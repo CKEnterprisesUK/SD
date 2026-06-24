@@ -22,10 +22,10 @@ class QuoteAiDraftController extends Controller
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI estimate item accepted.');
+            return $this->itemJson($item, 'Item accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item accepted.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item accepted.');
     }
 
     public function reject(Request $request, Quote $quote, QuoteAiDraftItem $item)
@@ -37,10 +37,10 @@ class QuoteAiDraftController extends Controller
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI estimate item rejected.');
+            return $this->itemJson($item, 'Item rejected.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item rejected.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item rejected.');
     }
 
     public function update(Request $request, Quote $quote, QuoteAiDraftItem $item)
@@ -65,9 +65,11 @@ class QuoteAiDraftController extends Controller
         $vatPercent = (float) $rateCard->vat_percent;
 
         $quantity = max((float) $validated['quantity'], 0.01);
+
         $lowPence = $this->poundsToPence($validated['low_estimate_ex_vat']);
         $likelyPence = $this->poundsToPence($validated['likely_estimate_ex_vat']);
         $highPence = $this->poundsToPence($validated['high_estimate_ex_vat']);
+
         $unitAmountPence = (int) round($likelyPence / $quantity);
         $vatPence = $this->percentOf($likelyPence, $vatPercent);
 
@@ -101,10 +103,10 @@ class QuoteAiDraftController extends Controller
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI estimate item updated and accepted.');
+            return $this->itemJson($item, 'Item saved and accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item updated and accepted.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item saved and accepted.');
     }
 
     public function applyAccepted(Quote $quote, QuoteAiDraft $draft)
@@ -116,7 +118,7 @@ class QuoteAiDraftController extends Controller
 
         if ($acceptedItems->isEmpty()) {
             return redirect()->route('admin.quotes.pricing', $quote)->withErrors([
-                'ai_draft' => 'Accept at least one AI estimate item before applying it to the quote.',
+                'ai_draft' => 'Accept at least one item before applying it to the quote.',
             ]);
         }
 
@@ -151,7 +153,7 @@ class QuoteAiDraftController extends Controller
 
         return redirect()
             ->route('admin.quotes.pricing', $quote)
-            ->with('status', 'Accepted AI estimate items applied to the quote.');
+            ->with('status', 'Accepted items applied to the quote.');
     }
 
     public function applyWording(Quote $quote, QuoteAiDraft $draft)
@@ -171,7 +173,7 @@ class QuoteAiDraftController extends Controller
 
         return redirect()
             ->route('admin.quotes.pack', $quote)
-            ->with('status', 'AI customer wording applied to the customer pack.');
+            ->with('status', 'Customer wording applied to the quote pack.');
     }
 
     private function abortIfItemDoesNotBelongToQuote(Quote $quote, QuoteAiDraftItem $item): void
@@ -194,7 +196,6 @@ class QuoteAiDraftController extends Controller
                 'status_label' => ucfirst($item->status),
                 'quantity' => (string) $item->quantity,
                 'unit' => $item->unit,
-                'base_total' => $item->base_total,
                 'subtotal' => $item->subtotal,
                 'vat' => $item->vat,
                 'total' => $item->total,

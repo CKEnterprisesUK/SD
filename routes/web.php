@@ -7,6 +7,10 @@ use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceContro
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\QuoteFollowUpController;
+use App\Http\Controllers\Admin\QuoteLineItemController;
+use App\Http\Controllers\Admin\QuoteNoteController;
 
 Route::get('/', function () {
     if (auth()->check()) {

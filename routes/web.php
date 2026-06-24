@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CustomerController;
 
 Route::get('/', function () {
     if (auth()->check()) {

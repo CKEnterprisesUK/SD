@@ -40,6 +40,12 @@
                             Contractors
                         </x-nav-link>
 
+                        @if (auth()->user()?->isAdmin())
+                            <x-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
+                                Customers
+                            </x-nav-link>
+                        @endif
+
                         @if (Route::has('admin.users.index'))
                             <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                                 Users

@@ -113,7 +113,7 @@ class ContractorController extends Controller
         'contractor' => $contractor,
         'invoices' => $invoices,
     ]);
-}p
+}
     
 
     public function edit(Contractor $contractor)

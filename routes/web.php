@@ -193,6 +193,9 @@ Route::post('/quotes/{quote}/files', [QuoteFileController::class, 'store'])
 Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
     ->name('quotes.files.destroy');
 
+    Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])
+    ->name('quotes.download');
+
         Route::get('/settings', [PortalSettingsController::class, 'edit'])
             ->name('settings.edit');
 

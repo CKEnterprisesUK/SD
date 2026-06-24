@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\PortalSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuoteController extends Controller
 {
@@ -277,6 +279,30 @@ public function updatePack(Request $request, Quote $quote)
     return redirect()
         ->route('admin.quotes.pack', $quote)
         ->with('status', 'Customer pack updated successfully.');
+}
+
+public function download(Quote $quote)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
+
+    $quote->load([
+        'customer.contacts',
+        'lineItems',
+        'notes',
+        'files',
+        'creator',
+        'assignedUser',
+    ]);
+
+    $settings = PortalSetting::first();
+
+    $pdf = Pdf::loadView('pdf.customer-quote', [
+        'quote' => $quote,
+        'customer' => $quote->customer,
+        'settings' => $settings,
+    ])->setPaper('a4');
+
+    return $pdf->download($quote->quote_number . '.pdf');
 }
 
     private function nextQuoteNumber(): string

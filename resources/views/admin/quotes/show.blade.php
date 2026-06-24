@@ -139,6 +139,13 @@
                             Edit customer-facing wording and quote sections.
                         </div>
                     </a>
+                    <a href="{{ route('admin.quotes.download', $quote) }}"
+                        class="block border border-green-700 bg-green-50 p-4 text-green-900">
+                            <div class="font-semibold">Download quote PDF</div>
+                            <div class="text-sm mt-1">
+                                Generate a customer-facing quote PDF.
+                            </div>
+                        </a>
                 </div>
             </section>
         </div>

@@ -17,101 +17,101 @@
             $money = fn ($pence) => '£' . number_format(($pence ?? 0) / 100, 2);
         @endphp
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div class="grid grid-cols-5 gap-2 mb-4">
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_review'])) }}"
-               class="block min-w-0 border border-gray-500 bg-gray-50 p-4">
-                <div class="text-xs font-semibold text-gray-700">
+               class="block min-w-0 border border-gray-500 bg-gray-50 px-3 py-2">
+                <div class="text-[11px] font-semibold text-gray-700 truncate">
                     Awaiting review
                 </div>
 
-                <div class="mt-2 text-2xl font-bold text-gray-900">
+                <div class="mt-1 text-xl font-bold text-gray-900 leading-tight">
                     {{ $summary['awaiting_review']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-xs text-gray-600">
+                <div class="mt-0.5 text-[11px] text-gray-600 truncate">
                     {{ $money($summary['awaiting_review']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'returned'])) }}"
-               class="block min-w-0 border border-red-700 bg-red-50 p-4">
-                <div class="text-xs font-semibold text-red-900">
+               class="block min-w-0 border border-red-700 bg-red-50 px-3 py-2">
+                <div class="text-[11px] font-semibold text-red-900 truncate">
                     Returned
                 </div>
 
-                <div class="mt-2 text-2xl font-bold text-red-900">
+                <div class="mt-1 text-xl font-bold text-red-900 leading-tight">
                     {{ $summary['returned']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-xs text-red-900">
+                <div class="mt-0.5 text-[11px] text-red-900 truncate">
                     {{ $money($summary['returned']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'ready_or_paid'])) }}"
-               class="block min-w-0 border border-green-700 bg-green-50 p-4">
-                <div class="text-xs font-semibold text-green-900">
+               class="block min-w-0 border border-green-700 bg-green-50 px-3 py-2">
+                <div class="text-[11px] font-semibold text-green-900 truncate">
                     Sent / paid
                 </div>
 
-                <div class="mt-2 text-2xl font-bold text-green-900">
+                <div class="mt-1 text-xl font-bold text-green-900 leading-tight">
                     {{ $summary['ready_or_paid']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-xs text-green-900">
+                <div class="mt-0.5 text-[11px] text-green-900 truncate">
                     {{ $money($summary['ready_or_paid']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'cancelled_or_replaced'])) }}"
-               class="block min-w-0 border border-gray-400 bg-white p-4">
-                <div class="text-xs font-semibold text-gray-700">
+               class="block min-w-0 border border-gray-400 bg-white px-3 py-2">
+                <div class="text-[11px] font-semibold text-gray-700 truncate">
                     Cancelled / replaced
                 </div>
 
-                <div class="mt-2 text-2xl font-bold text-gray-900">
+                <div class="mt-1 text-xl font-bold text-gray-900 leading-tight">
                     {{ $summary['cancelled_or_replaced']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-xs text-gray-600">
+                <div class="mt-0.5 text-[11px] text-gray-600 truncate">
                     {{ $money($summary['cancelled_or_replaced']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', request()->except('status', 'page')) }}"
-               class="block min-w-0 border border-black bg-white p-4">
-                <div class="text-xs font-semibold text-gray-700">
+               class="block min-w-0 border border-black bg-white px-3 py-2">
+                <div class="text-[11px] font-semibold text-gray-700 truncate">
                     Total invoices
                 </div>
 
-                <div class="mt-2 text-2xl font-bold text-gray-900">
+                <div class="mt-1 text-xl font-bold text-gray-900 leading-tight">
                     {{ $summary['all']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-xs text-gray-600">
+                <div class="mt-0.5 text-[11px] text-gray-600 truncate">
                     {{ $money($summary['all']['total_pence'] ?? 0) }}
                 </div>
             </a>
         </div>
 
-        <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-4 mb-6">
-            <div class="flex items-center justify-between gap-4 mb-4">
-                <h2 class="text-base font-semibold">Filters</h2>
+        <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-3 mb-4">
+            <div class="flex items-center justify-between gap-4 mb-3">
+                <h2 class="text-sm font-semibold">Filters</h2>
 
-                <a href="{{ route('admin.invoices.index') }}" class="text-sm underline">
+                <a href="{{ route('admin.invoices.index') }}" class="text-xs underline">
                     Clear filters
                 </a>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div class="grid grid-cols-6 gap-2">
                 <div>
-                    <label for="contractor_id" class="block text-xs font-semibold mb-1">
+                    <label for="contractor_id" class="block text-[11px] font-semibold mb-1">
                         Contractor
                     </label>
 
                     <select id="contractor_id"
                             name="contractor_id"
-                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                            class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                         <option value="">All contractors</option>
 
                         @foreach ($contractors as $contractor)
@@ -123,13 +123,13 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-xs font-semibold mb-1">
+                    <label for="status" class="block text-[11px] font-semibold mb-1">
                         Status
                     </label>
 
                     <select id="status"
                             name="status"
-                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                            class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                         <option value="">All statuses</option>
 
                         <option value="awaiting_review" @selected(($filters['status'] ?? '') === 'awaiting_review')>
@@ -179,7 +179,7 @@
                 </div>
 
                 <div>
-                    <label for="invoice_date_from" class="block text-xs font-semibold mb-1">
+                    <label for="invoice_date_from" class="block text-[11px] font-semibold mb-1">
                         Invoice from
                     </label>
 
@@ -187,11 +187,11 @@
                            name="invoice_date_from"
                            type="date"
                            value="{{ $filters['invoice_date_from'] ?? '' }}"
-                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                           class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                 </div>
 
                 <div>
-                    <label for="invoice_date_to" class="block text-xs font-semibold mb-1">
+                    <label for="invoice_date_to" class="block text-[11px] font-semibold mb-1">
                         Invoice to
                     </label>
 
@@ -199,11 +199,11 @@
                            name="invoice_date_to"
                            type="date"
                            value="{{ $filters['invoice_date_to'] ?? '' }}"
-                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                           class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                 </div>
 
                 <div>
-                    <label for="week_commencing_from" class="block text-xs font-semibold mb-1">
+                    <label for="week_commencing_from" class="block text-[11px] font-semibold mb-1">
                         Week from
                     </label>
 
@@ -211,11 +211,11 @@
                            name="week_commencing_from"
                            type="date"
                            value="{{ $filters['week_commencing_from'] ?? '' }}"
-                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                           class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                 </div>
 
                 <div>
-                    <label for="week_commencing_to" class="block text-xs font-semibold mb-1">
+                    <label for="week_commencing_to" class="block text-[11px] font-semibold mb-1">
                         Week to
                     </label>
 
@@ -223,13 +223,13 @@
                            name="week_commencing_to"
                            type="date"
                            value="{{ $filters['week_commencing_to'] ?? '' }}"
-                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
+                           class="w-full border border-gray-400 px-2 py-1.5 rounded-none text-xs">
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 mt-4">
+            <div class="flex items-center gap-3 mt-3">
                 <button type="submit"
-                        class="px-4 py-2 bg-black text-white text-sm font-semibold">
+                        class="px-3 py-1.5 bg-black text-white text-xs font-semibold">
                     Apply
                 </button>
             </div>

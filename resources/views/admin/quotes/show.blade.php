@@ -7,7 +7,7 @@
 
             <a href="{{ route('admin.quotes.edit', $quote) }}"
                class="inline-flex px-5 py-3 bg-black text-white text-sm font-semibold">
-                Edit quote
+                Edit quote details
             </a>
         </div>
     </x-slot>
@@ -16,18 +16,6 @@
         @if (session('status'))
             <div class="mb-6 border border-green-700 bg-green-50 px-4 py-3 text-sm text-green-900">
                 {{ session('status') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="mb-6 border border-red-700 bg-red-50 px-4 py-3 text-sm text-red-900">
-                <p class="font-semibold mb-2">There is a problem with the form.</p>
-
-                <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
             </div>
         @endif
 
@@ -57,20 +45,37 @@
             };
         @endphp
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <section class="lg:col-span-2 border border-gray-300 bg-white p-6">
-                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                    <div>
-                        <h2 class="text-lg font-semibold">Quote details</h2>
-                        <p class="text-sm text-gray-600 mt-1">
-                            Core quote information and customer relationship.
-                        </p>
-                    </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="border border-gray-300 bg-white p-4">
+                <div class="text-xs font-semibold text-gray-600">Status</div>
+                <div class="mt-2">
                     <span class="inline-flex px-2 py-1 border text-xs font-semibold {{ $statusClass }}">
                         {{ ucfirst(str_replace('_', ' ', $quote->status)) }}
                     </span>
                 </div>
+            </div>
+
+            <div class="border border-gray-300 bg-white p-4">
+                <div class="text-xs font-semibold text-gray-600">Current total</div>
+                <div class="text-2xl font-bold mt-2">£{{ $quote->total }}</div>
+            </div>
+
+            <div class="border border-gray-300 bg-white p-4">
+                <div class="text-xs font-semibold text-gray-600">Assigned to</div>
+                <div class="text-lg font-semibold mt-2">{{ $quote->assignedUser?->name ?: '—' }}</div>
+            </div>
+
+            <div class="border border-gray-300 bg-white p-4">
+                <div class="text-xs font-semibold text-gray-600">Valid until</div>
+                <div class="text-lg font-semibold mt-2">
+                    {{ $quote->valid_until ? $quote->valid_until->format('d M Y') : '—' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <section class="lg:col-span-2 border border-gray-300 bg-white p-6">
+                <h2 class="text-lg font-semibold mb-4">Quote summary</h2>
 
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
@@ -87,28 +92,8 @@
                     </div>
 
                     <div>
-                        <dt class="font-semibold text-gray-700">Assigned to</dt>
-                        <dd>{{ $quote->assignedUser?->name ?: '—' }}</dd>
-                    </div>
-
-                    <div>
                         <dt class="font-semibold text-gray-700">Created by</dt>
                         <dd>{{ $quote->creator?->name ?: '—' }}</dd>
-                    </div>
-
-                    <div>
-                        <dt class="font-semibold text-gray-700">Valid until</dt>
-                        <dd>{{ $quote->valid_until ? $quote->valid_until->format('d M Y') : '—' }}</dd>
-                    </div>
-
-                    <div>
-                        <dt class="font-semibold text-gray-700">Subtotal</dt>
-                        <dd>£{{ $quote->subtotal }}</dd>
-                    </div>
-
-                    <div>
-                        <dt class="font-semibold text-gray-700">Total</dt>
-                        <dd class="font-semibold">£{{ $quote->total }}</dd>
                     </div>
                 </dl>
 
@@ -128,433 +113,93 @@
             </section>
 
             <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Actions</h2>
+                <h2 class="text-lg font-semibold mb-4">Work areas</h2>
 
                 <div class="space-y-3">
-                    @if ($quote->status === 'draft')
-                        <form method="POST" action="{{ route('admin.quotes.mark-survey-in-progress', $quote) }}">
-                            @csrf
-
-                            <button type="submit"
-                                    class="w-full px-4 py-3 border border-blue-700 bg-blue-50 text-blue-900 text-sm font-semibold text-left">
-                                Start survey
-                            </button>
-                        </form>
-                    @endif
-
-                    @if (in_array($quote->status, ['draft', 'survey_in_progress']))
-                        <form method="POST" action="{{ route('admin.quotes.mark-survey-completed', $quote) }}">
-                            @csrf
-
-                            <button type="submit"
-                                    class="w-full px-4 py-3 border border-yellow-700 bg-yellow-50 text-yellow-900 text-sm font-semibold text-left">
-                                Mark survey completed
-                            </button>
-                        </form>
-                    @endif
-
-                    <a href="{{ route('admin.quotes.edit', $quote) }}"
-                       class="block px-4 py-3 border border-gray-900 text-sm font-semibold">
-                        Edit customer pack text
+                    <a href="{{ route('admin.quotes.survey', $quote) }}"
+                       class="block border border-blue-700 bg-blue-50 p-4 text-blue-900">
+                        <div class="font-semibold">Survey mode</div>
+                        <div class="text-sm mt-1">
+                            Add walk-round notes, measurements and photos.
+                        </div>
                     </a>
 
-                    <div class="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
-                        <p class="font-semibold">Coming next</p>
-                        <p class="mt-1">
-                            Compile customer pack, generate PDF and send quote will be added after this foundation is working.
-                        </p>
-                    </div>
+                    <a href="{{ route('admin.quotes.pricing', $quote) }}"
+                       class="block border border-gray-900 bg-white p-4 text-gray-900">
+                        <div class="font-semibold">Pricing</div>
+                        <div class="text-sm mt-1">
+                            Add and manage quote line items.
+                        </div>
+                    </a>
+
+                    <a href="{{ route('admin.quotes.pack', $quote) }}"
+                       class="block border border-yellow-700 bg-yellow-50 p-4 text-yellow-900">
+                        <div class="font-semibold">Customer pack</div>
+                        <div class="text-sm mt-1">
+                            Edit customer-facing wording and quote sections.
+                        </div>
+                    </a>
                 </div>
             </section>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Add site survey note</h2>
+                <h2 class="text-lg font-semibold mb-4">Survey</h2>
 
-                <form method="POST" action="{{ route('admin.quotes.notes.store', $quote) }}" class="space-y-4">
-                    @csrf
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="note_type" class="block text-sm font-semibold mb-2">
-                                Type
-                            </label>
-
-                            <select id="note_type"
-                                    name="type"
-                                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                    required>
-                                <option value="general">General</option>
-                                <option value="measurement">Measurement</option>
-                                <option value="requirement">Requirement</option>
-                                <option value="consideration">Consideration</option>
-                                <option value="risk">Risk</option>
-                                <option value="material">Material</option>
-                                <option value="equipment">Equipment</option>
-                                <option value="customer_comment">Customer comment</option>
-                                <option value="internal">Internal</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="room_or_area" class="block text-sm font-semibold mb-2">
-                                Room / area
-                            </label>
-
-                            <input id="room_or_area"
-                                   name="room_or_area"
-                                   type="text"
-                                   class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                   placeholder="e.g. Kitchen, rear garden, footings">
-                        </div>
+                <dl class="text-sm space-y-3">
+                    <div>
+                        <dt class="font-semibold text-gray-700">Notes</dt>
+                        <dd>{{ $quote->notes()->count() }}</dd>
                     </div>
 
                     <div>
-                        <label for="body" class="block text-sm font-semibold mb-2">
-                            Note
-                        </label>
-
-                        <textarea id="body"
-                                  name="body"
-                                  rows="5"
-                                  class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                  placeholder="Add the site visit note..."
-                                  required></textarea>
+                        <dt class="font-semibold text-gray-700">Photos/files</dt>
+                        <dd>{{ $quote->files()->count() }}</dd>
                     </div>
-
-                    <button type="submit"
-                            class="px-5 py-3 bg-black text-white text-sm font-semibold">
-                        Add note
-                    </button>
-                </form>
+                </dl>
             </section>
 
             <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Add line item</h2>
+                <h2 class="text-lg font-semibold mb-4">Pricing</h2>
 
-                <form method="POST" action="{{ route('admin.quotes.line-items.store', $quote) }}" class="space-y-4">
-                    @csrf
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="line_type" class="block text-sm font-semibold mb-2">
-                                Type
-                            </label>
-
-                            <input id="line_type"
-                                   name="type"
-                                   type="text"
-                                   value="works"
-                                   class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label for="unit" class="block text-sm font-semibold mb-2">
-                                Unit
-                            </label>
-
-                            <input id="unit"
-                                   name="unit"
-                                   type="text"
-                                   value="item"
-                                   class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label for="quantity" class="block text-sm font-semibold mb-2">
-                                Quantity
-                            </label>
-
-                            <input id="quantity"
-                                   name="quantity"
-                                   type="number"
-                                   min="0.01"
-                                   step="0.01"
-                                   value="1"
-                                   class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label for="unit_amount" class="block text-sm font-semibold mb-2">
-                                Unit amount
-                            </label>
-
-                            <input id="unit_amount"
-                                   name="unit_amount"
-                                   type="number"
-                                   min="0"
-                                   step="0.01"
-                                   value="0.00"
-                                   class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                   required>
-                        </div>
+                <dl class="text-sm space-y-3">
+                    <div>
+                        <dt class="font-semibold text-gray-700">Line items</dt>
+                        <dd>{{ $quote->lineItems()->count() }}</dd>
                     </div>
 
                     <div>
-                        <label for="description" class="block text-sm font-semibold mb-2">
-                            Description
-                        </label>
-
-                        <input id="description"
-                               name="description"
-                               type="text"
-                               class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                               placeholder="e.g. Skimming and plastering works"
-                               required>
+                        <dt class="font-semibold text-gray-700">Total</dt>
+                        <dd class="font-semibold">£{{ $quote->total }}</dd>
                     </div>
-
-                    <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="is_optional" value="1">
-                        Optional item
-                    </label>
-
-                    <button type="submit"
-                            class="px-5 py-3 bg-black text-white text-sm font-semibold">
-                        Add line item
-                    </button>
-                </form>
-            </section>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Site survey notes</h2>
-
-                <div class="space-y-4">
-                    @forelse ($quote->notes as $note)
-                        <article class="border border-gray-300 bg-gray-50 p-4">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                                        {{ ucfirst(str_replace('_', ' ', $note->type)) }}
-                                        @if ($note->room_or_area)
-                                            — {{ $note->room_or_area }}
-                                        @endif
-                                    </div>
-
-                                    <p class="text-sm whitespace-pre-line mt-2">{{ $note->body }}</p>
-
-                                    <p class="text-xs text-gray-500 mt-3">
-                                        {{ $note->creator?->name ?: 'Unknown user' }}
-                                        ·
-                                        {{ $note->created_at ? $note->created_at->format('d M Y H:i') : '' }}
-                                    </p>
-                                </div>
-
-                                <form method="POST" action="{{ route('admin.quotes.notes.destroy', [$quote, $note]) }}">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit"
-                                            class="text-xs underline text-red-700"
-                                            onclick="return confirm('Delete this note?')">
-                                        Delete
-                                    </button>
-                                </form>
-                            </div>
-                        </article>
-                    @empty
-                        <p class="text-sm text-gray-600">
-                            No survey notes have been added yet.
-                        </p>
-                    @endforelse
-                </div>
+                </dl>
             </section>
 
             <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Line items</h2>
+                <h2 class="text-lg font-semibold mb-4">Follow-up</h2>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-gray-300 bg-gray-50 text-left">
-                                <th class="px-3 py-2 font-semibold">Description</th>
-                                <th class="px-3 py-2 font-semibold">Qty</th>
-                                <th class="px-3 py-2 font-semibold">Unit</th>
-                                <th class="px-3 py-2 font-semibold">Total</th>
-                                <th class="px-3 py-2 font-semibold">Action</th>
-                            </tr>
-                        </thead>
+                @php
+                    $nextFollowUp = $quote->followUps()
+                        ->whereNull('completed_at')
+                        ->orderBy('due_at')
+                        ->first();
+                @endphp
 
-                        <tbody>
-                            @forelse ($quote->lineItems as $lineItem)
-                                <tr class="border-b border-gray-200">
-                                    <td class="px-3 py-3">
-                                        <div class="font-semibold">
-                                            {{ $lineItem->description }}
-                                        </div>
+                @if ($nextFollowUp)
+                    <p class="text-sm">
+                        Next follow-up:
+                        <strong>{{ $nextFollowUp->due_at->format('d M Y H:i') }}</strong>
+                    </p>
+                @else
+                    <p class="text-sm text-gray-600">
+                        No follow-up scheduled.
+                    </p>
+                @endif
 
-                                        <div class="text-xs text-gray-500 mt-1">
-                                            {{ ucfirst($lineItem->type) }}
-                                            @if ($lineItem->is_optional)
-                                                · Optional
-                                            @endif
-                                        </div>
-                                    </td>
-
-                                    <td class="px-3 py-3">
-                                        {{ $lineItem->quantity }}
-                                    </td>
-
-                                    <td class="px-3 py-3">
-                                        £{{ $lineItem->unit_amount }} / {{ $lineItem->unit }}
-                                    </td>
-
-                                    <td class="px-3 py-3 font-semibold">
-                                        £{{ $lineItem->total }}
-                                    </td>
-
-                                    <td class="px-3 py-3">
-                                        <form method="POST" action="{{ route('admin.quotes.line-items.destroy', [$quote, $lineItem]) }}">
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit"
-                                                    class="text-xs underline text-red-700"
-                                                    onclick="return confirm('Delete this line item?')">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-3 py-8 text-center text-gray-600">
-                                        No line items have been added yet.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-
-                        <tfoot>
-                            <tr>
-                                <th colspan="3" class="px-3 py-3 text-right">
-                                    Total
-                                </th>
-                                <th class="px-3 py-3 text-left">
-                                    £{{ $quote->total }}
-                                </th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Customer pack text</h2>
-
-                <div class="space-y-5 text-sm">
-                    <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Customer message</h3>
-                        <p class="whitespace-pre-line">{{ $quote->final_customer_message ?: 'Not added yet.' }}</p>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Scope of works</h3>
-                        <p class="whitespace-pre-line">{{ $quote->final_scope ?: 'Not added yet.' }}</p>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Estimated timeline</h3>
-                        <p class="whitespace-pre-line">{{ $quote->final_timeline ?: 'Not added yet.' }}</p>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Assumptions</h3>
-                        <p class="whitespace-pre-line">{{ $quote->final_assumptions ?: 'Not added yet.' }}</p>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Exclusions</h3>
-                        <p class="whitespace-pre-line">{{ $quote->final_exclusions ?: 'Not added yet.' }}</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Follow-ups</h2>
-
-                <form method="POST" action="{{ route('admin.quotes.follow-ups.store', $quote) }}" class="space-y-4 mb-6">
-                    @csrf
-
-                    <div>
-                        <label for="due_at" class="block text-sm font-semibold mb-2">
-                            Follow-up due
-                        </label>
-
-                        <input id="due_at"
-                               name="due_at"
-                               type="datetime-local"
-                               class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                               required>
-                    </div>
-
-                    <div>
-                        <label for="follow_up_note" class="block text-sm font-semibold mb-2">
-                            Note
-                        </label>
-
-                        <textarea id="follow_up_note"
-                                  name="note"
-                                  rows="3"
-                                  class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                                  placeholder="e.g. Call customer to check whether they want to proceed"></textarea>
-                    </div>
-
-                    <button type="submit"
-                            class="px-5 py-3 bg-black text-white text-sm font-semibold">
-                        Add follow-up
-                    </button>
-                </form>
-
-                <div class="space-y-3">
-                    @forelse ($quote->followUps as $followUp)
-                        <div class="border border-gray-300 bg-gray-50 p-4 text-sm">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <p class="font-semibold">
-                                        {{ $followUp->due_at ? $followUp->due_at->format('d M Y H:i') : '—' }}
-                                    </p>
-
-                                    @if ($followUp->note)
-                                        <p class="mt-2 whitespace-pre-line">{{ $followUp->note }}</p>
-                                    @endif
-
-                                    <p class="text-xs text-gray-500 mt-2">
-                                        Assigned to: {{ $followUp->assignedUser?->name ?: '—' }}
-                                    </p>
-
-                                    @if ($followUp->completed_at)
-                                        <p class="text-xs text-green-800 font-semibold mt-2">
-                                            Completed {{ $followUp->completed_at->format('d M Y H:i') }}
-                                        </p>
-                                    @endif
-                                </div>
-
-                                @if (! $followUp->completed_at)
-                                    <form method="POST" action="{{ route('admin.quotes.follow-ups.complete', [$quote, $followUp]) }}">
-                                        @csrf
-
-                                        <button type="submit" class="text-xs underline">
-                                            Mark complete
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-sm text-gray-600">
-                            No follow-up reminders have been added yet.
-                        </p>
-                    @endforelse
-                </div>
+                <p class="text-xs text-gray-500 mt-3">
+                    Follow-ups will be focused around quote generation and sending.
+                </p>
             </section>
         </div>
     </div>

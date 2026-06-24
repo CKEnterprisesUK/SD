@@ -213,6 +213,72 @@ class QuoteController extends Controller
             ->with('status', 'Survey marked as completed.');
     }
 
+    public function survey(Quote $quote)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
+
+    $quote->load([
+        'customer.contacts',
+        'assignedUser',
+        'notes.creator',
+        'files.uploadedBy',
+    ]);
+
+    return view('admin.quotes.survey', [
+        'quote' => $quote,
+    ]);
+}
+
+public function pricing(Quote $quote)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
+
+    $quote->load([
+        'customer',
+        'lineItems',
+    ]);
+
+    return view('admin.quotes.pricing', [
+        'quote' => $quote,
+    ]);
+}
+
+public function pack(Quote $quote)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
+
+    $quote->load([
+        'customer.contacts',
+        'lineItems',
+        'notes',
+        'files',
+    ]);
+
+    return view('admin.quotes.pack', [
+        'quote' => $quote,
+    ]);
+}
+
+public function updatePack(Request $request, Quote $quote)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
+
+    $validated = $request->validate([
+        'final_customer_message' => ['nullable', 'string'],
+        'final_scope' => ['nullable', 'string'],
+        'final_assumptions' => ['nullable', 'string'],
+        'final_exclusions' => ['nullable', 'string'],
+        'final_timeline' => ['nullable', 'string'],
+        'final_terms' => ['nullable', 'string'],
+    ]);
+
+    $quote->update($validated);
+
+    return redirect()
+        ->route('admin.quotes.pack', $quote)
+        ->with('status', 'Customer pack updated successfully.');
+}
+
     private function nextQuoteNumber(): string
     {
         $prefix = 'Q-' . now()->format('Y');

@@ -76,6 +76,19 @@ class Quote extends Model
             ->orderBy('due_at');
     }
 
+    public function files(): HasMany
+    {
+        return $this->hasMany(QuoteFile::class)
+            ->latest();
+    }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(QuoteFile::class)
+            ->where('type', 'photo')
+            ->latest();
+    }
+
     public function getSubtotalAttribute(): string
     {
         return number_format($this->subtotal_pence / 100, 2);

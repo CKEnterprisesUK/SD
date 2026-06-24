@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\QuoteFollowUpController;
 use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
+use App\Http\Controllers\Admin\QuoteFileController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -173,6 +174,24 @@ Route::post('/quotes/{quote}/follow-ups', [QuoteFollowUpController::class, 'stor
 
 Route::post('/quotes/{quote}/follow-ups/{followUp}/complete', [QuoteFollowUpController::class, 'complete'])
     ->name('quotes.follow-ups.complete');
+
+    Route::get('/quotes/{quote}/survey', [QuoteController::class, 'survey'])
+    ->name('quotes.survey');
+
+Route::get('/quotes/{quote}/pricing', [QuoteController::class, 'pricing'])
+    ->name('quotes.pricing');
+
+Route::get('/quotes/{quote}/pack', [QuoteController::class, 'pack'])
+    ->name('quotes.pack');
+
+Route::put('/quotes/{quote}/pack', [QuoteController::class, 'updatePack'])
+    ->name('quotes.pack.update');
+
+Route::post('/quotes/{quote}/files', [QuoteFileController::class, 'store'])
+    ->name('quotes.files.store');
+
+Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
+    ->name('quotes.files.destroy');
 
         Route::get('/settings', [PortalSettingsController::class, 'edit'])
             ->name('settings.edit');

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContractorInvoice extends Model
 {
@@ -51,6 +52,8 @@ class ContractorInvoice extends Model
         'sunday_days',
     ];
 
+    
+
     protected $casts = [
         'invoice_date' => 'date',
         'week_commencing' => 'date',
@@ -84,7 +87,19 @@ class ContractorInvoice extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+        
     }
+
+    public function lineItems(): HasMany
+{
+    return $this->hasMany(ContractorInvoiceLineItem::class)
+        ->orderBy('sort_order');
+}
+
+public function getLineItemsTotalAttribute(): string
+{
+    return number_format($this->lineItems->sum('total_pence') / 100, 2);
+}
 
     public function getDefaultDayRateAttribute(): string
     {

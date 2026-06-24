@@ -26,24 +26,12 @@ class InvoiceController extends Controller
 
         $invoices = ContractorInvoice::query()
             ->with('contractor')
-            ->when($validated['contractor_id'] ?? null, function ($query, $contractorId) {
-                $query->where('contractor_id', $contractorId);
-            })
-            ->when($validated['status'] ?? null, function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->when($validated['invoice_date_from'] ?? null, function ($query, $date) {
-                $query->whereDate('invoice_date', '>=', $date);
-            })
-            ->when($validated['invoice_date_to'] ?? null, function ($query, $date) {
-                $query->whereDate('invoice_date', '<=', $date);
-            })
-            ->when($validated['week_commencing_from'] ?? null, function ($query, $date) {
-                $query->whereDate('week_commencing', '>=', $date);
-            })
-            ->when($validated['week_commencing_to'] ?? null, function ($query, $date) {
-                $query->whereDate('week_commencing', '<=', $date);
-            })
+            ->when($validated['contractor_id'] ?? null, fn ($query, $contractorId) => $query->where('contractor_id', $contractorId))
+            ->when($validated['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($validated['invoice_date_from'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '>=', $date))
+            ->when($validated['invoice_date_to'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '<=', $date))
+            ->when($validated['week_commencing_from'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '>=', $date))
+            ->when($validated['week_commencing_to'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '<=', $date))
             ->latest('invoice_date')
             ->latest('id')
             ->paginate(15)
@@ -62,7 +50,7 @@ class InvoiceController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $invoice->load('contractor', 'user');
+        $invoice->load('contractor', 'user', 'lineItems');
 
         return view('admin.invoices.show', [
             'invoice' => $invoice,
@@ -73,7 +61,7 @@ class InvoiceController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $invoice->load('contractor', 'user');
+        $invoice->load('contractor', 'user', 'lineItems');
 
         $pdf = Pdf::loadView('pdf.contractor-invoice', [
             'invoice' => $invoice,

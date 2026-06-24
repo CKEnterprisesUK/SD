@@ -142,6 +142,106 @@
             </section>
 
             <section class="border border-gray-300 bg-white p-6">
+    <h2 class="text-lg font-semibold mb-4">Additional line items</h2>
+
+    <p class="text-sm text-gray-600 mb-4">
+        Add agreed materials, expenses or other costs for this invoice.
+    </p>
+
+    <div id="line-items" class="space-y-4">
+        @php
+            $oldLineItems = old('line_items', [
+                [
+                    'type' => 'materials',
+                    'description' => '',
+                    'quantity' => '1',
+                    'unit_amount' => '',
+                ],
+            ]);
+        @endphp
+
+        @foreach ($oldLineItems as $index => $lineItem)
+            <div class="line-item grid grid-cols-1 md:grid-cols-12 gap-3 border border-gray-300 p-4">
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-semibold mb-2">Type</label>
+
+                    <select
+                        name="line_items[{{ $index }}][type]"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                    >
+                        <option value="materials" @selected(($lineItem['type'] ?? '') === 'materials')>Materials</option>
+                        <option value="expense" @selected(($lineItem['type'] ?? '') === 'expense')>Expense</option>
+                        <option value="plant_hire" @selected(($lineItem['type'] ?? '') === 'plant_hire')>Plant hire</option>
+                        <option value="other" @selected(($lineItem['type'] ?? '') === 'other')>Other</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-4">
+                    <label class="block text-sm font-semibold mb-2">Description</label>
+
+                    <input
+                        type="text"
+                        name="line_items[{{ $index }}][description]"
+                        value="{{ $lineItem['description'] ?? '' }}"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                        placeholder="e.g. Timber, fixings, parking"
+                    >
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold mb-2">Quantity</label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="line_items[{{ $index }}][quantity]"
+                        value="{{ $lineItem['quantity'] ?? '1' }}"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                    >
+                </div>
+
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-semibold mb-2">Unit amount</label>
+
+                    <div class="flex">
+                        <span class="inline-flex items-center border border-r-0 border-gray-400 px-3 bg-gray-50">
+                            £
+                        </span>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            name="line_items[{{ $index }}][unit_amount]"
+                            value="{{ $lineItem['unit_amount'] ?? '' }}"
+                            class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                        >
+                    </div>
+                </div>
+
+                <div class="md:col-span-12">
+                    <button
+                        type="button"
+                        class="remove-line-item text-sm underline text-red-700"
+                    >
+                        Remove line
+                    </button>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <button
+        type="button"
+        id="add-line-item"
+        class="mt-4 px-4 py-2 border border-gray-900 text-sm font-semibold"
+    >
+        Add another line
+    </button>
+</section>
+
+            <section class="border border-gray-300 bg-white p-6">
                 <h2 class="text-lg font-semibold mb-4">Notes</h2>
 
                 <label for="contractor_notes" class="block text-sm font-semibold mb-2">
@@ -283,5 +383,102 @@
                 snapWeekCommencingToMonday();
             });
         }
+
+        let lineItemIndex = document.querySelectorAll('.line-item').length;
+
+const addLineItemButton = document.getElementById('add-line-item');
+const lineItemsContainer = document.getElementById('line-items');
+
+function bindRemoveLineItemButtons() {
+    document.querySelectorAll('.remove-line-item').forEach(function (button) {
+        button.onclick = function () {
+            const lineItem = button.closest('.line-item');
+
+            if (lineItem) {
+                lineItem.remove();
+            }
+        };
+    });
+}
+
+if (addLineItemButton && lineItemsContainer) {
+    addLineItemButton.addEventListener('click', function () {
+        const html = `
+            <div class="line-item grid grid-cols-1 md:grid-cols-12 gap-3 border border-gray-300 p-4">
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-semibold mb-2">Type</label>
+
+                    <select
+                        name="line_items[${lineItemIndex}][type]"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                    >
+                        <option value="materials">Materials</option>
+                        <option value="expense">Expense</option>
+                        <option value="plant_hire">Plant hire</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-4">
+                    <label class="block text-sm font-semibold mb-2">Description</label>
+
+                    <input
+                        type="text"
+                        name="line_items[${lineItemIndex}][description]"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                        placeholder="e.g. Timber, fixings, parking"
+                    >
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold mb-2">Quantity</label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="line_items[${lineItemIndex}][quantity]"
+                        value="1"
+                        class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                    >
+                </div>
+
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-semibold mb-2">Unit amount</label>
+
+                    <div class="flex">
+                        <span class="inline-flex items-center border border-r-0 border-gray-400 px-3 bg-gray-50">
+                            £
+                        </span>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            name="line_items[${lineItemIndex}][unit_amount]"
+                            class="w-full border border-gray-400 px-3 py-2 rounded-none"
+                        >
+                    </div>
+                </div>
+
+                <div class="md:col-span-12">
+                    <button
+                        type="button"
+                        class="remove-line-item text-sm underline text-red-700"
+                    >
+                        Remove line
+                    </button>
+                </div>
+            </div>
+        `;
+
+        lineItemsContainer.insertAdjacentHTML('beforeend', html);
+        lineItemIndex++;
+
+        bindRemoveLineItemButtons();
+    });
+
+    bindRemoveLineItemButtons();
+}
     </script>
 </x-app-layout>

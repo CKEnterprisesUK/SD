@@ -1,10 +1,11 @@
 <?php
+
 use App\Http\Controllers\Admin\ContractorController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
-use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -24,88 +25,107 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/contractors', [ContractorController::class, 'index'])
-        ->name('contractors.index');
+/*
+|--------------------------------------------------------------------------
+| Contractor invoice routes
+|--------------------------------------------------------------------------
+*/
 
-    Route::get('/contractors/create', [ContractorController::class, 'create'])
-        ->name('contractors.create');
+Route::middleware(['auth'])
+    ->prefix('my-invoices')
+    ->name('contractor.invoices.')
+    ->group(function () {
+        Route::get('/', [ContractorInvoiceController::class, 'index'])
+            ->name('index');
 
-    Route::post('/contractors', [ContractorController::class, 'store'])
-        ->name('contractors.store');
+        Route::get('/create', [ContractorInvoiceController::class, 'create'])
+            ->name('create');
 
-    Route::get('/settings', [PortalSettingsController::class, 'edit'])
-        ->name('settings.edit');
+        Route::post('/', [ContractorInvoiceController::class, 'store'])
+            ->name('store');
 
-    Route::put('/settings', [PortalSettingsController::class, 'update'])
-        ->name('settings.update');
+        Route::get('/{invoice}/download', [ContractorInvoiceController::class, 'download'])
+            ->name('download');
+
+        Route::get('/{invoice}/edit', [ContractorInvoiceController::class, 'edit'])
+            ->name('edit');
+
+        Route::put('/{invoice}', [ContractorInvoiceController::class, 'update'])
+            ->name('update');
+
+        Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])
+            ->name('show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | Contractors
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/contractors', [ContractorController::class, 'index'])
+            ->name('contractors.index');
+
+        Route::get('/contractors/create', [ContractorController::class, 'create'])
+            ->name('contractors.create');
+
+        Route::post('/contractors', [ContractorController::class, 'store'])
+            ->name('contractors.store');
+
+        Route::get('/contractors/{contractor}', [ContractorController::class, 'show'])
+            ->name('contractors.show');
+
+        Route::get('/contractors/{contractor}/edit', [ContractorController::class, 'edit'])
+            ->name('contractors.edit');
+
+        Route::put('/contractors/{contractor}', [ContractorController::class, 'update'])
+            ->name('contractors.update');
+
+        Route::post('/contractors/{contractor}/send-invite', [ContractorController::class, 'sendInvite'])
+            ->name('contractors.send-invite');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Invoices
+        |--------------------------------------------------------------------------
+        */
 
         Route::get('/invoices', [AdminInvoiceController::class, 'index'])
-    ->name('invoices.index');
+            ->name('invoices.index');
 
-    Route::middleware(['auth'])->prefix('my-invoices')->name('contractor.invoices.')->group(function () {
-    Route::get('/', [ContractorInvoiceController::class, 'index'])->name('index');
-    Route::get('/create', [ContractorInvoiceController::class, 'create'])->name('create');
-    Route::post('/', [ContractorInvoiceController::class, 'store'])->name('store');
+        Route::get('/invoices/{invoice}/download', [AdminInvoiceController::class, 'download'])
+            ->name('invoices.download');
 
-    Route::get('/{invoice}/download', [ContractorInvoiceController::class, 'download'])->name('download');
+        Route::post('/invoices/{invoice}/send-for-payment', [AdminInvoiceController::class, 'sendForPayment'])
+            ->name('invoices.send-for-payment');
 
-    Route::get('/{invoice}/edit', [ContractorInvoiceController::class, 'edit'])->name('edit');
-    Route::put('/{invoice}', [ContractorInvoiceController::class, 'update'])->name('update');
+        Route::post('/invoices/{invoice}/return-to-contractor', [AdminInvoiceController::class, 'returnToContractor'])
+            ->name('invoices.return-to-contractor');
 
-    Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])->name('show');
-});
+        Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show'])
+            ->name('invoices.show');
 
-Route::post('/invoices/{invoice}/send-for-payment', [AdminInvoiceController::class, 'sendForPayment'])
-    ->name('invoices.send-for-payment');
+        /*
+        |--------------------------------------------------------------------------
+        | Settings
+        |--------------------------------------------------------------------------
+        */
 
-Route::post('/invoices/{invoice}/return-to-contractor', [AdminInvoiceController::class, 'returnToContractor'])
-    ->name('invoices.return-to-contractor');
+        Route::get('/settings', [PortalSettingsController::class, 'edit'])
+            ->name('settings.edit');
 
-Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show'])
-    ->name('invoices.show');
+        Route::put('/settings', [PortalSettingsController::class, 'update'])
+            ->name('settings.update');
+    });
 
-Route::get('/invoices/{invoice}/download', [AdminInvoiceController::class, 'download'])
-    ->name('invoices.download');
-    
-Route::get('/contractors', [ContractorController::class, 'index'])
-    ->name('contractors.index');
-
-Route::get('/contractors/create', [ContractorController::class, 'create'])
-    ->name('contractors.create');
-
-Route::post('/contractors', [ContractorController::class, 'store'])
-    ->name('contractors.store');
-
-Route::get('/contractors/{contractor}', [ContractorController::class, 'show'])
-    ->name('contractors.show');
-
-Route::get('/contractors/{contractor}/edit', [ContractorController::class, 'edit'])
-    ->name('contractors.edit');
-
-Route::put('/contractors/{contractor}', [ContractorController::class, 'update'])
-    ->name('contractors.update');
-
-Route::post('/contractors/{contractor}/send-invite', [ContractorController::class, 'sendInvite'])
-    ->name('contractors.send-invite');
-
-});
-
-Route::middleware(['auth'])->prefix('my-invoices')->name('contractor.invoices.')->group(function () {
-    Route::get('/', [ContractorInvoiceController::class, 'index'])
-        ->name('index');
-
-    Route::get('/create', [ContractorInvoiceController::class, 'create'])
-        ->name('create');
-
-    Route::post('/', [ContractorInvoiceController::class, 'store'])
-        ->name('store');
-
-    Route::get('/{invoice}/download', [ContractorInvoiceController::class, 'download'])
-        ->name('download');
-
-    Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])
-        ->name('show');
-});
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

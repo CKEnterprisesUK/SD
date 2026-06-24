@@ -34,8 +34,8 @@ class QuoteNoteController extends Controller
         }
 
         return redirect()
-            ->route('admin.quotes.show', $quote)
-            ->with('status', 'Quote note added.');
+            ->route('admin.quotes.survey', $quote)
+            ->with('status', 'Survey note added.');
     }
 
     public function destroy(Quote $quote, QuoteNote $note)
@@ -46,7 +46,7 @@ class QuoteNoteController extends Controller
         $note->delete();
 
         return redirect()
-            ->route('admin.quotes.show', $quote)
-            ->with('status', 'Quote note deleted.');
+            ->route('admin.quotes.survey', $quote)
+            ->with('status', 'Survey note deleted.');
     }
 }

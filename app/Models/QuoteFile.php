@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class QuoteFile extends Model
 {
@@ -33,7 +32,7 @@ class QuoteFile extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk($this->disk)->url($this->path);
+        return asset($this->path);
     }
 
     public function getIsImageAttribute(): bool

@@ -96,19 +96,25 @@ class ContractorController extends Controller
             ->with('status', 'Contractor created successfully.');
     }
 
-    public function show(Contractor $contractor)
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
+   public function show(Contractor $contractor)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
 
-        $contractor->load([
-            'user',
-            'activityLogs' => fn ($query) => $query->with('user')->latest()->limit(20),
-        ]);
+    $contractor->load([
+        'user',
+        'activityLogs' => fn ($query) => $query->with('user')->latest()->limit(20),
+    ]);
 
-        return view('admin.contractors.show', [
-            'contractor' => $contractor,
-        ]);
-    }
+    $invoices = $contractor->invoices()
+        ->latest('week_commencing')
+        ->paginate(10, ['*'], 'invoices_page');
+
+    return view('admin.contractors.show', [
+        'contractor' => $contractor,
+        'invoices' => $invoices,
+    ]);
+}p
+    
 
     public function edit(Contractor $contractor)
     {

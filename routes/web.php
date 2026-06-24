@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
+use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -35,6 +36,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/settings', [PortalSettingsController::class, 'update'])
         ->name('settings.update');
 
+        Route::get('/invoices', [AdminInvoiceController::class, 'index'])
+    ->name('invoices.index');
+
+Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show'])
+    ->name('invoices.show');
+
+Route::get('/invoices/{invoice}/download', [AdminInvoiceController::class, 'download'])
+    ->name('invoices.download');
+    
 Route::get('/contractors', [ContractorController::class, 'index'])
     ->name('contractors.index');
 

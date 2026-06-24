@@ -105,12 +105,84 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Invoices</h2>
-                <p class="text-sm text-gray-600">
-                    Invoice history will appear here once the invoice module is added.
-                </p>
-            </section>
+           <section class="border border-gray-300 bg-white p-6">
+    <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+            <h2 class="text-lg font-semibold">Invoices</h2>
+            <p class="text-sm text-gray-600 mt-1">
+                Contractor-submitted invoice history.
+            </p>
+        </div>
+
+        <a href="{{ route('admin.invoices.index', ['contractor_id' => $contractor->id]) }}"
+           class="text-sm underline">
+            View all
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-300 bg-gray-50 text-left">
+                    <th class="px-3 py-2 font-semibold">Invoice</th>
+                    <th class="px-3 py-2 font-semibold">Week</th>
+                    <th class="px-3 py-2 font-semibold">Days</th>
+                    <th class="px-3 py-2 font-semibold">Total</th>
+                    <th class="px-3 py-2 font-semibold">Status</th>
+                    <th class="px-3 py-2 font-semibold">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @forelse ($invoices as $invoice)
+                    <tr class="border-b border-gray-200">
+                        <td class="px-3 py-2 font-semibold">
+                            {{ $invoice->invoice_number }}
+                        </td>
+
+                        <td class="px-3 py-2">
+                            {{ $invoice->week_commencing->format('d M Y') }}
+                        </td>
+
+                        <td class="px-3 py-2">
+                            {{ $invoice->days_worked }}
+                        </td>
+
+                        <td class="px-3 py-2">
+                            £{{ $invoice->total }}
+                        </td>
+
+                        <td class="px-3 py-2">
+                            {{ ucfirst($invoice->status) }}
+                        </td>
+
+                        <td class="px-3 py-2">
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('admin.invoices.show', $invoice) }}" class="underline">
+                                    View
+                                </a>
+
+                                <a href="{{ route('admin.invoices.download', $invoice) }}" class="underline">
+                                    Download
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-3 py-6 text-center text-gray-600">
+                            No invoices have been submitted by this contractor yet.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        {{ $invoices->links() }}
+    </div>
+</section>
 
             <section class="border border-gray-300 bg-white p-6">
                 <h2 class="text-lg font-semibold mb-4">Timesheets</h2>

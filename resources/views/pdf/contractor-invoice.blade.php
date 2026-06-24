@@ -167,12 +167,8 @@
         <table class="brand-row">
             <tr>
                 <td>
-                    <div class="brand-title">
-                        {{ $invoice->customer_name ?: ($settings->portal_name ?? 'SiteDesk') }}
-                    </div>
-                    <div class="brand-subtitle">
-                        Invoice generated using SiteDesk — A CK Enterprises Product
-                    </div>
+                    
+                    
                 </td>
                 <td class="text-right">
                     <div class="invoice-title">Contractor Invoice</div>

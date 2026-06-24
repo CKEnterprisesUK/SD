@@ -25,14 +25,7 @@
                             </div>
                         @endif
 
-                        <div class="leading-tight">
-                            <div class="font-bold text-lg text-gray-900">
-                                {{ $portalSettings->portal_name ?: 'SiteDesk' }}
-                            </div>
-                            <div class="text-xs text-gray-600">
-                                Contractor portal
-                            </div>
-                        </div>
+                        
                     </a>
                 </div>
 
@@ -52,6 +45,10 @@
                                 Users
                             </x-nav-link>
                         @endif
+
+                        <x-nav-link :href="route('admin.invoices.index')" :active="request()->routeIs('admin.invoices.*')">
+                            Invoices
+                        </x-nav-link>
 
                         @if (Route::has('admin.settings.edit'))
                             <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">

@@ -1,18 +1,20 @@
 <?php
 
 use App\Http\Controllers\Admin\ContractorController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
-use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\PricingSettingsController;
+use App\Http\Controllers\Admin\QuoteAiController;
+use App\Http\Controllers\Admin\QuoteAiDraftController;
 use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\QuoteFileController;
 use App\Http\Controllers\Admin\QuoteFollowUpController;
 use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
-use App\Http\Controllers\Admin\QuoteFileController;
-use App\Http\Controllers\Admin\QuoteAiController;
+use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -27,9 +29,14 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
 /*
@@ -124,86 +131,9 @@ Route::middleware(['auth'])
 
         /*
         |--------------------------------------------------------------------------
-        | Settings
+        | Portal settings
         |--------------------------------------------------------------------------
         */
-
-        /*
-|--------------------------------------------------------------------------
-| Quotes
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/quotes', [QuoteController::class, 'index'])
-    ->name('quotes.index');
-
-Route::get('/quotes/create', [QuoteController::class, 'create'])
-    ->name('quotes.create');
-
-Route::post('/quotes', [QuoteController::class, 'store'])
-    ->name('quotes.store');
-
-Route::get('/quotes/{quote}', [QuoteController::class, 'show'])
-    ->name('quotes.show');
-
-Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])
-    ->name('quotes.edit');
-
-Route::put('/quotes/{quote}', [QuoteController::class, 'update'])
-    ->name('quotes.update');
-
-Route::post('/quotes/{quote}/mark-survey-in-progress', [QuoteController::class, 'markSurveyInProgress'])
-    ->name('quotes.mark-survey-in-progress');
-
-Route::post('/quotes/{quote}/mark-survey-completed', [QuoteController::class, 'markSurveyCompleted'])
-    ->name('quotes.mark-survey-completed');
-
-Route::post('/quotes/{quote}/notes', [QuoteNoteController::class, 'store'])
-    ->name('quotes.notes.store');
-
-Route::delete('/quotes/{quote}/notes/{note}', [QuoteNoteController::class, 'destroy'])
-    ->name('quotes.notes.destroy');
-
-Route::post('/quotes/{quote}/line-items', [QuoteLineItemController::class, 'store'])
-    ->name('quotes.line-items.store');
-
-Route::delete('/quotes/{quote}/line-items/{lineItem}', [QuoteLineItemController::class, 'destroy'])
-    ->name('quotes.line-items.destroy');
-
-Route::post('/quotes/{quote}/follow-ups', [QuoteFollowUpController::class, 'store'])
-    ->name('quotes.follow-ups.store');
-
-Route::post('/quotes/{quote}/follow-ups/{followUp}/complete', [QuoteFollowUpController::class, 'complete'])
-    ->name('quotes.follow-ups.complete');
-
-    Route::get('/quotes/{quote}/survey', [QuoteController::class, 'survey'])
-    ->name('quotes.survey');
-
-Route::get('/quotes/{quote}/pricing', [QuoteController::class, 'pricing'])
-    ->name('quotes.pricing');
-
-Route::get('/quotes/{quote}/pack', [QuoteController::class, 'pack'])
-    ->name('quotes.pack');
-
-Route::put('/quotes/{quote}/pack', [QuoteController::class, 'updatePack'])
-    ->name('quotes.pack.update');
-
-Route::post('/quotes/{quote}/files', [QuoteFileController::class, 'store'])
-    ->name('quotes.files.store');
-
-Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
-    ->name('quotes.files.destroy');
-
-    Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])
-    ->name('quotes.download');
-
-
-
-    Route::post('/quotes/{quote}/compile-ai', [QuoteAiController::class, 'compile'])
-    ->name('quotes.compile-ai');
-
-
-    
 
         Route::get('/settings', [PortalSettingsController::class, 'edit'])
             ->name('settings.edit');
@@ -211,24 +141,176 @@ Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'dest
         Route::put('/settings', [PortalSettingsController::class, 'update'])
             ->name('settings.update');
 
+        /*
+        |--------------------------------------------------------------------------
+        | AI & pricing settings
+        |--------------------------------------------------------------------------
+        */
 
-            Route::get('/customers', [CustomerController::class, 'index'])
-    ->name('customers.index');
+        Route::get('/pricing-settings', [PricingSettingsController::class, 'edit'])
+            ->name('pricing-settings.edit');
 
-Route::get('/customers/create', [CustomerController::class, 'create'])
-    ->name('customers.create');
+        Route::put('/pricing-settings/rate-card', [PricingSettingsController::class, 'updateRateCard'])
+            ->name('pricing-settings.rate-card.update');
 
-Route::post('/customers', [CustomerController::class, 'store'])
-    ->name('customers.store');
+        Route::post('/pricing-settings/rate-items', [PricingSettingsController::class, 'storeRateItem'])
+            ->name('pricing-settings.rate-items.store');
 
-Route::get('/customers/{customer}', [CustomerController::class, 'show'])
-    ->name('customers.show');
+        Route::put('/pricing-settings/rate-items/{rateItem}', [PricingSettingsController::class, 'updateRateItem'])
+            ->name('pricing-settings.rate-items.update');
 
-Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])
-    ->name('customers.edit');
+        Route::delete('/pricing-settings/rate-items/{rateItem}', [PricingSettingsController::class, 'destroyRateItem'])
+            ->name('pricing-settings.rate-items.destroy');
 
-Route::put('/customers/{customer}', [CustomerController::class, 'update'])
-    ->name('customers.update');
+        Route::post('/pricing-settings/templates', [PricingSettingsController::class, 'storeTemplate'])
+            ->name('pricing-settings.templates.store');
+
+        Route::put('/pricing-settings/templates/{template}', [PricingSettingsController::class, 'updateTemplate'])
+            ->name('pricing-settings.templates.update');
+
+        Route::delete('/pricing-settings/templates/{template}', [PricingSettingsController::class, 'destroyTemplate'])
+            ->name('pricing-settings.templates.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Customers
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/customers', [CustomerController::class, 'index'])
+            ->name('customers.index');
+
+        Route::get('/customers/create', [CustomerController::class, 'create'])
+            ->name('customers.create');
+
+        Route::post('/customers', [CustomerController::class, 'store'])
+            ->name('customers.store');
+
+        Route::get('/customers/{customer}', [CustomerController::class, 'show'])
+            ->name('customers.show');
+
+        Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])
+            ->name('customers.edit');
+
+        Route::put('/customers/{customer}', [CustomerController::class, 'update'])
+            ->name('customers.update');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quotes
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/quotes', [QuoteController::class, 'index'])
+            ->name('quotes.index');
+
+        Route::get('/quotes/create', [QuoteController::class, 'create'])
+            ->name('quotes.create');
+
+        Route::post('/quotes', [QuoteController::class, 'store'])
+            ->name('quotes.store');
+
+        Route::get('/quotes/{quote}', [QuoteController::class, 'show'])
+            ->name('quotes.show');
+
+        Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])
+            ->name('quotes.edit');
+
+        Route::put('/quotes/{quote}', [QuoteController::class, 'update'])
+            ->name('quotes.update');
+
+        Route::post('/quotes/{quote}/mark-survey-in-progress', [QuoteController::class, 'markSurveyInProgress'])
+            ->name('quotes.mark-survey-in-progress');
+
+        Route::post('/quotes/{quote}/mark-survey-completed', [QuoteController::class, 'markSurveyCompleted'])
+            ->name('quotes.mark-survey-completed');
+
+        Route::get('/quotes/{quote}/survey', [QuoteController::class, 'survey'])
+            ->name('quotes.survey');
+
+        Route::get('/quotes/{quote}/pricing', [QuoteController::class, 'pricing'])
+            ->name('quotes.pricing');
+
+        Route::get('/quotes/{quote}/pack', [QuoteController::class, 'pack'])
+            ->name('quotes.pack');
+
+        Route::put('/quotes/{quote}/pack', [QuoteController::class, 'updatePack'])
+            ->name('quotes.pack.update');
+
+        Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])
+            ->name('quotes.download');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quote AI
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/quotes/{quote}/compile-ai', [QuoteAiController::class, 'compile'])
+            ->name('quotes.compile-ai');
+
+        Route::post('/quotes/{quote}/ai-draft-items/{item}/accept', [QuoteAiDraftController::class, 'accept'])
+            ->name('quotes.ai-draft-items.accept');
+
+        Route::post('/quotes/{quote}/ai-draft-items/{item}/reject', [QuoteAiDraftController::class, 'reject'])
+            ->name('quotes.ai-draft-items.reject');
+
+        Route::put('/quotes/{quote}/ai-draft-items/{item}', [QuoteAiDraftController::class, 'update'])
+            ->name('quotes.ai-draft-items.update');
+
+        Route::post('/quotes/{quote}/ai-drafts/{draft}/apply-accepted', [QuoteAiDraftController::class, 'applyAccepted'])
+            ->name('quotes.ai-drafts.apply-accepted');
+
+        Route::post('/quotes/{quote}/ai-drafts/{draft}/apply-wording', [QuoteAiDraftController::class, 'applyWording'])
+            ->name('quotes.ai-drafts.apply-wording');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quote notes
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/quotes/{quote}/notes', [QuoteNoteController::class, 'store'])
+            ->name('quotes.notes.store');
+
+        Route::delete('/quotes/{quote}/notes/{note}', [QuoteNoteController::class, 'destroy'])
+            ->name('quotes.notes.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quote line items
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/quotes/{quote}/line-items', [QuoteLineItemController::class, 'store'])
+            ->name('quotes.line-items.store');
+
+        Route::delete('/quotes/{quote}/line-items/{lineItem}', [QuoteLineItemController::class, 'destroy'])
+            ->name('quotes.line-items.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quote files
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/quotes/{quote}/files', [QuoteFileController::class, 'store'])
+            ->name('quotes.files.store');
+
+        Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
+            ->name('quotes.files.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Quote follow-ups
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/quotes/{quote}/follow-ups', [QuoteFollowUpController::class, 'store'])
+            ->name('quotes.follow-ups.store');
+
+        Route::post('/quotes/{quote}/follow-ups/{followUp}/complete', [QuoteFollowUpController::class, 'complete'])
+            ->name('quotes.follow-ups.complete');
     });
 
 require __DIR__ . '/auth.php';

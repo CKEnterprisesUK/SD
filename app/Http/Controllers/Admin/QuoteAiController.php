@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PricingRateCard;
+use App\Models\PricingRateItem;
 use App\Models\Quote;
 use App\Models\QuoteAiGeneration;
+use App\Services\QuoteAiPricingContextBuilder;
+use App\Services\QuotePricingCalculator;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,16 +17,20 @@ use RuntimeException;
 
 class QuoteAiController extends Controller
 {
-    public function compile(Request $request, Quote $quote)
+    public function compile(Request $request, Quote $quote, QuoteAiPricingContextBuilder $contextBuilder, QuotePricingCalculator $calculator)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
+        $validated = $request->validate([
+            'pricing_hint' => ['nullable', 'string', 'max:10000'],
+        ]);
+
         $apiKey = config('services.openai.api_key');
-        $model = config('services.openai.model', 'gpt-4o-mini');
+        $model = config('services.openai.estimate_model', config('services.openai.model', 'gpt-4o'));
 
         if (! $apiKey) {
             return redirect()
-                ->route('admin.quotes.pack', $quote)
+                ->route('admin.quotes.pricing', $quote)
                 ->withErrors([
                     'ai' => 'OpenAI API key is missing. Add OPENAI_API_KEY to your .env file.',
                 ]);
@@ -35,7 +43,7 @@ class QuoteAiController extends Controller
             'files.uploadedBy',
         ]);
 
-        $inputPayload = $this->buildInputPayload($quote);
+        $inputPayload = $contextBuilder->build($quote, $validated['pricing_hint'] ?? null);
 
         $generation = QuoteAiGeneration::create([
             'quote_id' => $quote->id,
@@ -50,7 +58,7 @@ class QuoteAiController extends Controller
             $response = Http::withToken($apiKey)
                 ->acceptJson()
                 ->asJson()
-                ->timeout(90)
+                ->timeout(120)
                 ->post('https://api.openai.com/v1/chat/completions', [
                     'model' => $model,
                     'messages' => [
@@ -64,9 +72,14 @@ class QuoteAiController extends Controller
                         ],
                     ],
                     'response_format' => [
-                        'type' => 'json_object',
+                        'type' => 'json_schema',
+                        'json_schema' => [
+                            'name' => 'sitedesk_quote_pricing_draft',
+                            'strict' => true,
+                            'schema' => $this->jsonSchema(),
+                        ],
                     ],
-                    'temperature' => 0.25,
+                    'temperature' => 0.2,
                 ])
                 ->throw()
                 ->json();
@@ -83,7 +96,7 @@ class QuoteAiController extends Controller
                 throw new RuntimeException('OpenAI response was not valid JSON.');
             }
 
-            $this->applyAiOutputToQuote($quote, $decoded);
+            $draft = $this->storeDraft($quote, $generation, $decoded, $calculator);
 
             $generation->update([
                 'status' => 'completed',
@@ -92,11 +105,10 @@ class QuoteAiController extends Controller
             ]);
 
             return redirect()
-                ->route('admin.quotes.pack', $quote)
-                ->with('status', 'AI customer pack and draft cost build-up generated. Please review all pricing before sending.');
+                ->route('admin.quotes.pricing', $quote)
+                ->with('status', 'AI pricing draft created. Review, edit and accept the draft items before applying them to the quote.');
         } catch (RequestException $exception) {
-            $message = $exception->response?->json('error.message')
-                ?: $exception->getMessage();
+            $message = $exception->response?->json('error.message') ?: $exception->getMessage();
 
             $generation->update([
                 'status' => 'failed',
@@ -104,7 +116,7 @@ class QuoteAiController extends Controller
             ]);
 
             return redirect()
-                ->route('admin.quotes.pack', $quote)
+                ->route('admin.quotes.pricing', $quote)
                 ->withErrors([
                     'ai' => 'OpenAI request failed: ' . $message,
                 ]);
@@ -115,266 +127,221 @@ class QuoteAiController extends Controller
             ]);
 
             return redirect()
-                ->route('admin.quotes.pack', $quote)
+                ->route('admin.quotes.pricing', $quote)
                 ->withErrors([
                     'ai' => 'AI compile failed: ' . $exception->getMessage(),
                 ]);
         }
     }
 
-    private function buildInputPayload(Quote $quote): array
+    private function storeDraft(Quote $quote, QuoteAiGeneration $generation, array $decoded, QuotePricingCalculator $calculator)
     {
-        return [
-            'instruction' => 'Generate a customer-facing quote pack and a provisional costed build-up. Return JSON only.',
-            'pricing_instruction' => [
-                'Create draft costed line items from the quote summary, survey notes, measurements, photo captions and existing line items.',
-                'Break costs into labour, materials, plant_equipment, waste_disposal, preliminaries, and other_works where relevant.',
-                'Use pounds as numeric values, not pence.',
-                'Do not return zero-cost line items unless the item is genuinely informational.',
-                'If a cost cannot be firm, still provide a provisional estimate and explain the uncertainty in pricing_warnings.',
-                'If measurements are missing, estimate from the available description and flag missing information.',
-                'The team will review and amend prices before sending.',
-            ],
-            'quote' => [
-                'quote_number' => $quote->quote_number,
-                'title' => $quote->title,
-                'status' => $quote->status,
-                'site_address' => $quote->site_address,
-                'summary' => $quote->summary,
-                'internal_notes' => $quote->internal_notes,
-                'current_total' => $quote->total,
-            ],
-            'customer' => [
-                'name' => $quote->customer?->display_name,
-                'address' => $quote->customer?->address,
-                'contacts' => $quote->customer?->contacts?->map(fn ($contact) => [
-                    'name' => $contact->name,
-                    'email' => $contact->email,
-                    'phone' => $contact->phone,
-                    'role' => $contact->role,
-                    'is_primary' => $contact->is_primary,
-                ])->values()->all() ?? [],
-            ],
-            'survey_notes' => $quote->notes->map(fn ($note) => [
-                'type' => $note->type,
-                'room_or_area' => $note->room_or_area,
-                'body' => $note->body,
-                'created_by' => $note->creator?->name,
-                'created_at' => $note->created_at?->toDateTimeString(),
-            ])->values()->all(),
-            'photos_and_files' => $quote->files->map(fn ($file) => [
-                'type' => $file->type,
-                'room_or_area' => $file->room_or_area,
-                'caption' => $file->caption,
-                'original_name' => $file->original_name,
-                'mime_type' => $file->mime_type,
-                'uploaded_by' => $file->uploadedBy?->name,
-            ])->values()->all(),
-            'existing_line_items' => $quote->lineItems->map(fn ($lineItem) => [
-                'source' => $lineItem->source,
-                'type' => $lineItem->type,
-                'description' => $lineItem->description,
-                'quantity' => $lineItem->quantity,
-                'unit' => $lineItem->unit,
-                'unit_amount' => $lineItem->unit_amount,
-                'total' => $lineItem->total,
-                'is_optional' => $lineItem->is_optional,
-            ])->values()->all(),
-            'required_json_schema' => [
-                'customer_message' => 'string',
-                'scope_of_works' => 'string',
-                'estimated_timeline' => 'string',
-                'assumptions' => 'string or array',
-                'exclusions' => 'string or array',
-                'terms' => 'string or array',
-                'pricing_basis' => 'string',
-                'suggested_line_items' => [
-                    [
-                        'type' => 'labour | materials | plant_equipment | waste_disposal | preliminaries | other_works',
-                        'description' => 'string',
-                        'quantity' => 'number',
-                        'unit' => 'string',
-                        'unit_amount' => 'number in pounds, non-zero unless genuinely informational',
-                        'reasoning' => 'string',
-                    ],
-                ],
-                'missing_information' => ['string'],
-                'pricing_warnings' => ['string'],
-            ],
-        ];
+        $rateCard = PricingRateCard::activeOrCreateDefault();
+        $rateItems = PricingRateItem::where('is_active', true)->get()->keyBy('code');
+        $draftWarnings = $decoded['pricing_warnings'] ?? [];
+
+        return DB::transaction(function () use ($quote, $generation, $decoded, $calculator, $rateCard, $rateItems, &$draftWarnings) {
+            $draft = $quote->aiDrafts()->create([
+                'quote_ai_generation_id' => $generation->id,
+                'status' => 'pending_review',
+                'detected_job_type' => $decoded['detected_job_type'] ?? null,
+                'selected_template_code' => $decoded['selected_template_code'] ?? null,
+                'overall_confidence' => $decoded['overall_confidence'] ?? 'medium',
+                'pricing_basis' => $decoded['pricing_basis'] ?? null,
+                'missing_information' => $decoded['missing_information'] ?? [],
+                'warnings' => $draftWarnings,
+                'assumptions' => $decoded['assumptions'] ?? [],
+                'exclusions' => $decoded['exclusions'] ?? [],
+                'internal_reasoning' => $decoded['internal_reasoning'] ?? null,
+                'customer_message' => $decoded['customer_pack']['customer_message'] ?? null,
+                'scope_of_works' => $decoded['customer_pack']['scope_of_works'] ?? null,
+                'timeline' => $decoded['customer_pack']['estimated_timeline'] ?? null,
+                'terms' => $decoded['customer_pack']['terms'] ?? null,
+            ]);
+
+            foreach (($decoded['pricing_items'] ?? []) as $item) {
+                $code = $item['rate_item_code'] ?? null;
+                $rateItem = $code ? $rateItems->get($code) : null;
+
+                if (! $rateItem) {
+                    $draftWarnings[] = 'AI selected an unknown or inactive rate-card code: ' . ($code ?: 'blank') . '. The item was not priced.';
+                    continue;
+                }
+
+                $quantity = (float) ($item['quantity'] ?? 0);
+
+                if ($quantity <= 0) {
+                    $draftWarnings[] = 'AI returned a zero or negative quantity for ' . $code . '. The item was not priced.';
+                    continue;
+                }
+
+                $confidence = in_array(($item['confidence'] ?? 'medium'), ['low', 'medium', 'high'], true)
+                    ? $item['confidence']
+                    : 'medium';
+
+                $calculated = $calculator->calculate($rateItem, $quantity, $rateCard, $confidence);
+
+                $draft->items()->create(array_merge($calculated, [
+                    'quote_id' => $quote->id,
+                    'pricing_rate_item_id' => $rateItem->id,
+                    'category' => $rateItem->category,
+                    'rate_item_code' => $rateItem->code,
+                    'clean_customer_description' => $this->cleanCustomerDescription($item['customer_description'] ?? $rateItem->customer_description ?? $rateItem->name),
+                    'internal_reasoning' => $item['internal_reasoning'] ?? null,
+                    'quantity' => $quantity,
+                    'unit' => $rateItem->unit,
+                    'confidence' => $confidence,
+                    'pricing_source' => 'rate_card',
+                    'evidence' => $item['evidence'] ?? [],
+                    'warnings' => $item['warnings'] ?? [],
+                    'status' => 'pending',
+                ]));
+            }
+
+            $draft->update(['warnings' => $draftWarnings]);
+
+            return $draft;
+        });
+    }
+
+    private function cleanCustomerDescription(string $description): string
+    {
+        $description = trim(preg_replace('/\s+/', ' ', $description));
+        $description = preg_replace('/\b(ai|chatgpt|model|reasoning|confidence)\b/i', '', $description);
+        $description = trim(preg_replace('/\s+/', ' ', $description));
+
+        return mb_substr($description ?: 'Works allowance', 0, 255);
     }
 
     private function systemPrompt(): string
     {
         return <<<'PROMPT'
-You are assisting a UK building firm to draft a professional customer quote and a provisional internal cost build-up.
+You are a senior UK building-estimating assistant working inside SiteDesk.
 
-You must return valid JSON only. Do not wrap it in markdown.
+Your job is to do the estimating thinking, not the final pricing maths.
 
-The quote must be professional, clear, practical and customer-friendly.
+You must:
+- Read the quote, survey notes, file captions, existing line items, pricing hints, rate-card items and job templates.
+- Identify the likely job type and closest job template.
+- Select the best matching rate-card items using only supplied rate_item_code values.
+- Estimate realistic quantities from the supplied context.
+- Use existing pricing hints to improve quantities, risk and assumptions.
+- Flag unclear measurements, access, specification, materials, site risks and exclusions.
+- Produce clean customer-facing wording.
+- Keep internal reasoning separate from customer-facing descriptions.
 
-Important safety and accuracy rules:
-- Do not claim that anything is guaranteed unless explicitly stated in the input.
-- Do not invent planning permission, building control, structural engineer, utility, asbestos, drainage or party wall conclusions.
-- If information is missing, add it to "missing_information".
-- If pricing is uncertain, add it to "pricing_warnings".
-- Suggested prices are draft estimates only. They must be reviewed by the team.
+You must not:
+- Invent unit prices.
+- Calculate final totals, VAT, markup or margin.
+- Use rate-card codes not supplied in the prompt.
+- Put warnings, AI notes, uncertainty or reasoning into customer_description.
+- Claim that hidden defects, asbestos, building control, planning, party wall, drainage, utilities or structural matters are resolved unless explicitly stated.
+- Mention AI, ChatGPT or language models in customer-facing wording.
+
+Quantity rules:
+- quantity must be greater than zero.
+- If information is missing, estimate cautiously and flag the missing information.
+- Low-confidence items must have warnings.
 - Use UK English.
-- Do not mention AI or ChatGPT.
-
-Pricing rules:
-- You must produce a costed draft build-up if the quote contains enough information to describe the job.
-- Break costs into separate line items: labour, materials, plant_equipment, waste_disposal, preliminaries, and other_works where relevant.
-- Use numeric unit_amount values in pounds, not pence.
-- Do not use "£" symbols in JSON numeric fields.
-- Do not return zero-cost line items unless the item is genuinely informational.
-- If the exact cost is uncertain, still produce a reasonable provisional draft estimate and explain the uncertainty in "pricing_warnings".
-- If measurements are missing, estimate cautiously using the available description and add a warning.
-- Do not duplicate existing manual line items unless they need to be broken down into clearer components.
-- Use quantity and unit properly. Examples:
-  - 3 days labour at 250 per day
-  - 1 skip at 280 each
-  - 1 plant hire allowance at 450 item
-  - 25 m2 plastering materials at 18 per m2
-- Keep descriptions suitable for a quote line item.
-- Put detailed uncertainty in reasoning/pricing_warnings, not in the description.
-
-Return JSON with exactly these top-level keys:
-{
-  "customer_message": "...",
-  "scope_of_works": "...",
-  "estimated_timeline": "...",
-  "assumptions": "...",
-  "exclusions": "...",
-  "terms": "...",
-  "pricing_basis": "...",
-  "suggested_line_items": [
-    {
-      "type": "labour",
-      "description": "Labour for preparation and installation works",
-      "quantity": 3,
-      "unit": "day",
-      "unit_amount": 250,
-      "reasoning": "Based on the survey notes and described scope."
-    }
-  ],
-  "missing_information": [],
-  "pricing_warnings": []
-}
 PROMPT;
     }
 
-    private function applyAiOutputToQuote(Quote $quote, array $decoded): void
+    private function jsonSchema(): array
     {
-        DB::transaction(function () use ($quote, $decoded) {
-            $quote->update([
-                'status' => 'ai_compiled',
-                'final_customer_message' => $decoded['customer_message'] ?? null,
-                'final_scope' => $decoded['scope_of_works'] ?? null,
-                'final_timeline' => $decoded['estimated_timeline'] ?? null,
-                'final_assumptions' => $this->normaliseTextList($decoded['assumptions'] ?? null),
-                'final_exclusions' => $this->normaliseTextList($decoded['exclusions'] ?? null),
-                'final_terms' => $this->buildTermsText($decoded),
-            ]);
-
-            $quote->lineItems()
-                ->where('source', 'ai_suggested')
-                ->delete();
-
-            $suggestedLineItems = $decoded['suggested_line_items'] ?? [];
-
-            if (is_array($suggestedLineItems)) {
-                foreach ($suggestedLineItems as $index => $item) {
-                    if (empty($item['description'])) {
-                        continue;
-                    }
-
-                    $quantity = max(0.01, (float) ($item['quantity'] ?? 1));
-                    $unitAmountPounds = (float) ($item['unit_amount'] ?? 0);
-
-                    /*
-                     * Reject zero-value AI pricing.
-                     * If OpenAI cannot price the item, it should go into pricing_warnings,
-                     * not into the quote as a £0.00 line item.
-                     */
-                    if ($unitAmountPounds <= 0) {
-                        continue;
-                    }
-
-                    $unitAmountPence = (int) round($unitAmountPounds * 100);
-                    $totalPence = (int) round($quantity * $unitAmountPence);
-
-                    $description = trim((string) $item['description']);
-
-                    if (! empty($item['reasoning'])) {
-                        $description .= ' — AI note: ' . trim((string) $item['reasoning']);
-                    }
-
-                    $quote->lineItems()->create([
-                        'source' => 'ai_suggested',
-                        'type' => $this->normaliseLineItemType($item['type'] ?? 'other_works'),
-                        'description' => mb_substr($description, 0, 255),
-                        'quantity' => $quantity,
-                        'unit' => mb_substr((string) ($item['unit'] ?? 'item'), 0, 255),
-                        'unit_amount_pence' => $unitAmountPence,
-                        'total_pence' => $totalPence,
-                        'is_optional' => false,
-                        'sort_order' => $quote->lineItems()->count() + $index + 1,
-                    ]);
-                }
-            }
-
-            $quote->recalculateTotals();
-        });
-    }
-
-    private function normaliseLineItemType(string $type): string
-    {
-        $type = strtolower(trim($type));
-
-        return match ($type) {
-            'labour', 'labor' => 'labour',
-            'material', 'materials' => 'materials',
-            'plant', 'equipment', 'plant_equipment', 'plant / equipment' => 'plant_equipment',
-            'waste', 'disposal', 'waste_disposal', 'waste / disposal' => 'waste_disposal',
-            'preliminaries', 'prelims' => 'preliminaries',
-            'works', 'other', 'other_works' => 'other_works',
-            default => 'other_works',
-        };
-    }
-
-    private function normaliseTextList(mixed $value): ?string
-    {
-        if (is_array($value)) {
-            return collect($value)
-                ->filter()
-                ->map(fn ($item) => '- ' . $item)
-                ->implode("\n");
-        }
-
-        return $value ?: null;
-    }
-
-    private function buildTermsText(array $decoded): ?string
-    {
-        $parts = [];
-
-        if (! empty($decoded['terms'])) {
-            $parts[] = $this->normaliseTextList($decoded['terms']);
-        }
-
-        if (! empty($decoded['pricing_basis'])) {
-            $parts[] = "Pricing basis:\n" . $this->normaliseTextList($decoded['pricing_basis']);
-        }
-
-        if (! empty($decoded['missing_information'])) {
-            $parts[] = "Information still to confirm:\n" . $this->normaliseTextList($decoded['missing_information']);
-        }
-
-        if (! empty($decoded['pricing_warnings'])) {
-            $parts[] = "Pricing notes:\n" . $this->normaliseTextList($decoded['pricing_warnings']);
-        }
-
-        return count($parts) ? implode("\n\n", array_filter($parts)) : null;
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'properties' => [
+                'detected_job_type' => ['type' => 'string'],
+                'selected_template_code' => ['type' => 'string'],
+                'overall_confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
+                'pricing_basis' => ['type' => 'string'],
+                'internal_reasoning' => ['type' => 'string'],
+                'pricing_items' => [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => [
+                            'rate_item_code' => ['type' => 'string'],
+                            'customer_description' => ['type' => 'string'],
+                            'quantity' => ['type' => 'number'],
+                            'unit' => ['type' => 'string'],
+                            'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
+                            'pricing_source' => ['type' => 'string', 'enum' => ['rate_card']],
+                            'evidence' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string'],
+                            ],
+                            'warnings' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string'],
+                            ],
+                            'internal_reasoning' => ['type' => 'string'],
+                        ],
+                        'required' => [
+                            'rate_item_code',
+                            'customer_description',
+                            'quantity',
+                            'unit',
+                            'confidence',
+                            'pricing_source',
+                            'evidence',
+                            'warnings',
+                            'internal_reasoning',
+                        ],
+                    ],
+                ],
+                'missing_information' => [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => [
+                            'field' => ['type' => 'string'],
+                            'severity' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
+                            'question' => ['type' => 'string'],
+                        ],
+                        'required' => ['field', 'severity', 'question'],
+                    ],
+                ],
+                'pricing_warnings' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'assumptions' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'exclusions' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'customer_pack' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'properties' => [
+                        'customer_message' => ['type' => 'string'],
+                        'scope_of_works' => ['type' => 'string'],
+                        'estimated_timeline' => ['type' => 'string'],
+                        'terms' => ['type' => 'string'],
+                    ],
+                    'required' => ['customer_message', 'scope_of_works', 'estimated_timeline', 'terms'],
+                ],
+            ],
+            'required' => [
+                'detected_job_type',
+                'selected_template_code',
+                'overall_confidence',
+                'pricing_basis',
+                'internal_reasoning',
+                'pricing_items',
+                'missing_information',
+                'pricing_warnings',
+                'assumptions',
+                'exclusions',
+                'customer_pack',
+            ],
+        ];
     }
 }

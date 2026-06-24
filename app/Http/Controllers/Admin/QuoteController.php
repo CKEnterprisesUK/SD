@@ -8,6 +8,7 @@ use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\PortalSetting;
+use App\Models\PricingRateItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuoteController extends Controller
@@ -238,10 +239,19 @@ public function pricing(Quote $quote)
     $quote->load([
         'customer',
         'lineItems',
+        'aiDrafts.items.rateItem',
     ]);
+
+    $latestDraft = $quote->aiDrafts->first();
+    $rateItems = PricingRateItem::where('is_active', true)
+        ->orderBy('category')
+        ->orderBy('name')
+        ->get();
 
     return view('admin.quotes.pricing', [
         'quote' => $quote,
+        'latestDraft' => $latestDraft,
+        'rateItems' => $rateItems,
     ]);
 }
 

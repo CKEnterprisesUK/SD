@@ -41,7 +41,7 @@ class QuoteLineItemController extends Controller
         $quote->recalculateTotals();
 
         return redirect()
-            ->route('admin.quotes.show', $quote)
+            ->route('admin.quotes.pricing', $quote)
             ->with('status', 'Quote line item added.');
     }
 
@@ -55,7 +55,7 @@ class QuoteLineItemController extends Controller
         $quote->recalculateTotals();
 
         return redirect()
-            ->route('admin.quotes.show', $quote)
+            ->route('admin.quotes.pricing', $quote)
             ->with('status', 'Quote line item deleted.');
     }
 }

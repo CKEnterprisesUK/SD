@@ -59,34 +59,42 @@ class Quote extends Model
 
     public function notes(): HasMany
     {
-        return $this->hasMany(QuoteNote::class)
-            ->latest();
+        return $this->hasMany(QuoteNote::class)->latest();
     }
 
     public function lineItems(): HasMany
     {
-        return $this->hasMany(QuoteLineItem::class)
-            ->orderBy('sort_order')
-            ->orderBy('id');
+        return $this->hasMany(QuoteLineItem::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function followUps(): HasMany
     {
-        return $this->hasMany(QuoteFollowUp::class)
-            ->orderBy('due_at');
+        return $this->hasMany(QuoteFollowUp::class)->orderBy('due_at');
     }
 
     public function files(): HasMany
     {
-        return $this->hasMany(QuoteFile::class)
-            ->latest();
+        return $this->hasMany(QuoteFile::class)->latest();
     }
 
     public function photos(): HasMany
     {
-        return $this->hasMany(QuoteFile::class)
-            ->where('type', 'photo')
-            ->latest();
+        return $this->hasMany(QuoteFile::class)->where('type', 'photo')->latest();
+    }
+
+    public function aiGenerations(): HasMany
+    {
+        return $this->hasMany(QuoteAiGeneration::class)->latest();
+    }
+
+    public function aiDrafts(): HasMany
+    {
+        return $this->hasMany(QuoteAiDraft::class)->latest();
+    }
+
+    public function latestAiDraft(): HasMany
+    {
+        return $this->aiDrafts()->limit(1);
     }
 
     public function getSubtotalAttribute(): string
@@ -103,11 +111,6 @@ class Quote extends Model
     {
         return number_format($this->total_pence / 100, 2);
     }
-    public function aiGenerations(): HasMany
-    {
-        return $this->hasMany(QuoteAiGeneration::class)
-            ->latest();
-    }
 
     public function recalculateTotals(): void
     {
@@ -115,10 +118,13 @@ class Quote extends Model
             ->where('is_optional', false)
             ->sum('total_pence');
 
+        $rateCard = PricingRateCard::activeOrCreateDefault();
+        $vat = (int) round($subtotal * ((float) $rateCard->vat_percent / 100));
+
         $this->update([
             'subtotal_pence' => $subtotal,
-            'vat_pence' => 0,
-            'total_pence' => $subtotal,
+            'vat_pence' => $vat,
+            'total_pence' => $subtotal + $vat,
         ]);
     }
 }

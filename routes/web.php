@@ -7,7 +7,11 @@ use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceContro
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {

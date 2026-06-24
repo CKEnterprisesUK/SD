@@ -12,7 +12,7 @@
 
 @php
     $existingContacts = $customer
-        ? $customer->contacts->map(function ($contact, $index) {
+        ? $customer->contacts->map(function ($contact) {
             return [
                 'name' => $contact->name,
                 'email' => $contact->email,
@@ -95,51 +95,35 @@
                     <option value="active" @selected(old('status', $customer?->status ?? 'active') === 'active')>
                         Active
                     </option>
+
                     <option value="prospect" @selected(old('status', $customer?->status ?? 'active') === 'prospect')>
                         Prospect
                     </option>
+
                     <option value="inactive" @selected(old('status', $customer?->status ?? 'active') === 'inactive')>
                         Inactive
                     </option>
+
                     <option value="archived" @selected(old('status', $customer?->status ?? 'active') === 'archived')>
                         Archived
                     </option>
                 </select>
             </div>
 
-            <div>
-                <label for="email" class="block text-sm font-semibold mb-2">
-                    Main email
-                </label>
-
-                <input id="email"
-                       name="email"
-                       type="email"
-                       value="{{ old('email', $customer?->email) }}"
-                       class="w-full border border-gray-400 px-4 py-3 rounded-none">
-            </div>
-
-            <div>
-                <label for="phone" class="block text-sm font-semibold mb-2">
-                    Main phone
-                </label>
-
-                <input id="phone"
-                       name="phone"
-                       type="text"
-                       value="{{ old('phone', $customer?->phone) }}"
-                       class="w-full border border-gray-400 px-4 py-3 rounded-none">
-            </div>
-
             <div class="md:col-span-2">
                 <label for="address" class="block text-sm font-semibold mb-2">
-                    Address
+                    Customer / site address
                 </label>
+
+                <p class="text-xs text-gray-600 mb-2">
+                    Enter the full formatted address. Address lookup can be added later when an API provider is selected.
+                </p>
 
                 <textarea id="address"
                           name="address"
                           rows="4"
-                          class="w-full border border-gray-400 px-4 py-3 rounded-none">{{ old('address', $customer?->address) }}</textarea>
+                          class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                          placeholder="Enter the full address">{{ old('address', $customer?->address) }}</textarea>
             </div>
 
             <div class="md:col-span-2">
@@ -160,7 +144,7 @@
             <div>
                 <h2 class="text-lg font-semibold">Contacts</h2>
                 <p class="text-sm text-gray-600 mt-1">
-                    Add one or more customer contacts. Mark one as the primary contact.
+                    Add one or more customer contacts. Email and phone numbers are stored against contacts, not the customer record.
                 </p>
             </div>
 

@@ -37,7 +37,7 @@
                            name="search"
                            type="text"
                            value="{{ $filters['search'] ?? '' }}"
-                           placeholder="Name, company, email or phone"
+                           placeholder="Customer, company, contact, email or phone"
                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                 </div>
 
@@ -117,17 +117,13 @@
                                     <a href="mailto:{{ $customer->primaryContact->email }}" class="underline">
                                         {{ $customer->primaryContact->email }}
                                     </a>
-                                @elseif ($customer->email)
-                                    <a href="mailto:{{ $customer->email }}" class="underline">
-                                        {{ $customer->email }}
-                                    </a>
                                 @else
                                     —
                                 @endif
                             </td>
 
                             <td class="px-4 py-3">
-                                {{ $customer->primaryContact?->phone ?: $customer->phone ?: '—' }}
+                                {{ $customer->primaryContact?->phone ?: '—' }}
                             </td>
 
                             <td class="px-4 py-3">

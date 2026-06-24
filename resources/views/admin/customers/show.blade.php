@@ -49,31 +49,13 @@
 
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
-                        <dt class="font-semibold text-gray-700">Name</dt>
+                        <dt class="font-semibold text-gray-700">Customer name</dt>
                         <dd>{{ $customer->name }}</dd>
                     </div>
 
                     <div>
                         <dt class="font-semibold text-gray-700">Company name</dt>
                         <dd>{{ $customer->company_name ?: '—' }}</dd>
-                    </div>
-
-                    <div>
-                        <dt class="font-semibold text-gray-700">Email</dt>
-                        <dd>
-                            @if ($customer->email)
-                                <a href="mailto:{{ $customer->email }}" class="underline">
-                                    {{ $customer->email }}
-                                </a>
-                            @else
-                                —
-                            @endif
-                        </dd>
-                    </div>
-
-                    <div>
-                        <dt class="font-semibold text-gray-700">Phone</dt>
-                        <dd>{{ $customer->phone ?: '—' }}</dd>
                     </div>
 
                     <div>
@@ -93,7 +75,7 @@
 
                 @if ($customer->address)
                     <div class="mt-6">
-                        <h3 class="font-semibold text-gray-700 text-sm mb-2">Address</h3>
+                        <h3 class="font-semibold text-gray-700 text-sm mb-2">Customer / site address</h3>
                         <p class="text-sm whitespace-pre-line">{{ $customer->address }}</p>
                     </div>
                 @endif

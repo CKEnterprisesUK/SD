@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Customer extends Model
 {
@@ -12,8 +13,6 @@ class Customer extends Model
         'name',
         'company_name',
         'status',
-        'phone',
-        'email',
         'address',
         'notes',
     ];
@@ -22,10 +21,11 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerContact::class)
             ->orderByDesc('is_primary')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
-    public function primaryContact()
+    public function primaryContact(): HasOne
     {
         return $this->hasOne(CustomerContact::class)
             ->where('is_primary', true);

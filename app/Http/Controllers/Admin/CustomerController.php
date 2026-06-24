@@ -25,13 +25,12 @@ class CustomerController extends Controller
                     $query
                         ->where('name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
                         ->orWhereHas('contacts', function ($query) use ($search) {
                             $query
                                 ->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%")
-                                ->orWhere('phone', 'like', "%{$search}%");
+                                ->orWhere('phone', 'like', "%{$search}%")
+                                ->orWhere('role', 'like', "%{$search}%");
                         });
                 });
             })
@@ -62,8 +61,6 @@ class CustomerController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:active,inactive,prospect,archived'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:5000'],
 
@@ -81,8 +78,6 @@ class CustomerController extends Controller
                 'name' => $validated['name'],
                 'company_name' => $validated['company_name'] ?? null,
                 'status' => $validated['status'],
-                'phone' => $validated['phone'] ?? null,
-                'email' => $validated['email'] ?? null,
                 'address' => $validated['address'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
@@ -127,8 +122,6 @@ class CustomerController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:active,inactive,prospect,archived'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:5000'],
 
@@ -145,8 +138,6 @@ class CustomerController extends Controller
                 'name' => $validated['name'],
                 'company_name' => $validated['company_name'] ?? null,
                 'status' => $validated['status'],
-                'phone' => $validated['phone'] ?? null,
-                'email' => $validated['email'] ?? null,
                 'address' => $validated['address'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
@@ -164,13 +155,26 @@ class CustomerController extends Controller
     private function syncContacts(Customer $customer, array $validated): void
     {
         $contacts = $validated['contacts'] ?? [];
+
+        if (! count($contacts)) {
+            return;
+        }
+
         $primaryContactIndex = isset($validated['primary_contact_index'])
             ? (int) $validated['primary_contact_index']
             : 0;
 
+        $createdAnyPrimary = false;
+
         foreach ($contacts as $index => $contact) {
             if (empty($contact['email'])) {
                 continue;
+            }
+
+            $isPrimary = $index === $primaryContactIndex;
+
+            if ($isPrimary) {
+                $createdAnyPrimary = true;
             }
 
             $customer->contacts()->create([
@@ -178,11 +182,21 @@ class CustomerController extends Controller
                 'email' => $contact['email'],
                 'phone' => $contact['phone'] ?? null,
                 'role' => $contact['role'] ?? null,
-                'is_primary' => $index === $primaryContactIndex,
+                'is_primary' => $isPrimary,
                 'receives_quotes' => true,
                 'receives_invoices' => false,
                 'portal_access_enabled' => false,
             ]);
+        }
+
+        if (! $createdAnyPrimary) {
+            $firstContact = $customer->contacts()->orderBy('id')->first();
+
+            if ($firstContact) {
+                $firstContact->update([
+                    'is_primary' => true,
+                ]);
+            }
         }
     }
 }

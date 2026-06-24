@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="max-w-7xl mx-auto py-8 px-4">
-        <div class="mb-5">
+        <div class="mb-4">
             <h1 class="text-3xl font-bold">Invoices</h1>
             <p class="text-gray-600 mt-2">
                 View, filter and download contractor-submitted invoices.
@@ -17,86 +17,98 @@
             $money = fn ($pence) => '£' . number_format(($pence ?? 0) / 100, 2);
         @endphp
 
-        <div class="grid grid-cols-5 gap-2 mb-4">
-            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_review'])) }}"
-               class="min-w-0 border border-gray-500 bg-gray-50 px-3 py-2 flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[11px] font-semibold text-gray-700 truncate">
+        <div class="mb-4 overflow-x-auto">
+            <div style="display: flex; gap: 10px; align-items: stretch; justify-content: flex-start; min-width: 760px;">
+                <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_review'])) }}"
+                   style="width: 150px; min-height: 66px;"
+                   class="border border-gray-500 bg-gray-50 px-3 py-2 no-underline">
+                    <div class="text-xs font-semibold text-gray-700 truncate">
                         Awaiting review
                     </div>
-                    <div class="text-[11px] text-gray-600 truncate">
-                        {{ $money($summary['awaiting_review']['total_pence'] ?? 0) }}
+
+                    <div class="flex items-end justify-between gap-2 mt-2">
+                        <div class="text-xs text-gray-600 truncate">
+                            {{ $money($summary['awaiting_review']['total_pence'] ?? 0) }}
+                        </div>
+
+                        <div class="text-2xl font-bold text-gray-900 leading-none">
+                            {{ $summary['awaiting_review']['count'] ?? 0 }}
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div class="shrink-0 text-xl font-bold text-gray-900 leading-none">
-                    {{ $summary['awaiting_review']['count'] ?? 0 }}
-                </div>
-            </a>
-
-            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'returned'])) }}"
-               class="min-w-0 border border-red-700 bg-red-50 px-3 py-2 flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[11px] font-semibold text-red-900 truncate">
+                <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'returned'])) }}"
+                   style="width: 150px; min-height: 66px;"
+                   class="border border-red-700 bg-red-50 px-3 py-2 no-underline">
+                    <div class="text-xs font-semibold text-red-900 truncate">
                         Returned
                     </div>
-                    <div class="text-[11px] text-red-900 truncate">
-                        {{ $money($summary['returned']['total_pence'] ?? 0) }}
+
+                    <div class="flex items-end justify-between gap-2 mt-2">
+                        <div class="text-xs text-red-900 truncate">
+                            {{ $money($summary['returned']['total_pence'] ?? 0) }}
+                        </div>
+
+                        <div class="text-2xl font-bold text-red-900 leading-none">
+                            {{ $summary['returned']['count'] ?? 0 }}
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div class="shrink-0 text-xl font-bold text-red-900 leading-none">
-                    {{ $summary['returned']['count'] ?? 0 }}
-                </div>
-            </a>
-
-            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'ready_or_paid'])) }}"
-               class="min-w-0 border border-green-700 bg-green-50 px-3 py-2 flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[11px] font-semibold text-green-900 truncate">
+                <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'ready_or_paid'])) }}"
+                   style="width: 150px; min-height: 66px;"
+                   class="border border-green-700 bg-green-50 px-3 py-2 no-underline">
+                    <div class="text-xs font-semibold text-green-900 truncate">
                         Sent / paid
                     </div>
-                    <div class="text-[11px] text-green-900 truncate">
-                        {{ $money($summary['ready_or_paid']['total_pence'] ?? 0) }}
+
+                    <div class="flex items-end justify-between gap-2 mt-2">
+                        <div class="text-xs text-green-900 truncate">
+                            {{ $money($summary['ready_or_paid']['total_pence'] ?? 0) }}
+                        </div>
+
+                        <div class="text-2xl font-bold text-green-900 leading-none">
+                            {{ $summary['ready_or_paid']['count'] ?? 0 }}
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div class="shrink-0 text-xl font-bold text-green-900 leading-none">
-                    {{ $summary['ready_or_paid']['count'] ?? 0 }}
-                </div>
-            </a>
-
-            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'cancelled_or_replaced'])) }}"
-               class="min-w-0 border border-gray-400 bg-white px-3 py-2 flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[11px] font-semibold text-gray-700 truncate">
+                <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'cancelled_or_replaced'])) }}"
+                   style="width: 150px; min-height: 66px;"
+                   class="border border-gray-400 bg-white px-3 py-2 no-underline">
+                    <div class="text-xs font-semibold text-gray-700 truncate">
                         Cancelled / replaced
                     </div>
-                    <div class="text-[11px] text-gray-600 truncate">
-                        {{ $money($summary['cancelled_or_replaced']['total_pence'] ?? 0) }}
+
+                    <div class="flex items-end justify-between gap-2 mt-2">
+                        <div class="text-xs text-gray-600 truncate">
+                            {{ $money($summary['cancelled_or_replaced']['total_pence'] ?? 0) }}
+                        </div>
+
+                        <div class="text-2xl font-bold text-gray-900 leading-none">
+                            {{ $summary['cancelled_or_replaced']['count'] ?? 0 }}
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div class="shrink-0 text-xl font-bold text-gray-900 leading-none">
-                    {{ $summary['cancelled_or_replaced']['count'] ?? 0 }}
-                </div>
-            </a>
-
-            <a href="{{ route('admin.invoices.index', request()->except('status', 'page')) }}"
-               class="min-w-0 border border-black bg-white px-3 py-2 flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[11px] font-semibold text-gray-700 truncate">
+                <a href="{{ route('admin.invoices.index', request()->except('status', 'page')) }}"
+                   style="width: 150px; min-height: 66px;"
+                   class="border border-black bg-white px-3 py-2 no-underline">
+                    <div class="text-xs font-semibold text-gray-700 truncate">
                         Total invoices
                     </div>
-                    <div class="text-[11px] text-gray-600 truncate">
-                        {{ $money($summary['all']['total_pence'] ?? 0) }}
-                    </div>
-                </div>
 
-                <div class="shrink-0 text-xl font-bold text-gray-900 leading-none">
-                    {{ $summary['all']['count'] ?? 0 }}
-                </div>
-            </a>
+                    <div class="flex items-end justify-between gap-2 mt-2">
+                        <div class="text-xs text-gray-600 truncate">
+                            {{ $money($summary['all']['total_pence'] ?? 0) }}
+                        </div>
+
+                        <div class="text-2xl font-bold text-gray-900 leading-none">
+                            {{ $summary['all']['count'] ?? 0 }}
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
 
         <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-3 mb-4">
@@ -108,9 +120,9 @@
                 </a>
             </div>
 
-            <div class="grid grid-cols-6 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
                 <div>
-                    <label for="contractor_id" class="block text-[11px] font-semibold mb-1">
+                    <label for="contractor_id" class="block text-xs font-semibold mb-1">
                         Contractor
                     </label>
 
@@ -128,7 +140,7 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-[11px] font-semibold mb-1">
+                    <label for="status" class="block text-xs font-semibold mb-1">
                         Status
                     </label>
 
@@ -184,7 +196,7 @@
                 </div>
 
                 <div>
-                    <label for="invoice_date_from" class="block text-[11px] font-semibold mb-1">
+                    <label for="invoice_date_from" class="block text-xs font-semibold mb-1">
                         Invoice from
                     </label>
 
@@ -196,7 +208,7 @@
                 </div>
 
                 <div>
-                    <label for="invoice_date_to" class="block text-[11px] font-semibold mb-1">
+                    <label for="invoice_date_to" class="block text-xs font-semibold mb-1">
                         Invoice to
                     </label>
 
@@ -208,7 +220,7 @@
                 </div>
 
                 <div>
-                    <label for="week_commencing_from" class="block text-[11px] font-semibold mb-1">
+                    <label for="week_commencing_from" class="block text-xs font-semibold mb-1">
                         Week from
                     </label>
 
@@ -220,7 +232,7 @@
                 </div>
 
                 <div>
-                    <label for="week_commencing_to" class="block text-[11px] font-semibold mb-1">
+                    <label for="week_commencing_to" class="block text-xs font-semibold mb-1">
                         Week to
                     </label>
 

@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PricingRateCard;
-use App\Models\PricingRateItem;
 use App\Models\Quote;
 use App\Models\QuoteAiDraft;
 use App\Models\QuoteAiDraftItem;
-use App\Services\QuotePricingCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +22,10 @@ class QuoteAiDraftController extends Controller
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI draft item accepted.');
+            return $this->itemJson($item, 'AI estimate item accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item accepted.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item accepted.');
     }
 
     public function reject(Request $request, Quote $quote, QuoteAiDraftItem $item)
@@ -39,55 +37,74 @@ class QuoteAiDraftController extends Controller
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI draft item rejected.');
+            return $this->itemJson($item, 'AI estimate item rejected.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item rejected.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item rejected.');
     }
 
-    public function update(Request $request, Quote $quote, QuoteAiDraftItem $item, QuotePricingCalculator $calculator)
+    public function update(Request $request, Quote $quote, QuoteAiDraftItem $item)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
         $this->abortIfItemDoesNotBelongToQuote($quote, $item);
 
         $validated = $request->validate([
-            'pricing_rate_item_id' => ['required', 'exists:pricing_rate_items,id'],
             'clean_customer_description' => ['required', 'string', 'max:255'],
             'quantity' => ['required', 'numeric', 'min:0.01', 'max:100000'],
+            'unit' => ['required', 'string', 'max:50'],
+            'low_estimate_ex_vat' => ['required', 'numeric', 'min:0', 'max:10000000'],
+            'likely_estimate_ex_vat' => ['required', 'numeric', 'min:0.01', 'max:10000000'],
+            'high_estimate_ex_vat' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'confidence' => ['required', 'in:low,medium,high'],
+            'pricing_basis' => ['required', 'string', 'max:80'],
+            'estimate_explanation' => ['nullable', 'string'],
             'warnings' => ['nullable', 'string'],
         ]);
 
-        $rateItem = PricingRateItem::findOrFail($validated['pricing_rate_item_id']);
         $rateCard = PricingRateCard::activeOrCreateDefault();
+        $vatPercent = (float) $rateCard->vat_percent;
 
-        $calculated = $calculator->calculate(
-            $rateItem,
-            (float) $validated['quantity'],
-            $rateCard,
-            $validated['confidence']
-        );
+        $quantity = max((float) $validated['quantity'], 0.01);
+        $lowPence = $this->poundsToPence($validated['low_estimate_ex_vat']);
+        $likelyPence = $this->poundsToPence($validated['likely_estimate_ex_vat']);
+        $highPence = $this->poundsToPence($validated['high_estimate_ex_vat']);
+        $unitAmountPence = (int) round($likelyPence / $quantity);
+        $vatPence = $this->percentOf($likelyPence, $vatPercent);
 
-        $item->update(array_merge($calculated, [
-            'pricing_rate_item_id' => $rateItem->id,
-            'category' => $rateItem->category,
-            'rate_item_code' => $rateItem->code,
+        $item->update([
+            'pricing_rate_item_id' => null,
+            'rate_item_code' => null,
             'clean_customer_description' => $validated['clean_customer_description'],
-            'quantity' => $validated['quantity'],
-            'unit' => $rateItem->unit,
+            'quantity' => $quantity,
+            'unit' => $validated['unit'],
+            'base_unit_cost_pence' => $unitAmountPence,
+            'base_total_pence' => $likelyPence,
+            'markup_percent' => 0,
+            'contingency_percent' => 0,
+            'vat_percent' => $vatPercent,
+            'contingency_pence' => 0,
+            'markup_pence' => 0,
+            'subtotal_pence' => $likelyPence,
+            'vat_pence' => $vatPence,
+            'total_pence' => $likelyPence + $vatPence,
+            'low_total_pence' => $lowPence,
+            'likely_total_pence' => $likelyPence,
+            'high_total_pence' => $highPence,
             'confidence' => $validated['confidence'],
-            'pricing_source' => 'rate_card',
+            'pricing_source' => 'ai_estimate',
+            'pricing_basis' => $validated['pricing_basis'],
+            'estimate_explanation' => $validated['estimate_explanation'] ?? null,
             'warnings' => $this->linesToArray($validated['warnings'] ?? null),
             'status' => 'accepted',
-        ]));
+        ]);
 
         $item->refresh();
 
         if ($this->wantsJson($request)) {
-            return $this->itemJson($item, 'AI draft item updated and accepted.');
+            return $this->itemJson($item, 'AI estimate item updated and accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item updated and accepted.');
+        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI estimate item updated and accepted.');
     }
 
     public function applyAccepted(Quote $quote, QuoteAiDraft $draft)
@@ -99,7 +116,7 @@ class QuoteAiDraftController extends Controller
 
         if ($acceptedItems->isEmpty()) {
             return redirect()->route('admin.quotes.pricing', $quote)->withErrors([
-                'ai_draft' => 'Accept at least one AI draft item before applying it to the quote.',
+                'ai_draft' => 'Accept at least one AI estimate item before applying it to the quote.',
             ]);
         }
 
@@ -134,7 +151,7 @@ class QuoteAiDraftController extends Controller
 
         return redirect()
             ->route('admin.quotes.pricing', $quote)
-            ->with('status', 'Accepted AI draft items applied to the quote.');
+            ->with('status', 'Accepted AI estimate items applied to the quote.');
     }
 
     public function applyWording(Quote $quote, QuoteAiDraft $draft)
@@ -177,16 +194,28 @@ class QuoteAiDraftController extends Controller
                 'status_label' => ucfirst($item->status),
                 'quantity' => (string) $item->quantity,
                 'unit' => $item->unit,
-                'rate_item_code' => $item->rate_item_code,
                 'base_total' => $item->base_total,
-                'markup_percent' => (string) $item->markup_percent,
                 'subtotal' => $item->subtotal,
                 'vat' => $item->vat,
                 'total' => $item->total,
+                'low_total' => $item->low_total,
+                'likely_total' => $item->likely_total,
+                'high_total' => $item->high_total,
                 'confidence' => $item->confidence,
+                'pricing_basis' => $item->pricing_basis,
                 'warnings' => $item->warnings ?? [],
             ],
         ]);
+    }
+
+    private function poundsToPence(mixed $value): int
+    {
+        return max((int) round((float) $value * 100), 0);
+    }
+
+    private function percentOf(int $amountPence, float $percent): int
+    {
+        return (int) round($amountPence * ($percent / 100));
     }
 
     private function linesToArray(?string $value): array

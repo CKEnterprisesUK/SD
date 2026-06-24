@@ -15,6 +15,7 @@ class QuoteAiDraftItem extends Model
         'rate_item_code',
         'clean_customer_description',
         'internal_reasoning',
+        'estimate_explanation',
         'quantity',
         'unit',
         'base_unit_cost_pence',
@@ -27,8 +28,12 @@ class QuoteAiDraftItem extends Model
         'subtotal_pence',
         'vat_pence',
         'total_pence',
+        'low_total_pence',
+        'likely_total_pence',
+        'high_total_pence',
         'confidence',
         'pricing_source',
+        'pricing_basis',
         'evidence',
         'warnings',
         'status',
@@ -60,26 +65,41 @@ class QuoteAiDraftItem extends Model
 
     public function getBaseUnitCostAttribute(): string
     {
-        return number_format($this->base_unit_cost_pence / 100, 2);
+        return number_format(($this->base_unit_cost_pence ?? 0) / 100, 2);
     }
 
     public function getBaseTotalAttribute(): string
     {
-        return number_format($this->base_total_pence / 100, 2);
+        return number_format(($this->base_total_pence ?? 0) / 100, 2);
     }
 
     public function getSubtotalAttribute(): string
     {
-        return number_format($this->subtotal_pence / 100, 2);
+        return number_format(($this->subtotal_pence ?? 0) / 100, 2);
     }
 
     public function getVatAttribute(): string
     {
-        return number_format($this->vat_pence / 100, 2);
+        return number_format(($this->vat_pence ?? 0) / 100, 2);
     }
 
     public function getTotalAttribute(): string
     {
-        return number_format($this->total_pence / 100, 2);
+        return number_format(($this->total_pence ?? 0) / 100, 2);
+    }
+
+    public function getLowTotalAttribute(): string
+    {
+        return number_format(($this->low_total_pence ?? 0) / 100, 2);
+    }
+
+    public function getLikelyTotalAttribute(): string
+    {
+        return number_format(($this->likely_total_pence ?? $this->subtotal_pence ?? 0) / 100, 2);
+    }
+
+    public function getHighTotalAttribute(): string
+    {
+        return number_format(($this->high_total_pence ?? 0) / 100, 2);
     }
 }

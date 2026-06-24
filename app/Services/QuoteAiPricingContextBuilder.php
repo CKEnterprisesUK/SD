@@ -11,13 +11,14 @@ class QuoteAiPricingContextBuilder
     public function build(Quote $quote, ?string $pricingHint = null): array
     {
         $rateCard = PricingRateCard::activeOrCreateDefault()->load('activeItems');
+
         $templates = PricingJobTemplate::where('is_active', true)
             ->orderBy('category')
             ->orderBy('name')
             ->get();
 
         return [
-            'instruction' => 'Extract scope, quantities, rate-card matches, risks, missing information and customer pack wording. Do not calculate final prices.',
+            'instruction' => 'Create a draft building estimate with low, likely and high pricing ranges. Use pricing guidance, project context and professional estimating judgement. Do not force a rate-card match.',
             'quote' => [
                 'quote_number' => $quote->quote_number,
                 'title' => $quote->title,
@@ -60,24 +61,25 @@ class QuoteAiPricingContextBuilder
                 'is_optional' => $lineItem->is_optional,
             ])->values()->all(),
             'pricing_policy' => [
-                'rate_card_name' => $rateCard->name,
+                'name' => $rateCard->name,
                 'default_markup_percent' => (float) $rateCard->default_markup_percent,
                 'high_risk_markup_percent' => (float) $rateCard->high_risk_markup_percent,
                 'contingency_percent' => (float) $rateCard->contingency_percent,
                 'vat_percent' => (float) $rateCard->vat_percent,
                 'regional_adjustment_percent' => (float) $rateCard->regional_adjustment_percent,
                 'minimum_job_charge_pounds' => round($rateCard->minimum_job_charge_pence / 100, 2),
-                'important' => 'Laravel will calculate prices from the rate card. The model must only choose rate_item_code and quantity.',
+                'important' => 'AI may estimate ex-VAT prices, but every estimated item must include low, likely and high values, confidence, pricing basis and warnings where needed.',
             ],
-            'rate_card_items' => $rateCard->activeItems->map(fn ($item) => $item->toAiContext())->values()->all(),
+            'pricing_guidance' => $rateCard->activeItems->map(fn ($item) => $item->toAiContext())->values()->all(),
             'job_templates' => $templates->map(fn ($template) => $template->toAiContext())->values()->all(),
             'output_contract' => [
-                'Do not invent unit prices.',
-                'Use only rate_item_code values from rate_card_items.',
-                'Use quantity greater than zero.',
-                'Use clean customer descriptions with no AI notes or uncertainty.',
-                'Put uncertainty in warnings and internal_reasoning only.',
-                'Flag missing information before quote sending.',
+                'Estimate prices in GBP excluding VAT at line-item level.',
+                'Provide low, likely and high ex-VAT estimates for every item.',
+                'Use pricing guidance where relevant, but do not force a match.',
+                'Use professional estimating judgement where guidance is incomplete.',
+                'Show uncertainty clearly with confidence, warnings and missing information.',
+                'Keep customer descriptions clean and do not include internal reasoning in them.',
+                'Do not mention AI, ChatGPT or language models in customer-facing text.',
             ],
         ];
     }

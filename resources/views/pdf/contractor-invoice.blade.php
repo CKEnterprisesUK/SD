@@ -169,7 +169,7 @@
             <tr>
                 <td>
                     <div class="brand-title">
-                        {{ $settings->company_name ?: $settings->portal_name ?: 'SiteDesk' }}
+                        {{ $invoice->supplier_name }}
                     </div>
 
                     @if ($settings->company_address)

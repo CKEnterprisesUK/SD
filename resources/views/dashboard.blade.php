@@ -166,19 +166,19 @@
                         </div>
 
                         @if (auth()->user()?->isAdmin())
-    <div class="border border-gray-300 bg-white p-6">
-        <h2 class="text-lg font-semibold mb-2">Customers</h2>
+                        <div class="border border-gray-300 bg-white p-6">
+                            <h2 class="text-lg font-semibold mb-2">Customers</h2>
 
-        <p class="text-sm text-gray-600 mb-4">
-            Manage customer records, contacts and future quote history.
-        </p>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Manage customer records, contacts and future quote history.
+                            </p>
 
-        <a href="{{ route('admin.customers.index') }}"
-           class="inline-flex px-4 py-2 bg-black text-white text-sm font-semibold">
-            View customers
-        </a>
-    </div>
-@endif
+                            <a href="{{ route('admin.customers.index') }}"
+                            class="inline-flex px-4 py-2 bg-black text-white text-sm font-semibold">
+                                View customers
+                            </a>
+                        </div>
+                    @endif
                     </div>
 
                     <div class="block border border-gray-300 bg-white opacity-70">
@@ -194,21 +194,20 @@
                             </svg>
                         </div>
 
-                        <div class="p-6">
-                            <div class="flex items-center justify-between gap-4">
-                                <h2 class="text-xl font-bold text-gray-700">
-                                    Quotes
-                                </h2>
+                        @if (auth()->user()?->isAdmin())
+                        <div class="border border-gray-300 bg-white p-6">
+                            <h2 class="text-lg font-semibold mb-2">Quotes</h2>
 
-                                <span class="text-sm text-gray-500">
-                                    Coming soon
-                                </span>
-                            </div>
-
-                            <p class="text-sm text-gray-600 mt-3">
-                                Create, send and track customer quotes.
+                            <p class="text-sm text-gray-600 mb-4">
+                                Generate Client Packs and manage quotes for customers.
                             </p>
+
+                            <a href="{{ route('admin.quotes.index') }}"
+                            class="inline-flex px-4 py-2 bg-black text-white text-sm font-semibold">
+                                View quotes
+                            </a>
                         </div>
+                    @endif
                     </div>
 
                     <div class="block border border-gray-300 bg-white opacity-70">

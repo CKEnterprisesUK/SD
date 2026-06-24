@@ -43,18 +43,21 @@
             </p>
         </div>
 
-        @if ($invoice->status === 'returned')
-            <div class="border border-red-700 bg-red-50 p-4 mb-6 text-sm text-red-900">
-                <p class="font-semibold mb-2">This invoice has been returned for changes.</p>
+       @if ($invoice->status === 'returned')
+    <div class="border border-red-700 bg-red-50 p-4 mb-6 text-sm text-red-900">
+        <p class="font-semibold mb-2">This invoice has been returned for changes.</p>
 
-                @if ($invoice->review_comment)
-                    <p class="whitespace-pre-line">{{ $invoice->review_comment }}</p>
-                @endif
+        @if ($invoice->review_comment)
+            <p class="whitespace-pre-line">{{ $invoice->review_comment }}</p>
+        @endif
 
-                <p class="mt-3">
-                    You will be able to edit and resubmit this invoice once the edit flow has been added.
-                </p>
-            </div>
+        <div class="mt-4">
+            <a href="{{ route('contractor.invoices.edit', $invoice) }}"
+               class="inline-flex px-5 py-3 bg-red-900 text-white text-sm font-semibold">
+                Edit and resubmit invoice
+            </a>
+        </div>
+    </div>
         @elseif (in_array($invoice->status, ['submitted', 'resubmitted']))
             <div class="border border-yellow-700 bg-yellow-50 p-4 mb-6 text-sm text-yellow-900">
                 This invoice has been submitted and is awaiting review by the accounts team.

@@ -1,52 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Invoice returned for changes</title>
-</head>
-<body style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
-    <h1 style="font-size: 20px; margin-bottom: 16px;">
-        Invoice returned for changes
-    </h1>
+@extends('emails.layout', [
+    'emailTitle' => 'Invoice returned for changes',
+    'emailLabel' => 'Action required',
+    'emailIntro' => 'Your invoice has been reviewed and returned for changes. Please review the accounts comment, edit the invoice and resubmit it.',
+    'footerNote' => 'This email relates to an invoice returned for changes through SiteDesk.',
+])
 
-    <p>
-        Your contractor invoice has been reviewed and returned for changes in SiteDesk.
-    </p>
-
-    <table cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse; margin-top: 16px;">
-        <tr>
-            <td><strong>Invoice number:</strong></td>
-            <td>{{ $invoice->invoice_number }}</td>
-        </tr>
-        <tr>
-            <td><strong>Week commencing:</strong></td>
-            <td>{{ $invoice->week_commencing->format('d M Y') }}</td>
-        </tr>
-        <tr>
-            <td><strong>Total:</strong></td>
-            <td>£{{ $invoice->total }}</td>
-        </tr>
-    </table>
+@section('content')
+    @include('emails.partials.detail-table', [
+        'rows' => [
+            'Invoice number' => e($invoice->invoice_number),
+            'Week commencing' => e($invoice->week_commencing->format('d M Y')),
+            'Total due' => '£' . e($invoice->total),
+        ],
+    ])
 
     @if ($invoice->review_comment)
-        <div style="margin-top: 20px; padding: 12px; border: 1px solid #991b1b; background: #fef2f2; color: #7f1d1d;">
-            <strong>Accounts comment:</strong>
-            <p style="white-space: pre-line; margin-bottom: 0;">{{ $invoice->review_comment }}</p>
+        <div style="border: 1px solid #991b1b; background: #fef2f2; color: #7f1d1d; padding: 12px; font-size: 13px; line-height: 1.5; margin: 18px 0;">
+            <strong>Accounts comment</strong>
+
+            <div style="white-space: pre-line; margin-top: 8px;">
+                {{ $invoice->review_comment }}
+            </div>
         </div>
     @endif
 
-    <p style="margin-top: 20px;">
-        Please log in to SiteDesk, edit the invoice and resubmit it for review.
-    </p>
+    @include('emails.partials.button', [
+        'url' => $editUrl,
+        'label' => 'Edit and resubmit invoice',
+    ])
 
-    <p style="margin-top: 20px;">
-        <a href="{{ $editUrl }}" style="background: #111827; color: #ffffff; padding: 10px 14px; text-decoration: none; display: inline-block;">
-            Edit invoice
-        </a>
+    <p style="font-size: 13px; line-height: 1.5; color: #4b5563; margin: 18px 0 0 0;">
+        This invoice will remain returned until it is edited and resubmitted through SiteDesk.
     </p>
-
-    <p style="margin-top: 24px; font-size: 12px; color: #4b5563;">
-        Powered by SiteDesk — A CK Enterprises Group Product.
-    </p>
-</body>
-</html>
+@endsection

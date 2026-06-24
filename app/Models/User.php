@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -17,6 +19,10 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public function contractor(): HasOne
+{
+    return $this->hasOne(Contractor::class);
+}
     /**
      * Get the attributes that should be cast.
      *
@@ -32,6 +38,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
 {
     return $this->role === 'admin';
+}
+
+public function contractorInvoices(): HasMany
+{
+    return $this->hasMany(ContractorInvoice::class);
 }
 
 public function isContractor(): bool

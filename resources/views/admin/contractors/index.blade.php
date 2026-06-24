@@ -35,6 +35,7 @@
                         <th class="px-4 py-3 font-semibold">Company</th>
                         <th class="px-4 py-3 font-semibold">Day rate</th>
                         <th class="px-4 py-3 font-semibold">Status</th>
+                         <th class="px-4 py-3 font-semibold">Actions</th>
                     </tr>
                 </thead>
 
@@ -44,8 +45,18 @@
                             <td class="px-4 py-3">{{ $contractor->name }}</td>
                             <td class="px-4 py-3">{{ $contractor->email }}</td>
                             <td class="px-4 py-3">{{ $contractor->company_name ?: '—' }}</td>
-                            <td class="px-4 py-3">£{{ $contractor->day_rate }}</td>
+                            <td class="px-4 py-3">
+                            <span title="£{{ $contractor->day_rate }}" class="cursor-help tracking-widest">
+                                ***
+                            </span>
+                        </td>
                             <td class="px-4 py-3">{{ ucfirst($contractor->status) }}</td>
+                            <td class="px-4 py-3">
+    <a href="{{ route('admin.contractors.show', $contractor) }}" class="underline">
+        View
+    </a>
+</td>
+                        
                         </tr>
                     @empty
                         <tr>

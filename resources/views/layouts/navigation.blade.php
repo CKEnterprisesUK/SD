@@ -12,27 +12,20 @@
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
                         @if ($portalSettings->logo_path)
-                                <div class="h-12 w-40 flex items-center justify-start overflow-hidden">
-                                    <img
-                                        src="{{ asset('storage/' . $portalSettings->logo_path) }}"
-                                        alt="{{ $portalSettings->portal_name }} logo"
-                                        class="max-h-10 max-w-36 object-contain"
-                                    >
-                                </div>
-                            @else
+    <div style="height:48px; width:160px; overflow:hidden; display:flex; align-items:center;">
+        <img
+            src="{{ asset('storage/' . $portalSettings->logo_path) }}"
+            alt="{{ $portalSettings->portal_name }} logo"
+            style="max-height:40px; max-width:144px; width:auto; height:auto; object-fit:contain;"
+        >
+    </div>
+@else
                             <div class="h-11 w-11 flex items-center justify-center border-2 border-gray-900 font-bold text-sm">
                                 SD
                             </div>
                         @endif
 
-                        <div class="leading-tight">
-                            <div class="font-bold text-lg text-gray-900">
-                                {{ $portalSettings->portal_name ?: 'SiteDesk' }}
-                            </div>
-                            <div class="text-xs text-gray-600">
-                                Contractor portal
-                            </div>
-                        </div>
+                        
                     </a>
                 </div>
 
@@ -53,6 +46,10 @@
                             </x-nav-link>
                         @endif
 
+                        <x-nav-link :href="route('admin.invoices.index')" :active="request()->routeIs('admin.invoices.*')">
+                            Invoices
+                        </x-nav-link>
+
                         @if (Route::has('admin.settings.edit'))
                             <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
                                 Settings
@@ -61,11 +58,7 @@
                     @endif
 
                     @if ($user?->isContractor())
-                        <x-nav-link href="#" :active="false">
-                            My Timesheets
-                        </x-nav-link>
-
-                        <x-nav-link href="#" :active="false">
+                       <x-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
                             My Invoices
                         </x-nav-link>
                     @endif
@@ -191,7 +184,7 @@
                     My Timesheets
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link href="#" :active="false">
+                <x-responsive-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
                     My Invoices
                 </x-responsive-nav-link>
             @endif

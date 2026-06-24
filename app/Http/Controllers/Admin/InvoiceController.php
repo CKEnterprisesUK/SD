@@ -71,4 +71,54 @@ class InvoiceController extends Controller
 
         return $pdf->download($invoice->invoice_number . '.pdf');
     }
+
+    public function sendForPayment(ContractorInvoice $invoice)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        abort_unless(in_array($invoice->status, [
+            'submitted',
+            'resubmitted',
+            'under_review',
+        ]), 403);
+
+        $invoice->update([
+            'status' => 'ready_for_payment',
+            'reviewed_by_user_id' => auth()->id(),
+            'reviewed_at' => now(),
+            'ready_for_payment_at' => now(),
+            'review_comment' => null,
+        ]);
+
+        return redirect()
+            ->route('admin.invoices.show', $invoice)
+            ->with('status', 'Invoice marked as ready for payment.');
+    }
+
+    public function returnToContractor(Request $request, ContractorInvoice $invoice)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        abort_unless(in_array($invoice->status, [
+            'submitted',
+            'resubmitted',
+            'under_review',
+        ]), 403);
+
+        $validated = $request->validate([
+            'review_comment' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $invoice->update([
+            'status' => 'returned',
+            'reviewed_by_user_id' => auth()->id(),
+            'reviewed_at' => now(),
+            'returned_at' => now(),
+            'review_comment' => $validated['review_comment'],
+        ]);
+
+        return redirect()
+            ->route('admin.invoices.show', $invoice)
+            ->with('status', 'Invoice returned to contractor.');
+    }
 }

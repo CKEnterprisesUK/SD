@@ -259,6 +259,72 @@
             </section>
         @endif
 
+        @if (in_array($invoice->status, ['submitted', 'resubmitted', 'under_review']))
+    <section class="border border-gray-300 bg-white p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Accounts review</h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="border border-green-700 bg-green-50 p-4">
+                <h3 class="font-semibold text-green-900 mb-2">
+                    Mark ready for payment
+                </h3>
+
+                <p class="text-sm text-green-900 mb-4">
+                    Use this when the invoice has been reviewed and can be passed to accounts for payment.
+                </p>
+
+                <form method="POST" action="{{ route('admin.invoices.send-for-payment', $invoice) }}">
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="px-5 py-3 bg-black text-white text-sm font-semibold"
+                    >
+                        Mark ready for payment
+                    </button>
+                </form>
+            </div>
+
+            <div class="border border-red-700 bg-red-50 p-4">
+                <h3 class="font-semibold text-red-900 mb-2">
+                    Return to contractor
+                </h3>
+
+                <p class="text-sm text-red-900 mb-4">
+                    Add a clear comment explaining what needs to be changed.
+                </p>
+
+                <form method="POST" action="{{ route('admin.invoices.return-to-contractor', $invoice) }}">
+                    @csrf
+
+                    <label for="review_comment" class="block text-sm font-semibold text-red-900 mb-2">
+                        Comment for contractor
+                    </label>
+
+                    <textarea
+                        id="review_comment"
+                        name="review_comment"
+                        rows="4"
+                        class="w-full border border-red-700 px-4 py-3 rounded-none text-sm"
+                        required
+                    >{{ old('review_comment') }}</textarea>
+
+                    @error('review_comment')
+                        <p class="text-sm text-red-900 mt-2">{{ $message }}</p>
+                    @enderror
+
+                    <button
+                        type="submit"
+                        class="mt-4 px-5 py-3 border border-red-900 text-red-900 text-sm font-semibold"
+                    >
+                        Return to contractor
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+@endif
+
         <section class="border border-gray-300 bg-white p-6">
             <h2 class="text-lg font-semibold mb-4">Submission record</h2>
 

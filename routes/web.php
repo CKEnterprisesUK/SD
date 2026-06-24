@@ -43,6 +43,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/invoices', [AdminInvoiceController::class, 'index'])
     ->name('invoices.index');
 
+Route::post('/invoices/{invoice}/send-for-payment', [AdminInvoiceController::class, 'sendForPayment'])
+    ->name('invoices.send-for-payment');
+
+Route::post('/invoices/{invoice}/return-to-contractor', [AdminInvoiceController::class, 'returnToContractor'])
+    ->name('invoices.return-to-contractor');
+
 Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show'])
     ->name('invoices.show');
 

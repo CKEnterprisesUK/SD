@@ -104,7 +104,7 @@
             </section>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="mt-6">
            <section class="border border-gray-300 bg-white p-6 mt-6">
     <div class="flex items-center justify-between gap-4 mb-4">
         <div>

@@ -4,9 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Dashboard
             </h2>
-            <p class="text-sm text-gray-600 mt-1">
-                Select a module to continue.
-            </p>
+          
         </div>
     </x-slot>
 
@@ -14,7 +12,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900">
-                    Your apps
+                    Tools
                 </h1>
 
                 <p class="text-gray-600 mt-2 max-w-2xl">

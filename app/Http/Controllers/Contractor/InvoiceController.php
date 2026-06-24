@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Contractor;
 
+use App\Mail\ContractorInvoiceSubmitted;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Controller;
 use App\Models\ContractorInvoice;
 use App\Models\PortalSetting;
@@ -215,9 +217,40 @@ class InvoiceController extends Controller
             'status' => 'submitted',
         ]);
 
-        return redirect()
-            ->route('contractor.invoices.show', $invoice)
-            ->with('status', 'Invoice submitted successfully.');
+       try {
+    if ($settings->accounts_email) {
+        Mail::to($settings->accounts_email)
+            ->send(new ContractorInvoiceSubmitted(
+                invoice: $invoice,
+                settings: $settings,
+                recipientType: 'accounts',
+            ));
+    }
+
+    if ($invoice->supplier_email) {
+        Mail::to($invoice->supplier_email)
+            ->send(new ContractorInvoiceSubmitted(
+                invoice: $invoice,
+                settings: $settings,
+                recipientType: 'contractor',
+            ));
+    }
+
+    $invoice->update([
+        'status' => 'emailed',
+        'emailed_at' => now(),
+    ]);
+
+    return redirect()
+        ->route('contractor.invoices.show', $invoice)
+        ->with('status', 'Invoice submitted successfully and emailed.');
+} catch (\Throwable $exception) {
+    report($exception);
+
+    return redirect()
+        ->route('contractor.invoices.show', $invoice)
+        ->with('status', 'Invoice submitted, but the email could not be sent. Please contact the accounts team.');
+};
     }
 
     public function show(ContractorInvoice $invoice)

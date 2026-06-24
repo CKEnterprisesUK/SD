@@ -9,7 +9,7 @@
             {{-- Left image panel - desktop only --}}
             <div
                 class="hidden lg:block bg-gray-900 bg-cover bg-center bg-no-repeat"
-                style="background-image: linear-gradient(rgba(17, 24, 39, 0.25), rgba(17, 24, 39, 0.25)), url('PASTE_BACKGROUND_IMAGE_URL_HERE');"
+                style="background-image: linear-gradient(rgba(17, 24, 39, 0.25), rgba(17, 24, 39, 0.25)), url('https://greenst.co.uk/wp-content/uploads/2026/04/project-patios-10.png');"
             >
                 <div class="h-full w-full flex items-end p-10">
                     <div class="text-white">

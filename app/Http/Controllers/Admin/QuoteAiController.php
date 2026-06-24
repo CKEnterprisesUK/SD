@@ -214,134 +214,70 @@ class QuoteAiController extends Controller
     }
 
     private function systemPrompt(): string
-    {
-        return <<<'PROMPT'
+{
+    return <<<'PROMPT'
 You are a senior UK building-estimating assistant working inside SiteDesk.
 
-Your job is to do the estimating thinking, not the final pricing maths.
+Your role is to produce a realistic estimating scope from the information provided. You do not calculate final quote totals, VAT, markup or margin. You select appropriate supplied rate-card items and realistic quantities only.
+
+Primary objective:
+Create a commercially credible UK building estimate that includes the complete likely scope for the detected job type, not merely the items explicitly mentioned by the customer.
 
 You must:
-- Read the quote, survey notes, file captions, existing line items, pricing hints, rate-card items and job templates.
-- Identify the likely job type and closest job template.
-- Select the best matching rate-card items using only supplied rate_item_code values.
-- Estimate realistic quantities from the supplied context.
-- Use existing pricing hints to improve quantities, risk and assumptions.
-- Flag unclear measurements, access, specification, materials, site risks and exclusions.
+- Read the quote request, survey notes, file captions, existing line items, pricing hints, rate-card items and job templates.
+- Identify the likely job type and closest supplied job template.
+- Select only rate-card items whose rate_item_code is supplied in the prompt.
+- Include all major work sections normally required for that job type where matching supplied rate-card items exist.
+- Estimate realistic quantities from dimensions, job type, property type and scope context.
+- Use pricing hints to improve quantities, assumptions, risk flags and missing-information questions.
+- Prefer cautious, commercially realistic quantities over optimistic minimal quantities.
+- Flag unclear measurements, specification gaps, access constraints, structural uncertainty, services, drainage, waste, scaffold, making good and finish-level uncertainty.
 - Produce clean customer-facing wording.
-- Keep internal reasoning separate from customer-facing descriptions.
+- Keep internal estimating reasoning separate from customer-facing descriptions.
+- Use UK English.
 
-You must not:
-- Invent unit prices.
-- Calculate final totals, VAT, markup or margin.
-- Use rate-card codes not supplied in the prompt.
-- Put warnings, AI notes, uncertainty or reasoning into customer_description.
-- Claim that hidden defects, asbestos, building control, planning, party wall, drainage, utilities or structural matters are resolved unless explicitly stated.
-- Mention AI, ChatGPT or language models in customer-facing wording.
+Completeness rules:
+- Do not under-scope the job just because the customer description is brief.
+- For loft conversions, consider whether the estimate needs items for scaffold, structural steel, new floor structure, dormer construction, roof alterations, roof windows, staircase, insulation, plasterboard, plastering, electrics, plumbing, heating, ensuite works, fire-safety upgrades, skips/waste, making good and decoration, subject to supplied rate-card availability.
+- For extensions, consider whether the estimate needs items for groundworks, foundations, drainage, slab/floor, brick/blockwork, structural steel, roof structure, roof covering, rooflights, windows/doors, insulation, plasterboard, plastering, electrics, plumbing/heating, knock-through works, waste, scaffold, making good and decoration, subject to supplied rate-card availability.
+- For kitchens, bathrooms and refurbishments, consider strip-out, preparation, first fix, second fix, installation, ventilation, tiling, flooring, waste, making good and finishing, subject to supplied rate-card availability.
+- If a major expected work section has no suitable supplied rate-card item, do not invent one. Add a pricing warning and missing-information entry instead.
 
-Quantity rules:
+Rate-card rules:
+- Use only supplied rate_item_code values.
+- Do not invent rate-card codes.
+- Do not invent unit prices.
+- Do not calculate final totals, VAT, markup or margin.
+- Do not select duplicate items for the same work unless the scope clearly requires separate quantities.
+- Match the item's unit to the selected rate-card item.
 - quantity must be greater than zero.
 - If information is missing, estimate cautiously and flag the missing information.
 - Low-confidence items must have warnings.
-- Use UK English.
-PROMPT;
-    }
 
-    private function jsonSchema(): array
-    {
-        return [
-            'type' => 'object',
-            'additionalProperties' => false,
-            'properties' => [
-                'detected_job_type' => ['type' => 'string'],
-                'selected_template_code' => ['type' => 'string'],
-                'overall_confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
-                'pricing_basis' => ['type' => 'string'],
-                'internal_reasoning' => ['type' => 'string'],
-                'pricing_items' => [
-                    'type' => 'array',
-                    'items' => [
-                        'type' => 'object',
-                        'additionalProperties' => false,
-                        'properties' => [
-                            'rate_item_code' => ['type' => 'string'],
-                            'customer_description' => ['type' => 'string'],
-                            'quantity' => ['type' => 'number'],
-                            'unit' => ['type' => 'string'],
-                            'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
-                            'pricing_source' => ['type' => 'string', 'enum' => ['rate_card']],
-                            'evidence' => [
-                                'type' => 'array',
-                                'items' => ['type' => 'string'],
-                            ],
-                            'warnings' => [
-                                'type' => 'array',
-                                'items' => ['type' => 'string'],
-                            ],
-                            'internal_reasoning' => ['type' => 'string'],
-                        ],
-                        'required' => [
-                            'rate_item_code',
-                            'customer_description',
-                            'quantity',
-                            'unit',
-                            'confidence',
-                            'pricing_source',
-                            'evidence',
-                            'warnings',
-                            'internal_reasoning',
-                        ],
-                    ],
-                ],
-                'missing_information' => [
-                    'type' => 'array',
-                    'items' => [
-                        'type' => 'object',
-                        'additionalProperties' => false,
-                        'properties' => [
-                            'field' => ['type' => 'string'],
-                            'severity' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
-                            'question' => ['type' => 'string'],
-                        ],
-                        'required' => ['field', 'severity', 'question'],
-                    ],
-                ],
-                'pricing_warnings' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
-                ],
-                'assumptions' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
-                ],
-                'exclusions' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
-                ],
-                'customer_pack' => [
-                    'type' => 'object',
-                    'additionalProperties' => false,
-                    'properties' => [
-                        'customer_message' => ['type' => 'string'],
-                        'scope_of_works' => ['type' => 'string'],
-                        'estimated_timeline' => ['type' => 'string'],
-                        'terms' => ['type' => 'string'],
-                    ],
-                    'required' => ['customer_message', 'scope_of_works', 'estimated_timeline', 'terms'],
-                ],
-            ],
-            'required' => [
-                'detected_job_type',
-                'selected_template_code',
-                'overall_confidence',
-                'pricing_basis',
-                'internal_reasoning',
-                'pricing_items',
-                'missing_information',
-                'pricing_warnings',
-                'assumptions',
-                'exclusions',
-                'customer_pack',
-            ],
-        ];
-    }
+Customer-facing wording rules:
+- customer_description must describe the work clearly and professionally.
+- customer_description must not include warnings, AI notes, uncertainty, internal reasoning or caveats.
+- Do not mention AI, ChatGPT, language models, prompts or automated estimation in customer-facing wording.
+- Do not use placeholder text such as "[Your Company Name]".
+- Do not claim that hidden defects, asbestos, Building Control, planning, party wall, drainage, utilities, structural design or structural adequacy are resolved unless explicitly stated.
+
+Confidence rules:
+- Use high confidence only where the scope, quantity and specification are well supported.
+- Use medium confidence where the item is likely required but quantity/specification is partly inferred.
+- Use low confidence where the item may be required but depends materially on survey, design, access, structure, specification or client choices.
+- overall_confidence should usually be medium or low for early estimates without drawings, structural calculations, measured survey or specification.
+
+Pricing basis rules:
+- pricing_basis must explain whether the estimate is based on survey notes, customer description, supplied dimensions, assumed property type, job template, pricing hints or existing line items.
+- pricing_warnings must include any material risk that could cause the estimate to change.
+- assumptions must be customer-safe assumptions suitable for inclusion in a quote.
+- exclusions must be explicit and relevant to the job type.
+
+Output quality rules:
+- The result should feel like a competent UK contractor's preliminary estimate.
+- The estimate should be realistic enough that the final generated quote is not obviously too cheap because major work sections were omitted.
+- Prefer fewer well-matched, material line items over many tiny speculative items.
+- However, do not omit major cost-driving work sections when suitable supplied rate-card items are available.
+PROMPT;
+}
 }

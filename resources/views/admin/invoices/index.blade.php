@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="max-w-7xl mx-auto py-8 px-4">
-        <div class="mb-8">
+        <div class="mb-6">
             <h1 class="text-3xl font-bold">Invoices</h1>
             <p class="text-gray-600 mt-2">
                 View, filter and download contractor-submitted invoices.
@@ -17,95 +17,101 @@
             $money = fn ($pence) => '£' . number_format(($pence ?? 0) / 100, 2);
         @endphp
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_review'])) }}"
-               class="block border border-gray-500 bg-gray-50 p-5">
-                <div class="text-sm font-semibold text-gray-700">
+               class="block min-w-0 border border-gray-500 bg-gray-50 p-4">
+                <div class="text-xs font-semibold text-gray-700">
                     Awaiting review
                 </div>
 
-                <div class="mt-3 text-3xl font-bold text-gray-900">
+                <div class="mt-2 text-2xl font-bold text-gray-900">
                     {{ $summary['awaiting_review']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-sm text-gray-600">
+                <div class="mt-1 text-xs text-gray-600">
                     {{ $money($summary['awaiting_review']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'returned'])) }}"
-               class="block border border-red-700 bg-red-50 p-5">
-                <div class="text-sm font-semibold text-red-900">
+               class="block min-w-0 border border-red-700 bg-red-50 p-4">
+                <div class="text-xs font-semibold text-red-900">
                     Returned
                 </div>
 
-                <div class="mt-3 text-3xl font-bold text-red-900">
+                <div class="mt-2 text-2xl font-bold text-red-900">
                     {{ $summary['returned']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-sm text-red-900">
+                <div class="mt-1 text-xs text-red-900">
                     {{ $money($summary['returned']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'ready_or_paid'])) }}"
-               class="block border border-green-700 bg-green-50 p-5">
-                <div class="text-sm font-semibold text-green-900">
-                    Sent for payment / paid
+               class="block min-w-0 border border-green-700 bg-green-50 p-4">
+                <div class="text-xs font-semibold text-green-900">
+                    Sent / paid
                 </div>
 
-                <div class="mt-3 text-3xl font-bold text-green-900">
+                <div class="mt-2 text-2xl font-bold text-green-900">
                     {{ $summary['ready_or_paid']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-sm text-green-900">
+                <div class="mt-1 text-xs text-green-900">
                     {{ $money($summary['ready_or_paid']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'cancelled_or_replaced'])) }}"
-               class="block border border-gray-400 bg-white p-5">
-                <div class="text-sm font-semibold text-gray-700">
+               class="block min-w-0 border border-gray-400 bg-white p-4">
+                <div class="text-xs font-semibold text-gray-700">
                     Cancelled / replaced
                 </div>
 
-                <div class="mt-3 text-3xl font-bold text-gray-900">
+                <div class="mt-2 text-2xl font-bold text-gray-900">
                     {{ $summary['cancelled_or_replaced']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-sm text-gray-600">
+                <div class="mt-1 text-xs text-gray-600">
                     {{ $money($summary['cancelled_or_replaced']['total_pence'] ?? 0) }}
                 </div>
             </a>
 
             <a href="{{ route('admin.invoices.index', request()->except('status', 'page')) }}"
-               class="block border border-black bg-white p-5">
-                <div class="text-sm font-semibold text-gray-700">
+               class="block min-w-0 border border-black bg-white p-4">
+                <div class="text-xs font-semibold text-gray-700">
                     Total invoices
                 </div>
 
-                <div class="mt-3 text-3xl font-bold text-gray-900">
+                <div class="mt-2 text-2xl font-bold text-gray-900">
                     {{ $summary['all']['count'] ?? 0 }}
                 </div>
 
-                <div class="mt-1 text-sm text-gray-600">
+                <div class="mt-1 text-xs text-gray-600">
                     {{ $money($summary['all']['total_pence'] ?? 0) }}
                 </div>
             </a>
         </div>
 
-        <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-6 mb-6">
-            <h2 class="text-lg font-semibold mb-4">Filters</h2>
+        <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-4 mb-6">
+            <div class="flex items-center justify-between gap-4 mb-4">
+                <h2 class="text-base font-semibold">Filters</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="{{ route('admin.invoices.index') }}" class="text-sm underline">
+                    Clear filters
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
                 <div>
-                    <label for="contractor_id" class="block text-sm font-semibold mb-2">
+                    <label for="contractor_id" class="block text-xs font-semibold mb-1">
                         Contractor
                     </label>
 
                     <select id="contractor_id"
                             name="contractor_id"
-                            class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                         <option value="">All contractors</option>
 
                         @foreach ($contractors as $contractor)
@@ -117,13 +123,13 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-sm font-semibold mb-2">
+                    <label for="status" class="block text-xs font-semibold mb-1">
                         Status
                     </label>
 
                     <select id="status"
                             name="status"
-                            class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                         <option value="">All statuses</option>
 
                         <option value="awaiting_review" @selected(($filters['status'] ?? '') === 'awaiting_review')>
@@ -147,7 +153,7 @@
                         </option>
 
                         <option value="ready_or_paid" @selected(($filters['status'] ?? '') === 'ready_or_paid')>
-                            Sent for payment / paid
+                            Sent / paid
                         </option>
 
                         <option value="ready_for_payment" @selected(($filters['status'] ?? '') === 'ready_for_payment')>
@@ -173,63 +179,59 @@
                 </div>
 
                 <div>
-                    <label for="invoice_date_from" class="block text-sm font-semibold mb-2">
-                        Invoice date from
+                    <label for="invoice_date_from" class="block text-xs font-semibold mb-1">
+                        Invoice from
                     </label>
 
                     <input id="invoice_date_from"
                            name="invoice_date_from"
                            type="date"
                            value="{{ $filters['invoice_date_from'] ?? '' }}"
-                           class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                 </div>
 
                 <div>
-                    <label for="invoice_date_to" class="block text-sm font-semibold mb-2">
-                        Invoice date to
+                    <label for="invoice_date_to" class="block text-xs font-semibold mb-1">
+                        Invoice to
                     </label>
 
                     <input id="invoice_date_to"
                            name="invoice_date_to"
                            type="date"
                            value="{{ $filters['invoice_date_to'] ?? '' }}"
-                           class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                 </div>
 
                 <div>
-                    <label for="week_commencing_from" class="block text-sm font-semibold mb-2">
-                        Week commencing from
+                    <label for="week_commencing_from" class="block text-xs font-semibold mb-1">
+                        Week from
                     </label>
 
                     <input id="week_commencing_from"
                            name="week_commencing_from"
                            type="date"
                            value="{{ $filters['week_commencing_from'] ?? '' }}"
-                           class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                 </div>
 
                 <div>
-                    <label for="week_commencing_to" class="block text-sm font-semibold mb-2">
-                        Week commencing to
+                    <label for="week_commencing_to" class="block text-xs font-semibold mb-1">
+                        Week to
                     </label>
 
                     <input id="week_commencing_to"
                            name="week_commencing_to"
                            type="date"
                            value="{{ $filters['week_commencing_to'] ?? '' }}"
-                           class="w-full border border-gray-400 px-4 py-3 rounded-none">
+                           class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm">
                 </div>
             </div>
 
-            <div class="flex items-center gap-4 mt-6">
+            <div class="flex items-center gap-3 mt-4">
                 <button type="submit"
-                        class="px-5 py-3 bg-black text-white text-sm font-semibold">
-                    Apply filters
+                        class="px-4 py-2 bg-black text-white text-sm font-semibold">
+                    Apply
                 </button>
-
-                <a href="{{ route('admin.invoices.index') }}" class="text-sm underline">
-                    Clear filters
-                </a>
             </div>
         </form>
 

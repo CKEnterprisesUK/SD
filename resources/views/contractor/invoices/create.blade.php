@@ -39,6 +39,7 @@
                         <label for="week_commencing" class="block text-sm font-semibold mb-2">
                             Week commencing
                         </label>
+
                         <input
                             id="week_commencing"
                             name="week_commencing"
@@ -47,6 +48,10 @@
                             class="w-full border border-gray-400 px-4 py-3 rounded-none"
                             required
                         >
+
+                        <p class="text-sm text-gray-600 mt-1">
+                            This will automatically use the Monday of the selected week.
+                        </p>
                     </div>
 
                     <div>
@@ -85,49 +90,57 @@
             </section>
 
             <section class="border border-gray-300 bg-white p-6">
-    <h2 class="text-lg font-semibold mb-4">Days worked</h2>
+                <h2 class="text-lg font-semibold mb-4">Days worked</h2>
 
-    <p class="text-sm text-gray-600 mb-4">
-        Select how much of each day you worked.
-    </p>
+                <p class="text-sm text-gray-600 mb-4">
+                    Select how much of each day you worked.
+                </p>
 
-    <div class="space-y-3">
-        @foreach ([
-            'monday_days' => 'Monday',
-            'tuesday_days' => 'Tuesday',
-            'wednesday_days' => 'Wednesday',
-            'thursday_days' => 'Thursday',
-            'friday_days' => 'Friday',
-            'saturday_days' => 'Saturday',
-            'sunday_days' => 'Sunday',
-        ] as $field => $label)
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center border border-gray-300 p-4">
-                <label for="{{ $field }}" class="font-semibold">
-                    {{ $label }}
-                </label>
-
-                <select
-                    id="{{ $field }}"
-                    name="{{ $field }}"
-                    class="sm:col-span-2 w-full border border-gray-400 px-4 py-3 rounded-none"
-                    required
-                >
+                <div class="space-y-3">
                     @foreach ([
-                        '0' => 'Not worked',
-                        '0.25' => 'Quarter day',
-                        '0.5' => 'Half day',
-                        '0.75' => 'Three-quarter day',
-                        '1' => 'Full day',
-                    ] as $value => $text)
-                        <option value="{{ $value }}" @selected(old($field, '0') == $value)>
-                            {{ $text }}
-                        </option>
+                        'monday_days' => ['label' => 'Monday', 'offset' => 0],
+                        'tuesday_days' => ['label' => 'Tuesday', 'offset' => 1],
+                        'wednesday_days' => ['label' => 'Wednesday', 'offset' => 2],
+                        'thursday_days' => ['label' => 'Thursday', 'offset' => 3],
+                        'friday_days' => ['label' => 'Friday', 'offset' => 4],
+                        'saturday_days' => ['label' => 'Saturday', 'offset' => 5],
+                        'sunday_days' => ['label' => 'Sunday', 'offset' => 6],
+                    ] as $field => $day)
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center border border-gray-300 p-4">
+                            <label for="{{ $field }}" class="font-semibold">
+                                <span>{{ $day['label'] }}</span>
+                                <span
+                                    id="{{ $field }}_date"
+                                    class="block text-sm font-normal text-gray-600 mt-1"
+                                    data-day-offset="{{ $day['offset'] }}"
+                                >
+                                    —
+                                </span>
+                            </label>
+
+                            <select
+                                id="{{ $field }}"
+                                name="{{ $field }}"
+                                class="sm:col-span-2 w-full border border-gray-400 px-4 py-3 rounded-none"
+                                required
+                            >
+                                @foreach ([
+                                    '0' => 'Not worked',
+                                    '0.25' => 'Quarter day',
+                                    '0.5' => 'Half day',
+                                    '0.75' => 'Three-quarter day',
+                                    '1' => 'Full day',
+                                ] as $value => $text)
+                                    <option value="{{ $value }}" @selected(old($field, '0') == $value)>
+                                        {{ $text }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     @endforeach
-                </select>
-            </div>
-        @endforeach
-    </div>
-</section>
+                </div>
+            </section>
+
             <section class="border border-gray-300 bg-white p-6">
                 <h2 class="text-lg font-semibold mb-4">Notes</h2>
 
@@ -182,6 +195,72 @@
     <script>
         const dayRateInput = document.getElementById('day_rate');
         const warning = document.getElementById('day-rate-warning');
+        const weekCommencingInput = document.getElementById('week_commencing');
+
+        function toDateInputValue(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function getMonday(date) {
+            const monday = new Date(date);
+            const day = monday.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+
+            monday.setDate(monday.getDate() + diff);
+
+            return monday;
+        }
+
+        function formatDisplayDate(date) {
+            return new Intl.DateTimeFormat('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            }).format(date);
+        }
+
+        function updateDayDates() {
+            if (!weekCommencingInput || !weekCommencingInput.value) {
+                return;
+            }
+
+            const monday = new Date(weekCommencingInput.value + 'T00:00:00');
+
+            document.querySelectorAll('[data-day-offset]').forEach(function (element) {
+                const offset = Number(element.dataset.dayOffset);
+                const date = new Date(monday);
+
+                date.setDate(monday.getDate() + offset);
+
+                element.textContent = formatDisplayDate(date);
+            });
+        }
+
+        function snapWeekCommencingToMonday() {
+            if (!weekCommencingInput) {
+                return;
+            }
+
+            if (!weekCommencingInput.value) {
+                const today = new Date();
+                const monday = getMonday(today);
+
+                weekCommencingInput.value = toDateInputValue(monday);
+                updateDayDates();
+
+                return;
+            }
+
+            const selectedDate = new Date(weekCommencingInput.value + 'T00:00:00');
+            const monday = getMonday(selectedDate);
+
+            weekCommencingInput.value = toDateInputValue(monday);
+            updateDayDates();
+        }
 
         if (dayRateInput && warning) {
             const defaultRate = Number(dayRateInput.dataset.defaultRate);
@@ -194,6 +273,14 @@
                 } else {
                     warning.classList.add('hidden');
                 }
+            });
+        }
+
+        if (weekCommencingInput) {
+            snapWeekCommencingToMonday();
+
+            weekCommencingInput.addEventListener('change', function () {
+                snapWeekCommencingToMonday();
             });
         }
     </script>

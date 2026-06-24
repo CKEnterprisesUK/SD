@@ -16,7 +16,7 @@
 
             <a href="{{ route('contractor.invoices.create') }}"
                class="px-5 py-3 bg-black text-white text-sm font-semibold">
-                Submit invoice
+                New invoice
             </a>
         </div>
 

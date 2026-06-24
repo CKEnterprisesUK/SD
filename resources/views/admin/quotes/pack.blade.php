@@ -31,11 +31,25 @@
         @endif
 
         <div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
             <h1 class="text-3xl font-bold">Customer pack</h1>
             <p class="text-gray-600 mt-2">
-                Edit the customer-facing quote wording. AI compile and PDF generation will connect to this screen later.
+                Edit the customer-facing quote wording. Use AI compile to draft wording from the survey notes, photos and pricing data.
             </p>
         </div>
+
+        <form method="POST" action="{{ route('admin.quotes.compile-ai', $quote) }}"
+              onsubmit="return confirm('This will replace the current customer pack text and replace previous AI-suggested line items. Continue?')">
+            @csrf
+
+            <button type="submit"
+                    class="inline-flex px-5 py-3 bg-black text-white text-sm font-semibold">
+                Compile with AI
+            </button>
+        </form>
+    </div>
+</div>
 
         <form method="POST" action="{{ route('admin.quotes.pack.update', $quote) }}" class="space-y-6">
             @csrf

@@ -103,6 +103,11 @@ class Quote extends Model
     {
         return number_format($this->total_pence / 100, 2);
     }
+    public function aiGenerations(): HasMany
+    {
+        return $this->hasMany(QuoteAiGeneration::class)
+            ->latest();
+    }
 
     public function recalculateTotals(): void
     {

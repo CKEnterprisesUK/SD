@@ -146,6 +146,13 @@
                                 Generate a customer-facing quote PDF.
                             </div>
                         </a>
+                                            <a href="{{ route('admin.quotes.pack', $quote) }}"
+                    class="block border border-purple-700 bg-purple-50 p-4 text-purple-900">
+                        <div class="font-semibold">Compile with AI</div>
+                        <div class="text-sm mt-1">
+                            Open the customer pack screen and generate wording from survey notes.
+                        </div>
+                    </a>
                 </div>
             </section>
         </div>

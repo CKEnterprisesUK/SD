@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\QuoteFollowUpController;
 use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
 use App\Http\Controllers\Admin\QuoteFileController;
+use App\Http\Controllers\Admin\QuoteAiController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -195,6 +196,14 @@ Route::delete('/quotes/{quote}/files/{file}', [QuoteFileController::class, 'dest
 
     Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])
     ->name('quotes.download');
+
+
+
+    Route::post('/quotes/{quote}/compile-ai', [QuoteAiController::class, 'compile'])
+    ->name('quotes.compile-ai');
+
+
+    
 
         Route::get('/settings', [PortalSettingsController::class, 'edit'])
             ->name('settings.edit');

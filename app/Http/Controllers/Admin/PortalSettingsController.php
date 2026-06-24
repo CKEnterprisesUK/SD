@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PortalSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class PortalSettingsController extends Controller
 {
@@ -35,15 +36,26 @@ class PortalSettingsController extends Controller
             'payment_terms_days' => ['required', 'integer', 'min:0', 'max:365'],
             'invoice_wording' => ['nullable', 'string'],
             'pdf_footer' => ['nullable', 'string'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024'],
         ]);
 
         if ($request->hasFile('logo')) {
-            if ($settings->logo_path) {
-                Storage::disk('public')->delete($settings->logo_path);
+            $logoDirectory = public_path('logos');
+
+            if (! File::exists($logoDirectory)) {
+                File::makeDirectory($logoDirectory, 0755, true);
             }
 
-            $validated['logo_path'] = $request->file('logo')->store('logos', 'public');
+            if ($settings->logo_path && File::exists(public_path($settings->logo_path))) {
+                File::delete(public_path($settings->logo_path));
+            }
+
+            $file = $request->file('logo');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            $file->move($logoDirectory, $filename);
+
+            $validated['logo_path'] = 'logos/' . $filename;
         }
 
         unset($validated['logo']);

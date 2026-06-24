@@ -64,7 +64,7 @@
 
                         @if ($settings->logo_path)
                             <div class="mb-3">
-                                <img src="{{ asset('storage/' . $settings->logo_path) }}"
+                                <img src="{{ asset($settings->logo_path) }}"
                                      alt="{{ $settings->portal_name }} logo"
                                      class="h-16 max-w-56 object-contain border border-gray-300 p-2 bg-white">
                             </div>

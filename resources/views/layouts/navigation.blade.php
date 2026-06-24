@@ -14,7 +14,7 @@
                         @if ($portalSettings->logo_path)
     <div style="height:48px; width:160px; overflow:hidden; display:flex; align-items:center;">
         <img
-            src="{{ asset('storage/' . $portalSettings->logo_path) }}"
+            src="{{ asset($portalSettings->logo_path) }}"
             alt="{{ $portalSettings->portal_name }} logo"
             style="max-height:40px; max-width:144px; width:auto; height:auto; object-fit:contain;"
         >

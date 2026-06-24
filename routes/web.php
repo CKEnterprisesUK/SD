@@ -126,6 +126,54 @@ Route::middleware(['auth'])
         |--------------------------------------------------------------------------
         */
 
+        /*
+|--------------------------------------------------------------------------
+| Quotes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/quotes', [QuoteController::class, 'index'])
+    ->name('quotes.index');
+
+Route::get('/quotes/create', [QuoteController::class, 'create'])
+    ->name('quotes.create');
+
+Route::post('/quotes', [QuoteController::class, 'store'])
+    ->name('quotes.store');
+
+Route::get('/quotes/{quote}', [QuoteController::class, 'show'])
+    ->name('quotes.show');
+
+Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])
+    ->name('quotes.edit');
+
+Route::put('/quotes/{quote}', [QuoteController::class, 'update'])
+    ->name('quotes.update');
+
+Route::post('/quotes/{quote}/mark-survey-in-progress', [QuoteController::class, 'markSurveyInProgress'])
+    ->name('quotes.mark-survey-in-progress');
+
+Route::post('/quotes/{quote}/mark-survey-completed', [QuoteController::class, 'markSurveyCompleted'])
+    ->name('quotes.mark-survey-completed');
+
+Route::post('/quotes/{quote}/notes', [QuoteNoteController::class, 'store'])
+    ->name('quotes.notes.store');
+
+Route::delete('/quotes/{quote}/notes/{note}', [QuoteNoteController::class, 'destroy'])
+    ->name('quotes.notes.destroy');
+
+Route::post('/quotes/{quote}/line-items', [QuoteLineItemController::class, 'store'])
+    ->name('quotes.line-items.store');
+
+Route::delete('/quotes/{quote}/line-items/{lineItem}', [QuoteLineItemController::class, 'destroy'])
+    ->name('quotes.line-items.destroy');
+
+Route::post('/quotes/{quote}/follow-ups', [QuoteFollowUpController::class, 'store'])
+    ->name('quotes.follow-ups.store');
+
+Route::post('/quotes/{quote}/follow-ups/{followUp}/complete', [QuoteFollowUpController::class, 'complete'])
+    ->name('quotes.follow-ups.complete');
+
         Route::get('/settings', [PortalSettingsController::class, 'edit'])
             ->name('settings.edit');
 

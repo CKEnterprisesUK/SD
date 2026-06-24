@@ -184,12 +184,7 @@
     </div>
 </section>
 
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">Timesheets</h2>
-                <p class="text-sm text-gray-600">
-                    Submitted timesheets will appear here once the timesheet module is added.
-                </p>
-            </section>
+        
         </div>
 
         <section class="border border-gray-300 bg-white p-6 mt-6">

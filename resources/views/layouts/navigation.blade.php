@@ -1,9 +1,11 @@
 @php
     $portalSettings = \App\Models\PortalSetting::current();
     $user = Auth::user();
+
+    $contractorAdminActive = request()->routeIs('admin.contractors.*') || request()->routeIs('admin.invoices.*');
 @endphp
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-300">
+<nav x-data="{ open: false, adminContractorsOpen: false }" class="bg-white border-b border-gray-300">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between min-h-16">
@@ -12,20 +14,18 @@
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
                         @if ($portalSettings->logo_path)
-    <div style="height:48px; width:160px; overflow:hidden; display:flex; align-items:center;">
-        <img
-            src="{{ asset($portalSettings->logo_path) }}"
-            alt="{{ $portalSettings->portal_name }} logo"
-            style="max-height:40px; max-width:144px; width:auto; height:auto; object-fit:contain;"
-        >
-    </div>
-@else
+                            <div style="height:48px; width:160px; overflow:hidden; display:flex; align-items:center;">
+                                <img
+                                    src="{{ asset($portalSettings->logo_path) }}"
+                                    alt="{{ $portalSettings->portal_name }} logo"
+                                    style="max-height:40px; max-width:144px; width:auto; height:auto; object-fit:contain;"
+                                >
+                            </div>
+                        @else
                             <div class="h-11 w-11 flex items-center justify-center border-2 border-gray-900 font-bold text-sm">
                                 SD
                             </div>
                         @endif
-
-                        
                     </a>
                 </div>
 
@@ -36,13 +36,44 @@
                     </x-nav-link>
 
                     @if ($user?->isAdmin())
-                        <x-nav-link :href="route('admin.contractors.index')" :active="request()->routeIs('admin.contractors.*')">
-                            Contractors
+                        <!-- Contractors dropdown -->
+                        <div class="hidden sm:flex sm:items-center">
+                            <x-dropdown align="left" width="48">
+                                <x-slot name="trigger">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none
+                                            {{ $contractorAdminActive
+                                                ? 'border-gray-900 text-gray-900'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                    >
+                                        Contractors
+
+                                        <svg class="ms-1 h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </x-slot>
+
+                                <x-slot name="content">
+                                    <x-dropdown-link :href="route('admin.contractors.index')">
+                                        Contractors
+                                    </x-dropdown-link>
+
+                                    <x-dropdown-link :href="route('admin.invoices.index')">
+                                        Contractor invoices
+                                    </x-dropdown-link>
+                                </x-slot>
+                            </x-dropdown>
+                        </div>
+
+                        <x-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
+                            Customers
                         </x-nav-link>
 
-                        @if (auth()->user()?->isAdmin())
-                            <x-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
-                                Customers
+                        @if (Route::has('admin.quotes.index'))
+                            <x-nav-link :href="route('admin.quotes.index')" :active="request()->routeIs('admin.quotes.*')">
+                                Quotes
                             </x-nav-link>
                         @endif
 
@@ -52,10 +83,6 @@
                             </x-nav-link>
                         @endif
 
-                        <x-nav-link :href="route('admin.invoices.index')" :active="request()->routeIs('admin.invoices.*')">
-                            Invoices
-                        </x-nav-link>
-
                         @if (Route::has('admin.settings.edit'))
                             <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
                                 Settings
@@ -64,14 +91,14 @@
                     @endif
 
                     @if ($user?->isContractor())
-                       <x-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
+                        <x-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
                             My Invoices
                         </x-nav-link>
                     @endif
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
+            <!-- Account Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -86,7 +113,7 @@
                             </div>
 
                             <div class="ms-2">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </div>
@@ -101,6 +128,10 @@
                         @if ($user?->isAdmin())
                             <x-dropdown-link :href="route('admin.contractors.index')">
                                 Contractors
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.invoices.index')">
+                                Contractor invoices
                             </x-dropdown-link>
 
                             @if (Route::has('admin.users.index'))
@@ -168,9 +199,41 @@
             </x-responsive-nav-link>
 
             @if ($user?->isAdmin())
-                <x-responsive-nav-link :href="route('admin.contractors.index')" :active="request()->routeIs('admin.contractors.*')">
-                    Contractors
+                <!-- Mobile contractors group -->
+                <button
+                    type="button"
+                    @click="adminContractorsOpen = ! adminContractorsOpen"
+                    class="w-full flex items-center justify-between ps-3 pe-4 py-2 border-l-4 text-start text-base font-medium transition duration-150 ease-in-out
+                        {{ $contractorAdminActive
+                            ? 'border-gray-900 text-gray-900 bg-gray-50'
+                            : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }}"
+                >
+                    <span>Contractors</span>
+
+                    <svg class="h-4 w-4 fill-current transition-transform" :class="{'rotate-180': adminContractorsOpen}" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <div x-show="adminContractorsOpen" x-cloak class="bg-gray-50 border-y border-gray-200">
+                    <x-responsive-nav-link :href="route('admin.contractors.index')" :active="request()->routeIs('admin.contractors.*')">
+                        <span class="ps-4">Contractors</span>
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.invoices.index')" :active="request()->routeIs('admin.invoices.*')">
+                        <span class="ps-4">Contractor invoices</span>
+                    </x-responsive-nav-link>
+                </div>
+
+                <x-responsive-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
+                    Customers
                 </x-responsive-nav-link>
+
+                @if (Route::has('admin.quotes.index'))
+                    <x-responsive-nav-link :href="route('admin.quotes.index')" :active="request()->routeIs('admin.quotes.*')">
+                        Quotes
+                    </x-responsive-nav-link>
+                @endif
 
                 @if (Route::has('admin.users.index'))
                     <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
@@ -186,10 +249,6 @@
             @endif
 
             @if ($user?->isContractor())
-                <x-responsive-nav-link href="#" :active="false">
-                    My Timesheets
-                </x-responsive-nav-link>
-
                 <x-responsive-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
                     My Invoices
                 </x-responsive-nav-link>

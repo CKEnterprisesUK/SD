@@ -26,9 +26,14 @@ class InvoiceController extends Controller
             ->latest('week_commencing')
             ->paginate(10);
 
+        $returnedInvoicesCount = ContractorInvoice::where('contractor_id', $contractor->id)
+            ->where('status', 'returned')
+            ->count();
+
         return view('contractor.invoices.index', [
             'contractor' => $contractor,
             'invoices' => $invoices,
+            'returnedInvoicesCount' => $returnedInvoicesCount,
         ]);
     }
 
@@ -394,6 +399,7 @@ class InvoiceController extends Controller
                 'contractor_notes' => $validated['contractor_notes'] ?? null,
 
                 'status' => 'resubmitted',
+                'review_comment' => null,
                 'resubmitted_at' => now(),
                 'submitted_at' => now(),
                 'submitted_ip' => $request->ip(),

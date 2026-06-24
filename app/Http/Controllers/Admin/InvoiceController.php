@@ -15,39 +15,80 @@ use Illuminate\Support\Facades\Mail;
 class InvoiceController extends Controller
 {
     public function index(Request $request)
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
 
-        $validated = $request->validate([
-            'contractor_id' => ['nullable', 'integer', 'exists:contractors,id'],
-            'status' => ['nullable', 'string', 'max:50'],
-            'invoice_date_from' => ['nullable', 'date'],
-            'invoice_date_to' => ['nullable', 'date'],
-            'week_commencing_from' => ['nullable', 'date'],
-            'week_commencing_to' => ['nullable', 'date'],
-        ]);
+    $validated = $request->validate([
+        'contractor_id' => ['nullable', 'integer', 'exists:contractors,id'],
+        'status' => ['nullable', 'string', 'max:50'],
+        'invoice_date_from' => ['nullable', 'date'],
+        'invoice_date_to' => ['nullable', 'date'],
+        'week_commencing_from' => ['nullable', 'date'],
+        'week_commencing_to' => ['nullable', 'date'],
+    ]);
 
-        $invoices = ContractorInvoice::query()
-            ->with('contractor')
-            ->when($validated['contractor_id'] ?? null, fn ($query, $contractorId) => $query->where('contractor_id', $contractorId))
-            ->when($validated['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($validated['invoice_date_from'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '>=', $date))
-            ->when($validated['invoice_date_to'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '<=', $date))
-            ->when($validated['week_commencing_from'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '>=', $date))
-            ->when($validated['week_commencing_to'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '<=', $date))
-            ->latest('invoice_date')
-            ->latest('id')
-            ->paginate(15)
-            ->withQueryString();
+    /*
+    |--------------------------------------------------------------------------
+    | Base query
+    |--------------------------------------------------------------------------
+    |
+    | This applies contractor/date filters. The summary cards use the same base
+    | filters, but intentionally ignore the selected status filter so you can
+    | still see the full state breakdown for the selected contractor/date range.
+    |
+    */
 
-        $contractors = Contractor::orderBy('name')->get();
+    $baseQuery = ContractorInvoice::query()
+        ->when($validated['contractor_id'] ?? null, fn ($query, $contractorId) => $query->where('contractor_id', $contractorId))
+        ->when($validated['invoice_date_from'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '>=', $date))
+        ->when($validated['invoice_date_to'] ?? null, fn ($query, $date) => $query->whereDate('invoice_date', '<=', $date))
+        ->when($validated['week_commencing_from'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '>=', $date))
+        ->when($validated['week_commencing_to'] ?? null, fn ($query, $date) => $query->whereDate('week_commencing', '<=', $date));
 
-        return view('admin.invoices.index', [
-            'invoices' => $invoices,
-            'contractors' => $contractors,
-            'filters' => $validated,
-        ]);
-    }
+    $summaryFor = function (array $statuses) use ($baseQuery) {
+        $query = clone $baseQuery;
+
+        return [
+            'count' => (clone $query)->whereIn('status', $statuses)->count(),
+            'total_pence' => (int) (clone $query)->whereIn('status', $statuses)->sum('total_pence'),
+        ];
+    };
+
+    $summary = [
+        'awaiting_review' => $summaryFor(['submitted', 'resubmitted', 'under_review']),
+        'returned' => $summaryFor(['returned']),
+        'ready_or_paid' => $summaryFor(['ready_for_payment', 'paid']),
+        'cancelled_or_replaced' => $summaryFor(['cancelled', 'replaced']),
+        'all' => [
+            'count' => (clone $baseQuery)->count(),
+            'total_pence' => (int) (clone $baseQuery)->sum('total_pence'),
+        ],
+    ];
+
+    $invoices = (clone $baseQuery)
+        ->with('contractor')
+        ->when($validated['status'] ?? null, function ($query, $status) {
+            return match ($status) {
+                'awaiting_review' => $query->whereIn('status', ['submitted', 'resubmitted', 'under_review']),
+                'ready_or_paid' => $query->whereIn('status', ['ready_for_payment', 'paid']),
+                'cancelled_or_replaced' => $query->whereIn('status', ['cancelled', 'replaced']),
+                default => $query->where('status', $status),
+            };
+        })
+        ->latest('invoice_date')
+        ->latest('id')
+        ->paginate(15)
+        ->withQueryString();
+
+    $contractors = Contractor::orderBy('name')->get();
+
+    return view('admin.invoices.index', [
+        'invoices' => $invoices,
+        'contractors' => $contractors,
+        'filters' => $validated,
+        'summary' => $summary,
+    ]);
+}
 
     public function show(ContractorInvoice $invoice)
     {

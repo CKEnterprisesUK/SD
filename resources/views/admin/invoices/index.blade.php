@@ -13,6 +13,87 @@
             </p>
         </div>
 
+        @php
+            $money = fn ($pence) => '£' . number_format(($pence ?? 0) / 100, 2);
+        @endphp
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_review'])) }}"
+               class="block border border-gray-500 bg-gray-50 p-5">
+                <div class="text-sm font-semibold text-gray-700">
+                    Awaiting review
+                </div>
+
+                <div class="mt-3 text-3xl font-bold text-gray-900">
+                    {{ $summary['awaiting_review']['count'] ?? 0 }}
+                </div>
+
+                <div class="mt-1 text-sm text-gray-600">
+                    {{ $money($summary['awaiting_review']['total_pence'] ?? 0) }}
+                </div>
+            </a>
+
+            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'returned'])) }}"
+               class="block border border-red-700 bg-red-50 p-5">
+                <div class="text-sm font-semibold text-red-900">
+                    Returned
+                </div>
+
+                <div class="mt-3 text-3xl font-bold text-red-900">
+                    {{ $summary['returned']['count'] ?? 0 }}
+                </div>
+
+                <div class="mt-1 text-sm text-red-900">
+                    {{ $money($summary['returned']['total_pence'] ?? 0) }}
+                </div>
+            </a>
+
+            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'ready_or_paid'])) }}"
+               class="block border border-green-700 bg-green-50 p-5">
+                <div class="text-sm font-semibold text-green-900">
+                    Sent for payment / paid
+                </div>
+
+                <div class="mt-3 text-3xl font-bold text-green-900">
+                    {{ $summary['ready_or_paid']['count'] ?? 0 }}
+                </div>
+
+                <div class="mt-1 text-sm text-green-900">
+                    {{ $money($summary['ready_or_paid']['total_pence'] ?? 0) }}
+                </div>
+            </a>
+
+            <a href="{{ route('admin.invoices.index', array_merge(request()->except('status', 'page'), ['status' => 'cancelled_or_replaced'])) }}"
+               class="block border border-gray-400 bg-white p-5">
+                <div class="text-sm font-semibold text-gray-700">
+                    Cancelled / replaced
+                </div>
+
+                <div class="mt-3 text-3xl font-bold text-gray-900">
+                    {{ $summary['cancelled_or_replaced']['count'] ?? 0 }}
+                </div>
+
+                <div class="mt-1 text-sm text-gray-600">
+                    {{ $money($summary['cancelled_or_replaced']['total_pence'] ?? 0) }}
+                </div>
+            </a>
+
+            <a href="{{ route('admin.invoices.index', request()->except('status', 'page')) }}"
+               class="block border border-black bg-white p-5">
+                <div class="text-sm font-semibold text-gray-700">
+                    Total invoices
+                </div>
+
+                <div class="mt-3 text-3xl font-bold text-gray-900">
+                    {{ $summary['all']['count'] ?? 0 }}
+                </div>
+
+                <div class="mt-1 text-sm text-gray-600">
+                    {{ $money($summary['all']['total_pence'] ?? 0) }}
+                </div>
+            </a>
+        </div>
+
         <form method="GET" action="{{ route('admin.invoices.index') }}" class="border border-gray-300 bg-white p-6 mb-6">
             <h2 class="text-lg font-semibold mb-4">Filters</h2>
 
@@ -21,10 +102,12 @@
                     <label for="contractor_id" class="block text-sm font-semibold mb-2">
                         Contractor
                     </label>
+
                     <select id="contractor_id"
                             name="contractor_id"
                             class="w-full border border-gray-400 px-4 py-3 rounded-none">
                         <option value="">All contractors</option>
+
                         @foreach ($contractors as $contractor)
                             <option value="{{ $contractor->id }}" @selected(($filters['contractor_id'] ?? '') == $contractor->id)>
                                 {{ $contractor->name }}
@@ -37,15 +120,55 @@
                     <label for="status" class="block text-sm font-semibold mb-2">
                         Status
                     </label>
+
                     <select id="status"
                             name="status"
                             class="w-full border border-gray-400 px-4 py-3 rounded-none">
                         <option value="">All statuses</option>
-                        @foreach (['submitted', 'emailed', 'queried', 'cancelled', 'replaced', 'paid'] as $status)
-                            <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>
-                                {{ ucfirst($status) }}
-                            </option>
-                        @endforeach
+
+                        <option value="awaiting_review" @selected(($filters['status'] ?? '') === 'awaiting_review')>
+                            Awaiting review
+                        </option>
+
+                        <option value="submitted" @selected(($filters['status'] ?? '') === 'submitted')>
+                            Submitted
+                        </option>
+
+                        <option value="resubmitted" @selected(($filters['status'] ?? '') === 'resubmitted')>
+                            Resubmitted
+                        </option>
+
+                        <option value="under_review" @selected(($filters['status'] ?? '') === 'under_review')>
+                            Under review
+                        </option>
+
+                        <option value="returned" @selected(($filters['status'] ?? '') === 'returned')>
+                            Returned
+                        </option>
+
+                        <option value="ready_or_paid" @selected(($filters['status'] ?? '') === 'ready_or_paid')>
+                            Sent for payment / paid
+                        </option>
+
+                        <option value="ready_for_payment" @selected(($filters['status'] ?? '') === 'ready_for_payment')>
+                            Sent for payment
+                        </option>
+
+                        <option value="paid" @selected(($filters['status'] ?? '') === 'paid')>
+                            Paid
+                        </option>
+
+                        <option value="cancelled_or_replaced" @selected(($filters['status'] ?? '') === 'cancelled_or_replaced')>
+                            Cancelled / replaced
+                        </option>
+
+                        <option value="cancelled" @selected(($filters['status'] ?? '') === 'cancelled')>
+                            Cancelled
+                        </option>
+
+                        <option value="replaced" @selected(($filters['status'] ?? '') === 'replaced')>
+                            Replaced
+                        </option>
                     </select>
                 </div>
 
@@ -53,6 +176,7 @@
                     <label for="invoice_date_from" class="block text-sm font-semibold mb-2">
                         Invoice date from
                     </label>
+
                     <input id="invoice_date_from"
                            name="invoice_date_from"
                            type="date"
@@ -64,6 +188,7 @@
                     <label for="invoice_date_to" class="block text-sm font-semibold mb-2">
                         Invoice date to
                     </label>
+
                     <input id="invoice_date_to"
                            name="invoice_date_to"
                            type="date"
@@ -75,6 +200,7 @@
                     <label for="week_commencing_from" class="block text-sm font-semibold mb-2">
                         Week commencing from
                     </label>
+
                     <input id="week_commencing_from"
                            name="week_commencing_from"
                            type="date"
@@ -86,6 +212,7 @@
                     <label for="week_commencing_to" class="block text-sm font-semibold mb-2">
                         Week commencing to
                     </label>
+
                     <input id="week_commencing_to"
                            name="week_commencing_to"
                            type="date"
@@ -123,7 +250,29 @@
 
                 <tbody>
                     @forelse ($invoices as $invoice)
-                        <tr class="border-b border-gray-200">
+                        @php
+                            $rowClass = match ($invoice->status) {
+                                'returned' => 'bg-red-50',
+                                'ready_for_payment', 'paid' => 'bg-green-50',
+                                'submitted', 'resubmitted', 'under_review' => 'bg-gray-50',
+                                default => 'bg-white',
+                            };
+
+                            $statusClass = match ($invoice->status) {
+                                'returned' => 'border-red-700 bg-red-50 text-red-900',
+                                'ready_for_payment', 'paid' => 'border-green-700 bg-green-50 text-green-900',
+                                'submitted', 'resubmitted', 'under_review' => 'border-gray-500 bg-gray-50 text-gray-800',
+                                default => 'border-gray-400 bg-white text-gray-700',
+                            };
+
+                            $statusLabel = match ($invoice->status) {
+                                'ready_for_payment' => 'Sent for payment',
+                                'under_review' => 'Under review',
+                                default => ucfirst(str_replace('_', ' ', $invoice->status)),
+                            };
+                        @endphp
+
+                        <tr class="border-b border-gray-200 {{ $rowClass }}">
                             <td class="px-4 py-3 font-semibold">
                                 {{ $invoice->invoice_number }}
                             </td>
@@ -155,7 +304,9 @@
                             </td>
 
                             <td class="px-4 py-3">
-                                {{ ucfirst($invoice->status) }}
+                                <span class="inline-flex px-2 py-1 border text-xs font-semibold {{ $statusClass }}">
+                                    {{ $statusLabel }}
+                                </span>
                             </td>
 
                             <td class="px-4 py-3">

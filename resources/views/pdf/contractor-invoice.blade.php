@@ -172,11 +172,7 @@
                         {{ $invoice->supplier_name }}
                     </div>
 
-                    @if ($settings->company_address)
-                        <div class="brand-subtitle whitespace-pre-line">
-                            {{ $settings->company_address }}
-                        </div>
-                    @endif
+                 
                 </td>
 
                 <td class="text-right">

@@ -43,6 +43,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/invoices', [AdminInvoiceController::class, 'index'])
     ->name('invoices.index');
 
+    Route::middleware(['auth'])->prefix('my-invoices')->name('contractor.invoices.')->group(function () {
+    Route::get('/', [ContractorInvoiceController::class, 'index'])->name('index');
+    Route::get('/create', [ContractorInvoiceController::class, 'create'])->name('create');
+    Route::post('/', [ContractorInvoiceController::class, 'store'])->name('store');
+
+    Route::get('/{invoice}/download', [ContractorInvoiceController::class, 'download'])->name('download');
+
+    Route::get('/{invoice}/edit', [ContractorInvoiceController::class, 'edit'])->name('edit');
+    Route::put('/{invoice}', [ContractorInvoiceController::class, 'update'])->name('update');
+
+    Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])->name('show');
+});
+
 Route::post('/invoices/{invoice}/send-for-payment', [AdminInvoiceController::class, 'sendForPayment'])
     ->name('invoices.send-for-payment');
 

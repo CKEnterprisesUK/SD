@@ -117,37 +117,10 @@ class InvoiceController extends Controller
                 ->withInput();
         }
 
+        $lineItemResult = $this->prepareLineItems($validated['line_items'] ?? []);
+
         $labourSubtotalPence = (int) round($workedDays * $actualRatePence);
-
-        $lineItemsForCreate = [];
-        $lineItemsTotalPence = 0;
-
-        foreach (($validated['line_items'] ?? []) as $index => $item) {
-            if (empty($item['description'])) {
-                continue;
-            }
-
-            $quantity = (float) ($item['quantity'] ?? 1);
-            $unitAmountPence = (int) round(((float) ($item['unit_amount'] ?? 0)) * 100);
-            $lineTotalPence = (int) round($quantity * $unitAmountPence);
-
-            if ($quantity <= 0 || $unitAmountPence <= 0) {
-                continue;
-            }
-
-            $lineItemsTotalPence += $lineTotalPence;
-
-            $lineItemsForCreate[] = [
-                'type' => $item['type'] ?? 'other',
-                'description' => $item['description'],
-                'quantity' => $quantity,
-                'unit_amount_pence' => $unitAmountPence,
-                'total_pence' => $lineTotalPence,
-                'sort_order' => $index,
-            ];
-        }
-
-        $subtotalPence = $labourSubtotalPence + $lineItemsTotalPence;
+        $subtotalPence = $labourSubtotalPence + $lineItemResult['total_pence'];
         $vatPence = 0;
         $totalPence = $subtotalPence + $vatPence;
 
@@ -173,7 +146,7 @@ class InvoiceController extends Controller
             $vatPence,
             $totalPence,
             $confirmationText,
-            $lineItemsForCreate,
+            $lineItemResult,
             $request,
             $customerName
         ) {
@@ -225,36 +198,15 @@ class InvoiceController extends Controller
                 'submitted_at' => now(),
                 'submitted_ip' => $request->ip(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | Review workflow status
-                |--------------------------------------------------------------------------
-                |
-                | The invoice is submitted by the contractor and is now ready for the
-                | accounts team to review. Do not set this to "emailed", otherwise it
-                | disappears from the review queue.
-                |
-                */
-
                 'status' => 'submitted',
             ]);
 
-            foreach ($lineItemsForCreate as $lineItem) {
+            foreach ($lineItemResult['items'] as $lineItem) {
                 $invoice->lineItems()->create($lineItem);
             }
 
             return $invoice->load('lineItems');
         });
-
-        /*
-        |--------------------------------------------------------------------------
-        | Email notifications
-        |--------------------------------------------------------------------------
-        |
-        | The invoice should still exist even if email fails. That is why this is
-        | outside the database transaction.
-        |
-        */
 
         try {
             if ($settings->accounts_email) {
@@ -308,6 +260,158 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function edit(ContractorInvoice $invoice)
+    {
+        abort_unless(auth()->user()->isContractor(), 403);
+
+        $contractor = auth()->user()->contractor;
+
+        abort_unless($contractor, 403);
+        abort_unless($invoice->contractor_id === $contractor->id, 403);
+        abort_unless($invoice->status === 'returned', 403);
+
+        $invoice->load('lineItems');
+
+        return view('contractor.invoices.edit', [
+            'invoice' => $invoice,
+            'contractor' => $contractor,
+            'settings' => PortalSetting::current(),
+        ]);
+    }
+
+    public function update(Request $request, ContractorInvoice $invoice)
+    {
+        abort_unless(auth()->user()->isContractor(), 403);
+
+        $contractor = auth()->user()->contractor;
+
+        abort_unless($contractor, 403);
+        abort_unless($invoice->contractor_id === $contractor->id, 403);
+        abort_unless($invoice->status === 'returned', 403);
+
+        $validated = $request->validate([
+            'day_rate' => ['required', 'numeric', 'min:0'],
+
+            'monday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'tuesday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'wednesday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'thursday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'friday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'saturday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+            'sunday_days' => ['required', 'numeric', 'min:0', 'max:1'],
+
+            'line_items' => ['nullable', 'array'],
+            'line_items.*.type' => ['nullable', 'in:materials,expense,plant_hire,other'],
+            'line_items.*.description' => ['nullable', 'string', 'max:255'],
+            'line_items.*.quantity' => ['nullable', 'numeric', 'min:0'],
+            'line_items.*.unit_amount' => ['nullable', 'numeric', 'min:0'],
+
+            'contractor_notes' => ['nullable', 'string', 'max:2000'],
+            'confirm_submission' => ['accepted'],
+        ]);
+
+        $defaultRatePence = $contractor->day_rate_pence;
+        $actualRatePence = (int) round((float) $validated['day_rate'] * 100);
+
+        $mondayDays = (float) $validated['monday_days'];
+        $tuesdayDays = (float) $validated['tuesday_days'];
+        $wednesdayDays = (float) $validated['wednesday_days'];
+        $thursdayDays = (float) $validated['thursday_days'];
+        $fridayDays = (float) $validated['friday_days'];
+        $saturdayDays = (float) $validated['saturday_days'];
+        $sundayDays = (float) $validated['sunday_days'];
+
+        $workedDays = collect([
+            $mondayDays,
+            $tuesdayDays,
+            $wednesdayDays,
+            $thursdayDays,
+            $fridayDays,
+            $saturdayDays,
+            $sundayDays,
+        ])->sum();
+
+        if ($workedDays <= 0) {
+            return back()
+                ->withErrors([
+                    'days_worked' => 'You must select at least one day or part-day worked.',
+                ])
+                ->withInput();
+        }
+
+        $lineItemResult = $this->prepareLineItems($validated['line_items'] ?? []);
+
+        $labourSubtotalPence = (int) round($workedDays * $actualRatePence);
+        $subtotalPence = $labourSubtotalPence + $lineItemResult['total_pence'];
+        $vatPence = 0;
+        $totalPence = $subtotalPence + $vatPence;
+
+        DB::transaction(function () use (
+            $invoice,
+            $validated,
+            $defaultRatePence,
+            $actualRatePence,
+            $mondayDays,
+            $tuesdayDays,
+            $wednesdayDays,
+            $thursdayDays,
+            $fridayDays,
+            $saturdayDays,
+            $sundayDays,
+            $workedDays,
+            $subtotalPence,
+            $vatPence,
+            $totalPence,
+            $lineItemResult,
+            $request
+        ) {
+            $invoice->update([
+                'actual_day_rate_pence' => $actualRatePence,
+                'day_rate_overridden' => $actualRatePence !== $defaultRatePence,
+
+                'monday_days' => $mondayDays,
+                'tuesday_days' => $tuesdayDays,
+                'wednesday_days' => $wednesdayDays,
+                'thursday_days' => $thursdayDays,
+                'friday_days' => $fridayDays,
+                'saturday_days' => $saturdayDays,
+                'sunday_days' => $sundayDays,
+
+                'worked_monday' => $mondayDays > 0,
+                'worked_tuesday' => $tuesdayDays > 0,
+                'worked_wednesday' => $wednesdayDays > 0,
+                'worked_thursday' => $thursdayDays > 0,
+                'worked_friday' => $fridayDays > 0,
+                'worked_saturday' => $saturdayDays > 0,
+                'worked_sunday' => $sundayDays > 0,
+
+                'days_worked' => $workedDays,
+
+                'subtotal_pence' => $subtotalPence,
+                'vat_pence' => $vatPence,
+                'total_pence' => $totalPence,
+
+                'contractor_notes' => $validated['contractor_notes'] ?? null,
+
+                'status' => 'resubmitted',
+                'resubmitted_at' => now(),
+                'submitted_at' => now(),
+                'submitted_ip' => $request->ip(),
+                'submission_version' => ($invoice->submission_version ?? 1) + 1,
+            ]);
+
+            $invoice->lineItems()->delete();
+
+            foreach ($lineItemResult['items'] as $lineItem) {
+                $invoice->lineItems()->create($lineItem);
+            }
+        });
+
+        return redirect()
+            ->route('contractor.invoices.show', $invoice)
+            ->with('status', 'Invoice resubmitted successfully and sent back for review.');
+    }
+
     public function download(ContractorInvoice $invoice)
     {
         abort_unless(auth()->user()->isContractor(), 403);
@@ -328,6 +432,42 @@ class InvoiceController extends Controller
         ])->setPaper('a4');
 
         return $pdf->download($invoice->invoice_number . '.pdf');
+    }
+
+    private function prepareLineItems(array $lineItems): array
+    {
+        $items = [];
+        $totalPence = 0;
+
+        foreach ($lineItems as $index => $item) {
+            if (empty($item['description'])) {
+                continue;
+            }
+
+            $quantity = (float) ($item['quantity'] ?? 1);
+            $unitAmountPence = (int) round(((float) ($item['unit_amount'] ?? 0)) * 100);
+            $lineTotalPence = (int) round($quantity * $unitAmountPence);
+
+            if ($quantity <= 0 || $unitAmountPence <= 0) {
+                continue;
+            }
+
+            $totalPence += $lineTotalPence;
+
+            $items[] = [
+                'type' => $item['type'] ?? 'other',
+                'description' => $item['description'],
+                'quantity' => $quantity,
+                'unit_amount_pence' => $unitAmountPence,
+                'total_pence' => $lineTotalPence,
+                'sort_order' => $index,
+            ];
+        }
+
+        return [
+            'items' => $items,
+            'total_pence' => $totalPence,
+        ];
     }
 
     private function nextInvoiceNumber(): string

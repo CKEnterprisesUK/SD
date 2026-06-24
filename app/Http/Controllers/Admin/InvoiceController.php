@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ContractorInvoiceReadyForPayment;
+use App\Mail\ContractorInvoiceReturned;
 use App\Models\Contractor;
 use App\Models\ContractorInvoice;
 use App\Models\PortalSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class InvoiceController extends Controller
 {
@@ -82,6 +85,8 @@ class InvoiceController extends Controller
             'under_review',
         ]), 403);
 
+        $settings = PortalSetting::current();
+
         $invoice->update([
             'status' => 'ready_for_payment',
             'reviewed_by_user_id' => auth()->id(),
@@ -90,9 +95,41 @@ class InvoiceController extends Controller
             'review_comment' => null,
         ]);
 
-        return redirect()
-            ->route('admin.invoices.show', $invoice)
-            ->with('status', 'Invoice marked as ready for payment.');
+        $invoice->load('contractor', 'user', 'lineItems');
+
+        try {
+            if ($invoice->supplier_email) {
+                Mail::to($invoice->supplier_email)
+                    ->send(new ContractorInvoiceReadyForPayment(
+                        invoice: $invoice,
+                        settings: $settings,
+                        recipientType: 'contractor',
+                    ));
+            }
+
+            if ($settings->accounts_email) {
+                Mail::to($settings->accounts_email)
+                    ->send(new ContractorInvoiceReadyForPayment(
+                        invoice: $invoice,
+                        settings: $settings,
+                        recipientType: 'accounts',
+                    ));
+            }
+
+            $invoice->update([
+                'emailed_at' => now(),
+            ]);
+
+            return redirect()
+                ->route('admin.invoices.show', $invoice)
+                ->with('status', 'Invoice marked as ready for payment and email sent.');
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('admin.invoices.show', $invoice)
+                ->with('status', 'Invoice marked as ready for payment, but the email could not be sent.');
+        }
     }
 
     public function returnToContractor(Request $request, ContractorInvoice $invoice)
@@ -109,6 +146,8 @@ class InvoiceController extends Controller
             'review_comment' => ['required', 'string', 'max:2000'],
         ]);
 
+        $settings = PortalSetting::current();
+
         $invoice->update([
             'status' => 'returned',
             'reviewed_by_user_id' => auth()->id(),
@@ -117,8 +156,26 @@ class InvoiceController extends Controller
             'review_comment' => $validated['review_comment'],
         ]);
 
-        return redirect()
-            ->route('admin.invoices.show', $invoice)
-            ->with('status', 'Invoice returned to contractor.');
+        $invoice->load('contractor', 'user', 'lineItems');
+
+        try {
+            if ($invoice->supplier_email) {
+                Mail::to($invoice->supplier_email)
+                    ->send(new ContractorInvoiceReturned(
+                        invoice: $invoice,
+                        settings: $settings,
+                    ));
+            }
+
+            return redirect()
+                ->route('admin.invoices.show', $invoice)
+                ->with('status', 'Invoice returned to contractor and email sent.');
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('admin.invoices.show', $invoice)
+                ->with('status', 'Invoice returned to contractor, but the email could not be sent.');
+        }
     }
 }

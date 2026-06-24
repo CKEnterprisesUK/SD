@@ -6,6 +6,12 @@
                     Invoice {{ $invoice->invoice_number }}
                 </h2>
             </div>
+            @if ($invoice->status === 'returned')
+    <a href="{{ route('contractor.invoices.edit', $invoice) }}"
+       class="inline-flex px-5 py-3 border border-gray-900 text-gray-900 text-sm font-semibold">
+        Edit and resubmit
+    </a>
+@endif
 
             <div>
                 <a href="{{ route('contractor.invoices.download', $invoice) }}"

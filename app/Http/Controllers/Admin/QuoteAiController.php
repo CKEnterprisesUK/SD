@@ -66,7 +66,7 @@ class QuoteAiController extends Controller
                     'response_format' => [
                         'type' => 'json_object',
                     ],
-                    'temperature' => 0.3,
+                    'temperature' => 0.25,
                 ])
                 ->throw()
                 ->json();
@@ -93,7 +93,7 @@ class QuoteAiController extends Controller
 
             return redirect()
                 ->route('admin.quotes.pack', $quote)
-                ->with('status', 'AI customer pack generated successfully. Please review before sending.');
+                ->with('status', 'AI customer pack and draft cost build-up generated. Please review all pricing before sending.');
         } catch (RequestException $exception) {
             $message = $exception->response?->json('error.message')
                 ?: $exception->getMessage();
@@ -125,7 +125,16 @@ class QuoteAiController extends Controller
     private function buildInputPayload(Quote $quote): array
     {
         return [
-            'instruction' => 'Generate a customer-facing quote pack and suggested line items from the supplied quote data. Return JSON only.',
+            'instruction' => 'Generate a customer-facing quote pack and a provisional costed build-up. Return JSON only.',
+            'pricing_instruction' => [
+                'Create draft costed line items from the quote summary, survey notes, measurements, photo captions and existing line items.',
+                'Break costs into labour, materials, plant_equipment, waste_disposal, preliminaries, and other_works where relevant.',
+                'Use pounds as numeric values, not pence.',
+                'Do not return zero-cost line items unless the item is genuinely informational.',
+                'If a cost cannot be firm, still provide a provisional estimate and explain the uncertainty in pricing_warnings.',
+                'If measurements are missing, estimate from the available description and flag missing information.',
+                'The team will review and amend prices before sending.',
+            ],
             'quote' => [
                 'quote_number' => $quote->quote_number,
                 'title' => $quote->title,
@@ -175,16 +184,17 @@ class QuoteAiController extends Controller
                 'customer_message' => 'string',
                 'scope_of_works' => 'string',
                 'estimated_timeline' => 'string',
-                'assumptions' => 'string',
-                'exclusions' => 'string',
-                'terms' => 'string',
+                'assumptions' => 'string or array',
+                'exclusions' => 'string or array',
+                'terms' => 'string or array',
+                'pricing_basis' => 'string',
                 'suggested_line_items' => [
                     [
-                        'type' => 'string',
+                        'type' => 'labour | materials | plant_equipment | waste_disposal | preliminaries | other_works',
                         'description' => 'string',
                         'quantity' => 'number',
                         'unit' => 'string',
-                        'unit_amount' => 'number',
+                        'unit_amount' => 'number in pounds, non-zero unless genuinely informational',
                         'reasoning' => 'string',
                     ],
                 ],
@@ -197,22 +207,37 @@ class QuoteAiController extends Controller
     private function systemPrompt(): string
     {
         return <<<'PROMPT'
-You are assisting a UK building firm to draft a professional customer quote.
+You are assisting a UK building firm to draft a professional customer quote and a provisional internal cost build-up.
 
 You must return valid JSON only. Do not wrap it in markdown.
 
 The quote must be professional, clear, practical and customer-friendly.
 
-Important rules:
+Important safety and accuracy rules:
 - Do not claim that anything is guaranteed unless explicitly stated in the input.
 - Do not invent planning permission, building control, structural engineer, utility, asbestos, drainage or party wall conclusions.
 - If information is missing, add it to "missing_information".
 - If pricing is uncertain, add it to "pricing_warnings".
 - Suggested prices are draft estimates only. They must be reviewed by the team.
-- Keep wording suitable for a homeowner/customer.
-- Avoid excessive sales language.
 - Use UK English.
 - Do not mention AI or ChatGPT.
+
+Pricing rules:
+- You must produce a costed draft build-up if the quote contains enough information to describe the job.
+- Break costs into separate line items: labour, materials, plant_equipment, waste_disposal, preliminaries, and other_works where relevant.
+- Use numeric unit_amount values in pounds, not pence.
+- Do not use "£" symbols in JSON numeric fields.
+- Do not return zero-cost line items unless the item is genuinely informational.
+- If the exact cost is uncertain, still produce a reasonable provisional draft estimate and explain the uncertainty in "pricing_warnings".
+- If measurements are missing, estimate cautiously using the available description and add a warning.
+- Do not duplicate existing manual line items unless they need to be broken down into clearer components.
+- Use quantity and unit properly. Examples:
+  - 3 days labour at 250 per day
+  - 1 skip at 280 each
+  - 1 plant hire allowance at 450 item
+  - 25 m2 plastering materials at 18 per m2
+- Keep descriptions suitable for a quote line item.
+- Put detailed uncertainty in reasoning/pricing_warnings, not in the description.
 
 Return JSON with exactly these top-level keys:
 {
@@ -222,24 +247,20 @@ Return JSON with exactly these top-level keys:
   "assumptions": "...",
   "exclusions": "...",
   "terms": "...",
+  "pricing_basis": "...",
   "suggested_line_items": [
     {
-      "type": "works",
-      "description": "...",
-      "quantity": 1,
-      "unit": "item",
-      "unit_amount": 0,
-      "reasoning": "..."
+      "type": "labour",
+      "description": "Labour for preparation and installation works",
+      "quantity": 3,
+      "unit": "day",
+      "unit_amount": 250,
+      "reasoning": "Based on the survey notes and described scope."
     }
   ],
   "missing_information": [],
   "pricing_warnings": []
 }
-
-For suggested_line_items:
-- Use numeric unit_amount in pounds, not pence.
-- Only include line items that are supported by the survey notes or quote summary.
-- If existing line items already cover the scope, you may return an empty suggested_line_items array.
 PROMPT;
     }
 
@@ -269,22 +290,32 @@ PROMPT;
                     }
 
                     $quantity = max(0.01, (float) ($item['quantity'] ?? 1));
-                    $unitAmountPounds = max(0, (float) ($item['unit_amount'] ?? 0));
+                    $unitAmountPounds = (float) ($item['unit_amount'] ?? 0);
+
+                    /*
+                     * Reject zero-value AI pricing.
+                     * If OpenAI cannot price the item, it should go into pricing_warnings,
+                     * not into the quote as a £0.00 line item.
+                     */
+                    if ($unitAmountPounds <= 0) {
+                        continue;
+                    }
+
                     $unitAmountPence = (int) round($unitAmountPounds * 100);
                     $totalPence = (int) round($quantity * $unitAmountPence);
 
-                    $description = $item['description'];
+                    $description = trim((string) $item['description']);
 
                     if (! empty($item['reasoning'])) {
-                        $description .= ' — ' . $item['reasoning'];
+                        $description .= ' — AI note: ' . trim((string) $item['reasoning']);
                     }
 
                     $quote->lineItems()->create([
                         'source' => 'ai_suggested',
-                        'type' => $item['type'] ?? 'works',
+                        'type' => $this->normaliseLineItemType($item['type'] ?? 'other_works'),
                         'description' => mb_substr($description, 0, 255),
                         'quantity' => $quantity,
-                        'unit' => $item['unit'] ?? 'item',
+                        'unit' => mb_substr((string) ($item['unit'] ?? 'item'), 0, 255),
                         'unit_amount_pence' => $unitAmountPence,
                         'total_pence' => $totalPence,
                         'is_optional' => false,
@@ -295,6 +326,21 @@ PROMPT;
 
             $quote->recalculateTotals();
         });
+    }
+
+    private function normaliseLineItemType(string $type): string
+    {
+        $type = strtolower(trim($type));
+
+        return match ($type) {
+            'labour', 'labor' => 'labour',
+            'material', 'materials' => 'materials',
+            'plant', 'equipment', 'plant_equipment', 'plant / equipment' => 'plant_equipment',
+            'waste', 'disposal', 'waste_disposal', 'waste / disposal' => 'waste_disposal',
+            'preliminaries', 'prelims' => 'preliminaries',
+            'works', 'other', 'other_works' => 'other_works',
+            default => 'other_works',
+        };
     }
 
     private function normaliseTextList(mixed $value): ?string
@@ -315,6 +361,10 @@ PROMPT;
 
         if (! empty($decoded['terms'])) {
             $parts[] = $this->normaliseTextList($decoded['terms']);
+        }
+
+        if (! empty($decoded['pricing_basis'])) {
+            $parts[] = "Pricing basis:\n" . $this->normaliseTextList($decoded['pricing_basis']);
         }
 
         if (! empty($decoded['missing_information'])) {

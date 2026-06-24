@@ -1,20 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Add Contractor
+            Edit Contractor
         </h2>
     </x-slot>
 
     <div class="max-w-3xl mx-auto py-8 px-4">
         <div class="mb-8">
-            <a href="{{ route('admin.contractors.index') }}"
-               class="text-sm underline">
-                Back to contractors
+            <a href="{{ route('admin.contractors.show', $contractor) }}" class="text-sm underline">
+                Back to contractor
             </a>
 
-            <h1 class="text-2xl font-bold mt-4">Add contractor</h1>
+            <h1 class="text-2xl font-bold mt-4">Edit contractor</h1>
+
             <p class="text-sm text-gray-600 mt-1">
-                Create a contractor record and set their day rate.
+                Name and email are locked because they are linked to the login account.
             </p>
         </div>
 
@@ -30,36 +30,16 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('admin.contractors.store') }}" class="space-y-6">
+        <div class="border border-gray-300 bg-gray-50 p-4 mb-6">
+            <div class="text-sm">
+                <div><strong>Name:</strong> {{ $contractor->name }}</div>
+                <div><strong>Email:</strong> {{ $contractor->email }}</div>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('admin.contractors.update', $contractor) }}" class="space-y-6">
             @csrf
-
-            <div>
-                <label for="name" class="block text-sm font-semibold mb-2">
-                    Contractor name
-                </label>
-                <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value="{{ old('name') }}"
-                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                    required
-                >
-            </div>
-
-            <div>
-                <label for="email" class="block text-sm font-semibold mb-2">
-                    Email address
-                </label>
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value="{{ old('email') }}"
-                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
-                    required
-                >
-            </div>
+            @method('PUT')
 
             <div>
                 <label for="phone" class="block text-sm font-semibold mb-2">
@@ -69,7 +49,7 @@
                     id="phone"
                     name="phone"
                     type="text"
-                    value="{{ old('phone') }}"
+                    value="{{ old('phone', $contractor->phone) }}"
                     class="w-full border border-gray-400 px-4 py-3 rounded-none"
                 >
             </div>
@@ -82,7 +62,7 @@
                     id="company_name"
                     name="company_name"
                     type="text"
-                    value="{{ old('company_name') }}"
+                    value="{{ old('company_name', $contractor->company_name) }}"
                     class="w-full border border-gray-400 px-4 py-3 rounded-none"
                 >
             </div>
@@ -101,33 +81,31 @@
                         type="number"
                         step="0.01"
                         min="0"
-                        value="{{ old('day_rate') }}"
+                        value="{{ old('day_rate', $contractor->day_rate) }}"
                         class="w-full border border-gray-400 px-4 py-3 rounded-none"
                         required
                     >
                 </div>
             </div>
 
-            <div class="border border-gray-300 bg-gray-50 p-4">
-    <label class="flex items-start gap-3">
-        <input
-            type="checkbox"
-            name="send_invite"
-            value="1"
-            class="mt-1"
-            checked
-        >
-
-        <span>
-            <span class="block text-sm font-semibold">
-                Send invite email
-            </span>
-            <span class="block text-sm text-gray-600">
-                The contractor will receive a link to set their password and log in.
-            </span>
-        </span>
-    </label>
-</div>
+            <div>
+                <label for="status" class="block text-sm font-semibold mb-2">
+                    Status
+                </label>
+                <select
+                    id="status"
+                    name="status"
+                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                    required
+                >
+                    <option value="active" @selected(old('status', $contractor->status) === 'active')>
+                        Active
+                    </option>
+                    <option value="inactive" @selected(old('status', $contractor->status) === 'inactive')>
+                        Inactive
+                    </option>
+                </select>
+            </div>
 
             <div class="flex items-center gap-4 pt-4">
                 <button type="submit"
@@ -135,8 +113,7 @@
                     Save contractor
                 </button>
 
-                <a href="{{ route('admin.contractors.index') }}"
-                   class="text-sm underline">
+                <a href="{{ route('admin.contractors.show', $contractor) }}" class="text-sm underline">
                     Cancel
                 </a>
             </div>

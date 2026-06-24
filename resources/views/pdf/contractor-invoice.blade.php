@@ -31,18 +31,18 @@
         }
 
         .brand-title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
         }
 
         .brand-subtitle {
-            font-size: 11px;
+            font-size: 10px;
             color: #4b5563;
             margin-top: 4px;
         }
 
         .invoice-title {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: bold;
             text-align: right;
         }
@@ -87,6 +87,7 @@
             border: 1px solid #d1d5db;
             padding: 8px;
             text-align: left;
+            vertical-align: top;
         }
 
         .detail-table th {
@@ -167,11 +168,19 @@
         <table class="brand-row">
             <tr>
                 <td>
-                    
-                    
+                    <div class="brand-title">
+                        {{ $settings->company_name ?: $settings->portal_name ?: 'SiteDesk' }}
+                    </div>
+
+                    @if ($settings->company_address)
+                        <div class="brand-subtitle whitespace-pre-line">
+                            {{ $settings->company_address }}
+                        </div>
+                    @endif
                 </td>
+
                 <td class="text-right">
-                    <div class="invoice-title">Contractor Invoice</div>
+                    <div class="invoice-title">Invoice</div>
                     <div class="muted">{{ $invoice->invoice_number }}</div>
                 </td>
             </tr>
@@ -184,6 +193,7 @@
                 <td style="padding-right: 10px;">
                     <div class="box">
                         <div class="section-title">Supplier</div>
+
                         <p class="font-bold">{{ $invoice->supplier_name }}</p>
 
                         @if ($invoice->supplier_email)
@@ -203,6 +213,7 @@
                 <td style="padding-left: 10px;">
                     <div class="box">
                         <div class="section-title">Customer</div>
+
                         <p class="font-bold">{{ $invoice->customer_name ?: '—' }}</p>
 
                         @if ($invoice->customer_address)
@@ -221,20 +232,17 @@
             <tr>
                 <th>Invoice number</th>
                 <td>{{ $invoice->invoice_number }}</td>
+
                 <th>Invoice date</th>
                 <td>{{ $invoice->invoice_date->format('d M Y') }}</td>
             </tr>
+
             <tr>
                 <th>Week commencing</th>
                 <td>{{ $invoice->week_commencing->format('d M Y') }}</td>
-                <th>Status</th>
-                <td>{{ ucfirst($invoice->status) }}</td>
-            </tr>
-            <tr>
+
                 <th>Submitted at</th>
-                <td>{{ $invoice->submitted_at->format('d M Y H:i') }}</td>
-                <th>Submitted by</th>
-                <td>{{ $invoice->supplier_name }}</td>
+                <td>{{ $invoice->submitted_at ? $invoice->submitted_at->format('d M Y H:i') : '—' }}</td>
             </tr>
         </table>
     </div>
@@ -249,31 +257,38 @@
                     <th>Days claimed</th>
                 </tr>
             </thead>
+
             <tbody>
                 <tr>
                     <td>Monday</td>
                     <td>{{ number_format((float) $invoice->monday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Tuesday</td>
                     <td>{{ number_format((float) $invoice->tuesday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Wednesday</td>
                     <td>{{ number_format((float) $invoice->wednesday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Thursday</td>
                     <td>{{ number_format((float) $invoice->thursday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Friday</td>
                     <td>{{ number_format((float) $invoice->friday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Saturday</td>
                     <td>{{ number_format((float) $invoice->saturday_days, 2) }}</td>
                 </tr>
+
                 <tr>
                     <td>Sunday</td>
                     <td>{{ number_format((float) $invoice->sunday_days, 2) }}</td>
@@ -289,16 +304,16 @@
             <thead>
                 <tr>
                     <th>Description</th>
-                    <th>Days</th>
-                    <th>Day rate</th>
+                    <th>Quantity</th>
+                    <th>Unit amount</th>
                     <th>Total</th>
                 </tr>
             </thead>
+
             <tbody>
                 <tr>
                     <td>
-                        Contractor work submitted for week commencing
-                        {{ $invoice->week_commencing->format('d M Y') }}
+                        Labour for week commencing {{ $invoice->week_commencing->format('d M Y') }}
 
                         @if ($invoice->day_rate_overridden)
                             <br>
@@ -307,10 +322,25 @@
                             </span>
                         @endif
                     </td>
-                    <td>{{ $invoice->days_worked }}</td>
+
+                    <td>{{ $invoice->days_worked }} days</td>
                     <td>£{{ $invoice->actual_day_rate }}</td>
-                    <td>£{{ $invoice->subtotal }}</td>
+                    <td>
+                        £{{ number_format(((float) $invoice->days_worked * $invoice->actual_day_rate_pence) / 100, 2) }}
+                    </td>
                 </tr>
+
+                @foreach ($invoice->lineItems as $lineItem)
+                    <tr>
+                        <td>
+                            {{ ucfirst(str_replace('_', ' ', $lineItem->type)) }} — {{ $lineItem->description }}
+                        </td>
+
+                        <td>{{ $lineItem->quantity }}</td>
+                        <td>£{{ $lineItem->unit_amount }}</td>
+                        <td>£{{ $lineItem->total }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
 
@@ -319,10 +349,12 @@
                 <th>Subtotal</th>
                 <td>£{{ $invoice->subtotal }}</td>
             </tr>
+
             <tr>
                 <th>VAT</th>
                 <td>£{{ $invoice->vat }}</td>
             </tr>
+
             <tr class="total-row">
                 <th>Total due</th>
                 <td>£{{ $invoice->total }}</td>
@@ -345,6 +377,7 @@
 
     <div class="section page-break-safe">
         <div class="section-title">Submission confirmation</div>
+
         <p>{{ $invoice->contractor_confirmation_text }}</p>
 
         @if ($invoice->submitted_ip)

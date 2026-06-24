@@ -9,27 +9,38 @@ use App\Models\Quote;
 use App\Models\QuoteAiDraft;
 use App\Models\QuoteAiDraftItem;
 use App\Services\QuotePricingCalculator;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class QuoteAiDraftController extends Controller
 {
-    public function accept(Quote $quote, QuoteAiDraftItem $item)
+    public function accept(Request $request, Quote $quote, QuoteAiDraftItem $item)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
         $this->abortIfItemDoesNotBelongToQuote($quote, $item);
 
         $item->update(['status' => 'accepted']);
+        $item->refresh();
+
+        if ($this->wantsJson($request)) {
+            return $this->itemJson($item, 'AI draft item accepted.');
+        }
 
         return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item accepted.');
     }
 
-    public function reject(Quote $quote, QuoteAiDraftItem $item)
+    public function reject(Request $request, Quote $quote, QuoteAiDraftItem $item)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
         $this->abortIfItemDoesNotBelongToQuote($quote, $item);
 
         $item->update(['status' => 'rejected']);
+        $item->refresh();
+
+        if ($this->wantsJson($request)) {
+            return $this->itemJson($item, 'AI draft item rejected.');
+        }
 
         return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item rejected.');
     }
@@ -49,7 +60,13 @@ class QuoteAiDraftController extends Controller
 
         $rateItem = PricingRateItem::findOrFail($validated['pricing_rate_item_id']);
         $rateCard = PricingRateCard::activeOrCreateDefault();
-        $calculated = $calculator->calculate($rateItem, (float) $validated['quantity'], $rateCard, $validated['confidence']);
+
+        $calculated = $calculator->calculate(
+            $rateItem,
+            (float) $validated['quantity'],
+            $rateCard,
+            $validated['confidence']
+        );
 
         $item->update(array_merge($calculated, [
             'pricing_rate_item_id' => $rateItem->id,
@@ -63,6 +80,12 @@ class QuoteAiDraftController extends Controller
             'warnings' => $this->linesToArray($validated['warnings'] ?? null),
             'status' => 'accepted',
         ]));
+
+        $item->refresh();
+
+        if ($this->wantsJson($request)) {
+            return $this->itemJson($item, 'AI draft item updated and accepted.');
+        }
 
         return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'AI draft item updated and accepted.');
     }
@@ -85,6 +108,7 @@ class QuoteAiDraftController extends Controller
 
             foreach ($acceptedItems as $item) {
                 $nextSortOrder++;
+
                 $unitAmountPence = $item->quantity > 0
                     ? (int) round($item->subtotal_pence / (float) $item->quantity)
                     : $item->subtotal_pence;
@@ -108,7 +132,9 @@ class QuoteAiDraftController extends Controller
             $quote->recalculateTotals();
         });
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Accepted AI draft items applied to the quote.');
+        return redirect()
+            ->route('admin.quotes.pricing', $quote)
+            ->with('status', 'Accepted AI draft items applied to the quote.');
     }
 
     public function applyWording(Quote $quote, QuoteAiDraft $draft)
@@ -126,12 +152,41 @@ class QuoteAiDraftController extends Controller
             'status' => 'ai_compiled',
         ]);
 
-        return redirect()->route('admin.quotes.pack', $quote)->with('status', 'AI customer wording applied to the customer pack.');
+        return redirect()
+            ->route('admin.quotes.pack', $quote)
+            ->with('status', 'AI customer wording applied to the customer pack.');
     }
 
     private function abortIfItemDoesNotBelongToQuote(Quote $quote, QuoteAiDraftItem $item): void
     {
         abort_unless($item->quote_id === $quote->id, 404);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson() || $request->ajax();
+    }
+
+    private function itemJson(QuoteAiDraftItem $item, string $message): JsonResponse
+    {
+        return response()->json([
+            'message' => $message,
+            'item' => [
+                'id' => $item->id,
+                'status' => $item->status,
+                'status_label' => ucfirst($item->status),
+                'quantity' => (string) $item->quantity,
+                'unit' => $item->unit,
+                'rate_item_code' => $item->rate_item_code,
+                'base_total' => $item->base_total,
+                'markup_percent' => (string) $item->markup_percent,
+                'subtotal' => $item->subtotal,
+                'vat' => $item->vat,
+                'total' => $item->total,
+                'confidence' => $item->confidence,
+                'warnings' => $item->warnings ?? [],
+            ],
+        ]);
     }
 
     private function linesToArray(?string $value): array

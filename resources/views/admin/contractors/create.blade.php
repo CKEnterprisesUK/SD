@@ -16,9 +16,6 @@
                 Add contractor
             </h1>
 
-            <p class="text-sm text-gray-600 mt-1">
-                Create a contractor record, set their day rate and add the invoice address used on future invoices.
-            </p>
         </div>
 
         @if ($errors->any())

@@ -111,9 +111,7 @@
                         Invoice details
                     </h2>
 
-                    <p class="text-sm text-gray-600 mt-1">
-                        This address will be copied onto future contractor invoices when they are submitted.
-                    </p>
+                 
                 </div>
 
                 <div>

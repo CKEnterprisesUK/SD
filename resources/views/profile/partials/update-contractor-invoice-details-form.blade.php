@@ -9,15 +9,19 @@
         </p>
     </header>
 
-    <form method="POST" action="{{ route('profile.contractor-invoice-details.update') }}" class="mt-6 space-y-6">
+    <form
+        method="POST"
+        action="{{ route('profile.contractor-invoice-details.update') }}"
+        class="mt-6 space-y-6"
+    >
         @csrf
         @method('PATCH')
 
         <div>
-            <x-input-label for="address" value="Invoice address" />
+            <x-input-label for="contractor_invoice_address" value="Invoice address" />
 
             <textarea
-                id="address"
+                id="contractor_invoice_address"
                 name="address"
                 rows="5"
                 class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-none shadow-sm"
@@ -33,7 +37,7 @@
             </p>
 
             <p class="mt-1">
-                When you submit a new invoice, SiteDesk copies this address onto that invoice. If you change this address later, old invoices will keep the address they were submitted with.
+                When you submit a new invoice, SiteDesk copies this address onto that invoice. Existing invoices keep the address they were submitted with.
             </p>
         </div>
 

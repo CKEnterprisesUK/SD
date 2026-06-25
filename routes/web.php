@@ -40,6 +40,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('/profile/contractor-invoice-details', [ContractorInvoiceDetailsController::class, 'update'])
     ->name('profile.contractor-invoice-details.update');
 
+    Route::get('/profile/contractor-invoice-details', function () {
+    return redirect()->route('profile.edit');
+})->name('profile.contractor-invoice-details.edit');
+
+
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
 

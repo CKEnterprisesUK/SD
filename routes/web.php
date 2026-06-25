@@ -17,6 +17,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\QuotePackController;
 use App\Http\Controllers\Admin\QuotePackTemplateController;
+use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\SettingsHubController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -148,6 +150,15 @@ Route::middleware(['auth'])
 
 Route::put('/settings/quote-pack', [QuotePackTemplateController::class, 'update'])
     ->name('settings.quote-pack.update');
+
+    Route::get('/settings/overview', [SettingsHubController::class, 'index'])
+    ->name('settings.index');
+
+Route::get('/settings/ai', [AiSettingsController::class, 'edit'])
+    ->name('settings.ai.edit');
+
+Route::put('/settings/ai', [AiSettingsController::class, 'update'])
+    ->name('settings.ai.update');
 
         /*
         |--------------------------------------------------------------------------

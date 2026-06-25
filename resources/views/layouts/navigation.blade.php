@@ -142,17 +142,7 @@
                         @if ($user?->isAdmin())
                             <div class="border-t border-gray-200 my-1"></div>
 
-                            @if (Route::has('admin.contractors.index'))
-                                <x-dropdown-link :href="route('admin.contractors.index')">
-                                    Contractors
-                                </x-dropdown-link>
-                            @endif
-
-                            @if (Route::has('admin.invoices.index'))
-                                <x-dropdown-link :href="route('admin.invoices.index')">
-                                    Contractor invoices
-                                </x-dropdown-link>
-                            @endif
+                            
 
                             @if (Route::has('admin.users.index'))
                                 <x-dropdown-link :href="route('admin.users.index')">

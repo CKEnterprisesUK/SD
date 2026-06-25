@@ -41,6 +41,7 @@ class ContractorController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:contractors,email', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:2000'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'day_rate' => ['required', 'numeric', 'min:0'],
             'send_invite' => ['nullable', 'boolean'],
@@ -59,6 +60,7 @@ class ContractorController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
             'company_name' => $validated['company_name'] ?? null,
             'day_rate_pence' => (int) round($validated['day_rate'] * 100),
             'status' => 'active',
@@ -73,6 +75,7 @@ class ContractorController extends Controller
                 'name',
                 'email',
                 'phone',
+                'address',
                 'company_name',
                 'day_rate_pence',
                 'status',
@@ -96,25 +99,24 @@ class ContractorController extends Controller
             ->with('status', 'Contractor created successfully.');
     }
 
-   public function show(Contractor $contractor)
-{
-    abort_unless(auth()->user()->isAdmin(), 403);
+    public function show(Contractor $contractor)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
 
-    $contractor->load([
-        'user',
-        'activityLogs' => fn ($query) => $query->with('user')->latest()->limit(20),
-    ]);
+        $contractor->load([
+            'user',
+            'activityLogs' => fn ($query) => $query->with('user')->latest()->limit(20),
+        ]);
 
-    $invoices = $contractor->invoices()
-        ->latest('week_commencing')
-        ->paginate(10, ['*'], 'invoices_page');
+        $invoices = $contractor->invoices()
+            ->latest('week_commencing')
+            ->paginate(10, ['*'], 'invoices_page');
 
-    return view('admin.contractors.show', [
-        'contractor' => $contractor,
-        'invoices' => $invoices,
-    ]);
-}
-    
+        return view('admin.contractors.show', [
+            'contractor' => $contractor,
+            'invoices' => $invoices,
+        ]);
+    }
 
     public function edit(Contractor $contractor)
     {
@@ -131,6 +133,7 @@ class ContractorController extends Controller
 
         $validated = $request->validate([
             'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:2000'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'day_rate' => ['required', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
@@ -138,6 +141,7 @@ class ContractorController extends Controller
 
         $oldValues = $contractor->only([
             'phone',
+            'address',
             'company_name',
             'day_rate_pence',
             'status',
@@ -145,6 +149,7 @@ class ContractorController extends Controller
 
         $contractor->update([
             'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
             'company_name' => $validated['company_name'] ?? null,
             'day_rate_pence' => (int) round($validated['day_rate'] * 100),
             'status' => $validated['status'],
@@ -163,6 +168,7 @@ class ContractorController extends Controller
             oldValues: $oldValues,
             newValues: $contractor->fresh()->only([
                 'phone',
+                'address',
                 'company_name',
                 'day_rate_pence',
                 'status',

@@ -44,6 +44,12 @@
                 Quote pack
             </a>
         @endif
+        @if (Route::has('admin.settings.users.index'))
+    <a href="{{ route('admin.settings.users.index') }}"
+       class="block px-4 py-3 border border-gray-300 text-sm font-semibold {{ request()->routeIs('admin.settings.users.*') ? 'bg-black text-white border-black' : 'bg-white text-gray-900 hover:border-black' }}">
+        Users
+    </a>
+@endif
 
         @if (Route::has('admin.users.index'))
             <a href="{{ route('admin.users.index') }}"

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\QuotePackTemplateController;
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\SettingsHubController;
 use App\Http\Controllers\Profile\ContractorInvoiceDetailsController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -141,6 +142,18 @@ Route::middleware(['auth'])
 
         Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show'])
             ->name('invoices.show');
+
+            Route::post('/users/{user}/send-password-reset', [\App\Http\Controllers\Admin\UserController::class, 'sendPasswordReset'])
+    ->name('users.send-password-reset');
+
+    Route::get('/settings/users', [UserController::class, 'index'])
+    ->name('settings.users.index');
+
+Route::post('/settings/users', [UserController::class, 'store'])
+    ->name('settings.users.store');
+
+Route::post('/settings/users/{user}/send-password-reset', [UserController::class, 'sendPasswordReset'])
+    ->name('settings.users.send-password-reset');
 
         /*
         |--------------------------------------------------------------------------

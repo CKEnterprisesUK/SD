@@ -103,6 +103,18 @@
                                 </span>
                             </a>
                         @endif
+                        @if (Route::has('admin.settings.users.index'))
+    <a href="{{ route('admin.settings.users.index') }}"
+       class="block border border-gray-300 bg-white p-6 hover:border-black">
+        <h2 class="text-lg font-bold text-gray-900">
+            Users
+        </h2>
+
+        <p class="text-sm text-gray-600 mt-2">
+            Add admin users and send password reset emails.
+        </p>
+    </a>
+@endif
 
                         @if (Route::has('admin.users.index'))
                             <a href="{{ route('admin.users.index') }}"

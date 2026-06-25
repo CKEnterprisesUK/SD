@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-use App\Http\Controllers\Admin\UserController;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -15,16 +16,14 @@ class UserController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('admin.users.index', [
-            'users' => User::latest()->paginate(10),
+        $users = User::query()
+            ->where('role', 'admin')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.settings.users', [
+            'users' => $users,
         ]);
-    }
-
-    public function create()
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
-
-        return view('admin.users.create');
     }
 
     public function store(Request $request)
@@ -33,63 +32,66 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', 'in:admin,contractor'],
-            'status' => ['required', 'in:active,inactive'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email'),
+            ],
+            'send_password_reset' => ['nullable', 'boolean'],
         ]);
 
-        User::create([
+        $user = new User();
+
+        $user->forceFill([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
-            'status' => $validated['status'],
-            'password' => Hash::make($validated['password']),
-        ]);
+            'role' => 'admin',
+            'status' => 'active',
+            'password' => Hash::make(Str::random(48)),
+        ])->save();
+
+        if ($request->boolean('send_password_reset', true)) {
+            $status = Password::sendResetLink([
+                'email' => $user->email,
+            ]);
+
+            if ($status !== Password::RESET_LINK_SENT) {
+                return redirect()
+                    ->route('admin.settings.users.index')
+                    ->with('status', 'Admin user created, but the password reset email could not be sent.');
+            }
+        }
 
         return redirect()
-            ->route('admin.users.index')
-            ->with('status', 'User created successfully.');
+            ->route('admin.settings.users.index')
+            ->with('status', 'Admin user created and password reset email sent.');
     }
 
-    public function edit(User $user)
+    public function sendPasswordReset(User $user)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        return view('admin.users.edit', [
-            'user' => $user,
-        ]);
-    }
+        abort_unless($user->role === 'admin', 403);
 
-    public function update(Request $request, User $user)
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        if (! $user->email) {
+            return redirect()
+                ->route('admin.settings.users.index')
+                ->with('status', 'This admin user does not have an email address.');
+        }
 
-        $validated = $request->validate([
-            'role' => ['required', 'in:admin,contractor'],
-            'status' => ['required', 'in:active,inactive'],
+        $status = Password::sendResetLink([
+            'email' => $user->email,
         ]);
 
-        $user->update($validated);
+        if ($status === Password::RESET_LINK_SENT) {
+            return redirect()
+                ->route('admin.settings.users.index')
+                ->with('status', 'Password reset email sent to ' . $user->email . '.');
+        }
 
         return redirect()
-            ->route('admin.users.index')
-            ->with('status', 'User updated successfully.');
-            
-            Route::get('/users', [UserController::class, 'index'])
-    ->name('users.index');
-
-Route::get('/users/create', [UserController::class, 'create'])
-    ->name('users.create');
-
-Route::post('/users', [UserController::class, 'store'])
-    ->name('users.store');
-
-Route::get('/users/{user}/edit', [UserController::class, 'edit'])
-    ->name('users.edit');
-
-Route::put('/users/{user}', [UserController::class, 'update'])
-    ->name('users.update');
+            ->route('admin.settings.users.index')
+            ->with('status', 'The password reset email could not be sent.');
     }
-    
 }

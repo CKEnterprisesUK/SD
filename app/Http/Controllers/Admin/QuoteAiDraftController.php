@@ -25,7 +25,9 @@ class QuoteAiDraftController extends Controller
             return $this->itemJson($item, 'Item accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item accepted.');
+        return redirect()
+            ->route('admin.quotes.pricing', $quote)
+            ->with('status', 'Item accepted.');
     }
 
     public function reject(Request $request, Quote $quote, QuoteAiDraftItem $item)
@@ -40,7 +42,9 @@ class QuoteAiDraftController extends Controller
             return $this->itemJson($item, 'Item rejected.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item rejected.');
+        return redirect()
+            ->route('admin.quotes.pricing', $quote)
+            ->with('status', 'Item rejected.');
     }
 
     public function update(Request $request, Quote $quote, QuoteAiDraftItem $item)
@@ -106,38 +110,49 @@ class QuoteAiDraftController extends Controller
             return $this->itemJson($item, 'Item saved and accepted.');
         }
 
-        return redirect()->route('admin.quotes.pricing', $quote)->with('status', 'Item saved and accepted.');
+        return redirect()
+            ->route('admin.quotes.pricing', $quote)
+            ->with('status', 'Item saved and accepted.');
     }
 
     public function applyAccepted(Quote $quote, QuoteAiDraft $draft)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
-        abort_unless($draft->quote_id === $quote->id, 404);
+        abort_unless((int) $draft->quote_id === (int) $quote->id, 404);
 
-        $acceptedItems = $draft->items()->where('status', 'accepted')->get();
+        /*
+         * New simplified behaviour:
+         * The pricing page no longer shows AI review items.
+         * This applies all draft items that are not rejected or already applied.
+         */
+        $itemsToApply = $draft->items()
+            ->whereNotIn('status', ['rejected', 'applied'])
+            ->get();
 
-        if ($acceptedItems->isEmpty()) {
-            return redirect()->route('admin.quotes.pricing', $quote)->withErrors([
-                'ai_draft' => 'Accept at least one item before applying it to the quote.',
-            ]);
+        if ($itemsToApply->isEmpty()) {
+            return redirect()
+                ->route('admin.quotes.pricing', $quote)
+                ->withErrors([
+                    'ai_draft' => 'There are no AI estimate items left to add to the quote.',
+                ]);
         }
 
-        DB::transaction(function () use ($quote, $draft, $acceptedItems) {
+        DB::transaction(function () use ($quote, $draft, $itemsToApply) {
             $nextSortOrder = (int) $quote->lineItems()->max('sort_order');
 
-            foreach ($acceptedItems as $item) {
+            foreach ($itemsToApply as $item) {
                 $nextSortOrder++;
 
                 $unitAmountPence = $item->quantity > 0
                     ? (int) round($item->subtotal_pence / (float) $item->quantity)
-                    : $item->subtotal_pence;
+                    : (int) $item->subtotal_pence;
 
                 $quote->lineItems()->create([
-                    'source' => 'ai_reviewed',
-                    'type' => $item->category,
+                    'source' => 'ai_estimate',
+                    'type' => $item->category ?: 'works',
                     'description' => $item->clean_customer_description,
                     'quantity' => $item->quantity,
-                    'unit' => $item->unit,
+                    'unit' => $item->unit ?: 'item',
                     'unit_amount_pence' => max($unitAmountPence, 0),
                     'total_pence' => max((int) $item->subtotal_pence, 0),
                     'is_optional' => false,
@@ -153,13 +168,13 @@ class QuoteAiDraftController extends Controller
 
         return redirect()
             ->route('admin.quotes.pricing', $quote)
-            ->with('status', 'Accepted items applied to the quote.');
+            ->with('status', 'AI estimate items added to the quote line items.');
     }
 
     public function applyWording(Quote $quote, QuoteAiDraft $draft)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
-        abort_unless($draft->quote_id === $quote->id, 404);
+        abort_unless((int) $draft->quote_id === (int) $quote->id, 404);
 
         $quote->update([
             'final_customer_message' => $draft->customer_message,
@@ -178,7 +193,7 @@ class QuoteAiDraftController extends Controller
 
     private function abortIfItemDoesNotBelongToQuote(Quote $quote, QuoteAiDraftItem $item): void
     {
-        abort_unless($item->quote_id === $quote->id, 404);
+        abort_unless((int) $item->quote_id === (int) $quote->id, 404);
     }
 
     private function wantsJson(Request $request): bool

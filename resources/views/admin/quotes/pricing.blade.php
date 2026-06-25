@@ -35,7 +35,15 @@
             ? route('admin.quotes.generate-ai-estimate', $quote)
             : route('admin.quotes.compile-ai', $quote);
 
-        $lineItemUpdateRouteExists = Route::has('admin.quotes.line-items.update');
+        $latestDraftItemsToApply = collect();
+
+        if ($latestDraft && $latestDraft->relationLoaded('items')) {
+            $latestDraftItemsToApply = $latestDraft->items
+                ->filter(fn ($item) => ! in_array($item->status, ['rejected', 'applied'], true))
+                ->values();
+        }
+
+        $lineItems = $quote->lineItems ?? collect();
     @endphp
 
     <div class="max-w-7xl mx-auto py-8 px-4 space-y-8">
@@ -64,8 +72,8 @@
                         Quote pricing
                     </h1>
 
-                    <p class="text-sm text-gray-600 mt-2">
-                        Edit the final quote line items below. These are the items used in the quote total.
+                    <p class="text-sm text-gray-600 mt-2 max-w-2xl">
+                        Edit the final quote line items below. These are the items used in the customer quote total.
                     </p>
                 </div>
 
@@ -88,7 +96,7 @@
 
         @if ($latestDraft)
             <section class="border border-gray-300 bg-white p-6">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h2 class="text-lg font-semibold">
                             Latest AI estimate
@@ -97,22 +105,27 @@
                         <p class="text-sm text-gray-600 mt-1">
                             {{ $latestDraft->detected_job_type ?: 'Job type not detected' }}
                             · Confidence: {{ ucfirst($latestDraft->overall_confidence) }}
+                            · {{ $latestDraftItemsToApply->count() }} item{{ $latestDraftItemsToApply->count() === 1 ? '' : 's' }} ready to add
                         </p>
                     </div>
 
-                    <div class="flex flex-wrap gap-3">
+                    @if ($latestDraftItemsToApply->isNotEmpty())
                         <form method="POST" action="{{ route('admin.quotes.ai-drafts.apply-accepted', [$quote, $latestDraft]) }}">
                             @csrf
 
                             <button
                                 type="submit"
-                                class="px-5 py-3 border border-black text-sm font-semibold rounded-none"
-                                onclick="return confirm('Apply accepted AI items to this quote?')"
+                                class="px-5 py-3 bg-black text-white text-sm font-semibold rounded-none"
+                                onclick="return confirm('Add the AI estimate items to this quote? You can edit them afterwards.')"
                             >
-                                Apply accepted AI items
+                                Add AI estimate to line items
                             </button>
                         </form>
-                    </div>
+                    @else
+                        <div class="border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                            No AI estimate items waiting to be added.
+                        </div>
+                    @endif
                 </div>
             </section>
         @endif
@@ -127,7 +140,7 @@
                             </h2>
 
                             <p class="text-sm text-gray-600 mt-1">
-                                Edit the items that will appear in the customer quote.
+                                These are the final priced rows used in the quote.
                             </p>
                         </div>
 
@@ -139,18 +152,18 @@
                 </div>
 
                 <div class="p-6 space-y-4">
-                    @forelse ($quote->lineItems as $lineItem)
-                        <article class="border border-gray-300 bg-white">
-                            <form
-                                method="POST"
-                                action="{{ $lineItemUpdateRouteExists ? route('admin.quotes.line-items.update', [$quote, $lineItem]) : '#' }}"
-                                class="p-4 space-y-4"
-                            >
-                                @csrf
+                    @forelse ($lineItems as $lineItem)
+                        @php
+                            $unitAmountValue = number_format(($lineItem->unit_amount_pence ?? 0) / 100, 2, '.', '');
+                            $lineTotalValue = number_format(($lineItem->total_pence ?? 0) / 100, 2);
+                        @endphp
 
-                                @if ($lineItemUpdateRouteExists)
-                                    @method('PUT')
-                                @endif
+                        <article class="border border-gray-300 bg-white">
+                            <form method="POST"
+                                  action="{{ route('admin.quotes.line-items.update', [$quote, $lineItem]) }}"
+                                  class="p-4 space-y-4">
+                                @csrf
+                                @method('PUT')
 
                                 <div class="grid grid-cols-1 lg:grid-cols-[1fr_180px] gap-4">
                                     <div>
@@ -163,7 +176,6 @@
                                             rows="2"
                                             class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm font-semibold"
                                             required
-                                            @disabled(! $lineItemUpdateRouteExists)
                                         >{{ old('line_items.' . $lineItem->id . '.description', $lineItem->description) }}</textarea>
                                     </div>
 
@@ -173,11 +185,11 @@
                                         </label>
 
                                         <div class="border border-gray-300 bg-gray-50 px-3 py-2 text-lg font-bold">
-                                            £{{ $lineItem->total }}
+                                            £{{ $lineTotalValue }}
                                         </div>
 
                                         <div class="text-xs text-gray-500 mt-1">
-                                            {{ $lineItem->source }}
+                                            {{ $lineItem->source ?: 'manual' }}
                                         </div>
                                     </div>
                                 </div>
@@ -194,7 +206,6 @@
                                             value="{{ old('line_items.' . $lineItem->id . '.type', $lineItem->type) }}"
                                             class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
                                             required
-                                            @disabled(! $lineItemUpdateRouteExists)
                                         >
                                     </div>
 
@@ -211,7 +222,6 @@
                                             value="{{ old('line_items.' . $lineItem->id . '.quantity', $lineItem->quantity) }}"
                                             class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
                                             required
-                                            @disabled(! $lineItemUpdateRouteExists)
                                         >
                                     </div>
 
@@ -226,7 +236,6 @@
                                             value="{{ old('line_items.' . $lineItem->id . '.unit', $lineItem->unit) }}"
                                             class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
                                             required
-                                            @disabled(! $lineItemUpdateRouteExists)
                                         >
                                     </div>
 
@@ -240,10 +249,9 @@
                                             type="number"
                                             min="0"
                                             step="0.01"
-                                            value="{{ old('line_items.' . $lineItem->id . '.unit_amount', $lineItem->unit_amount) }}"
+                                            value="{{ old('line_items.' . $lineItem->id . '.unit_amount', $unitAmountValue) }}"
                                             class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
                                             required
-                                            @disabled(! $lineItemUpdateRouteExists)
                                         >
                                     </div>
 
@@ -258,7 +266,6 @@
                                                 name="is_optional"
                                                 value="1"
                                                 @checked(old('line_items.' . $lineItem->id . '.is_optional', $lineItem->is_optional))
-                                                @disabled(! $lineItemUpdateRouteExists)
                                             >
 
                                             Yes
@@ -266,22 +273,12 @@
                                     </div>
 
                                     <div class="flex items-end">
-                                        @if ($lineItemUpdateRouteExists)
-                                            <button
-                                                type="submit"
-                                                class="w-full px-4 py-2 bg-black text-white text-sm font-semibold rounded-none"
-                                            >
-                                                Save
-                                            </button>
-                                        @else
-                                            <button
-                                                type="button"
-                                                class="w-full px-4 py-2 border border-gray-400 text-gray-500 text-sm font-semibold rounded-none cursor-not-allowed"
-                                                disabled
-                                            >
-                                                Save
-                                            </button>
-                                        @endif
+                                        <button
+                                            type="submit"
+                                            class="w-full px-4 py-2 bg-black text-white text-sm font-semibold rounded-none"
+                                        >
+                                            Save
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -442,275 +439,7 @@
                         </div>
                     </div>
                 </section>
-
-                @unless ($lineItemUpdateRouteExists)
-                    <section class="border border-yellow-700 bg-yellow-50 p-6 text-sm text-yellow-900">
-                        <p class="font-semibold">
-                            Line item editing route missing
-                        </p>
-
-                        <p class="mt-2">
-                            The page is ready for editing, but the update route still needs adding:
-                        </p>
-
-                        <pre class="mt-3 whitespace-pre-wrap text-xs">admin.quotes.line-items.update</pre>
-                    </section>
-                @endunless
             </aside>
         </div>
     </div>
-</x-app-layout>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const statusBox = document.getElementById('ajax-status');
-        const acceptAllButton = document.getElementById('accept-all-items');
-
-        function showStatus(message, type = 'success') {
-            if (!statusBox) {
-                return;
-            }
-
-            statusBox.textContent = message;
-            statusBox.className = 'border px-4 py-3 text-sm';
-
-            if (type === 'error') {
-                statusBox.classList.add('border-red-700', 'bg-red-50', 'text-red-900');
-            } else {
-                statusBox.classList.add('border-green-700', 'bg-green-50', 'text-green-900');
-            }
-
-            statusBox.classList.remove('hidden');
-        }
-
-        function setRowState(row, status) {
-            row.dataset.status = status;
-
-            row.classList.remove(
-                'border-gray-300',
-                'border-green-700',
-                'border-red-700',
-                'border-gray-700',
-                'bg-white',
-                'bg-green-50',
-                'bg-red-50',
-                'bg-gray-50'
-            );
-
-            if (status === 'accepted') {
-                row.classList.add('border-green-700', 'bg-green-50');
-            } else if (status === 'rejected') {
-                row.classList.add('border-red-700', 'bg-red-50');
-            } else if (status === 'applied') {
-                row.classList.add('border-gray-700', 'bg-gray-50');
-            } else {
-                row.classList.add('border-gray-300', 'bg-white');
-            }
-
-            const badge = row.querySelector('[data-status-badge]');
-
-            if (badge) {
-                badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                badge.className = 'inline-flex px-3 py-1 border text-xs font-semibold';
-
-                if (status === 'accepted') {
-                    badge.classList.add('border-green-700', 'text-green-800', 'bg-green-50');
-                } else if (status === 'rejected') {
-                    badge.classList.add('border-red-700', 'text-red-800', 'bg-red-50');
-                } else if (status === 'applied') {
-                    badge.classList.add('border-gray-700', 'text-gray-800', 'bg-gray-50');
-                } else {
-                    badge.classList.add('border-yellow-700', 'text-yellow-800', 'bg-yellow-50');
-                }
-            }
-
-            if (['accepted', 'rejected', 'applied'].includes(status)) {
-                row.classList.add('hidden');
-            } else {
-                row.classList.remove('hidden');
-            }
-
-            updateCounts();
-            updateEmptyState();
-        }
-
-        function updateRowPrices(row, item) {
-            if (item.likely_total !== undefined && item.likely_total !== null) {
-                row.dataset.likely = item.likely_total.replace(/,/g, '');
-            }
-
-            const totalEl = row.querySelector('[data-field="total"]');
-
-            if (totalEl && item.total !== undefined && item.total !== null) {
-                totalEl.textContent = item.total;
-            }
-
-            updateCounts();
-        }
-
-        function updateCounts() {
-            const rows = Array.from(document.querySelectorAll('[data-item-row]'));
-
-            const acceptedRows = rows.filter(row => row.dataset.status === 'accepted');
-            const pendingRows = rows.filter(row => row.dataset.status === 'pending');
-
-            const acceptedEl = document.getElementById('accepted-count');
-            const pendingEl = document.getElementById('pending-count');
-            const acceptedTotalEl = document.getElementById('accepted-total');
-
-            if (acceptedEl) {
-                acceptedEl.textContent = acceptedRows.length;
-            }
-
-            if (pendingEl) {
-                pendingEl.textContent = pendingRows.length;
-            }
-
-            if (acceptedTotalEl) {
-                const total = acceptedRows.reduce(function (sum, row) {
-                    return sum + (parseFloat(row.dataset.likely || '0') || 0);
-                }, 0);
-
-                acceptedTotalEl.textContent = total.toLocaleString('en-GB', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-        }
-
-        function updateEmptyState() {
-            const visiblePendingRows = Array.from(document.querySelectorAll('[data-item-row]'))
-                .filter(row => row.dataset.status === 'pending' && !row.classList.contains('hidden'));
-
-            let emptyState = document.getElementById('estimate-empty-state');
-
-            if (visiblePendingRows.length === 0) {
-                if (!emptyState) {
-                    const container = document.querySelector('[data-estimate-items-container]');
-
-                    if (container) {
-                        emptyState = document.createElement('div');
-                        emptyState.id = 'estimate-empty-state';
-                        emptyState.className = 'border border-green-700 bg-green-50 p-6 text-sm text-green-900';
-                        emptyState.textContent = 'All estimate items have been reviewed. Apply the accepted items to the quote when ready.';
-
-                        container.appendChild(emptyState);
-                    }
-                }
-            } else if (emptyState) {
-                emptyState.remove();
-            }
-        }
-
-        async function submitAjaxForm(form) {
-            let row = form.closest('[data-item-row]');
-
-            if (!row && form.id && form.id.startsWith('draft-item-')) {
-                const id = form.id.replace('draft-item-', '');
-                row = document.querySelector('[data-item-row][data-item-id="' + id + '"]');
-            }
-
-            const button = form.querySelector('button[type="submit"]');
-            const originalText = button ? button.textContent : null;
-
-            if (button) {
-                button.disabled = true;
-                button.textContent = 'Saving...';
-            }
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    if (data.errors) {
-                        throw new Error(Object.values(data.errors).flat().join(' '));
-                    }
-
-                    throw new Error(data.message || 'The item could not be saved.');
-                }
-
-                if (row && data.item) {
-                    updateRowPrices(row, data.item);
-                    setRowState(row, data.item.status);
-                }
-
-                return data;
-            } finally {
-                if (button) {
-                    button.disabled = false;
-                    button.textContent = originalText;
-                }
-            }
-        }
-
-        document.querySelectorAll('.js-ai-item-form').forEach(function (form) {
-            form.addEventListener('submit', async function (event) {
-                event.preventDefault();
-
-                try {
-                    const data = await submitAjaxForm(form);
-                    showStatus(data.message || 'Saved.');
-                } catch (error) {
-                    showStatus(error.message || 'There was a problem saving this item.', 'error');
-                }
-            });
-        });
-
-        if (acceptAllButton) {
-            acceptAllButton.addEventListener('click', async function () {
-                const forms = Array.from(document.querySelectorAll('.js-accept-form'))
-                    .filter(function (form) {
-                        const row = form.closest('[data-item-row]');
-
-                        return row &&
-                            row.dataset.status === 'pending' &&
-                            !row.classList.contains('hidden');
-                    });
-
-                if (forms.length === 0) {
-                    showStatus('There are no pending items to accept.');
-                    return;
-                }
-
-                acceptAllButton.disabled = true;
-                acceptAllButton.textContent = 'Accepting...';
-
-                let accepted = 0;
-                let failed = 0;
-
-                for (const form of forms) {
-                    try {
-                        await submitAjaxForm(form);
-                        accepted++;
-                    } catch (error) {
-                        failed++;
-                    }
-                }
-
-                acceptAllButton.disabled = false;
-                acceptAllButton.textContent = 'Accept all';
-
-                if (failed > 0) {
-                    showStatus(accepted + ' items accepted. ' + failed + ' items could not be accepted.', 'error');
-                } else {
-                    showStatus(accepted + ' items accepted.');
-                }
-
-                updateEmptyState();
-            });
-        }
-
-        updateCounts();
-        updateEmptyState();
-    });
-</script>
 </x-app-layout>

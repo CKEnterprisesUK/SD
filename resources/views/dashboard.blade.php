@@ -22,8 +22,8 @@
         };
 
         /*
-         * Replace this URL with your own photo later if you want.
-         * Recommended image: wide landscape, ideally 1600px wide.
+         * Replace this URL with your own image later.
+         * Good size: wide landscape image, 1600px+ wide.
          */
         $heroImageUrl = 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80';
 
@@ -36,35 +36,41 @@
         }
     @endphp
 
-    <div class="py-10">
+    <div class="py-6 sm:py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <section class="relative border border-gray-300 bg-black overflow-hidden mb-8">
+            <section
+                class="relative border border-gray-300 bg-black overflow-hidden mb-6 sm:mb-8"
+                style="height: 190px;"
+            >
                 <img
                     src="{{ $heroImageUrl }}"
                     alt="SiteDesk dashboard"
-                    class="w-full h-[150px] sm:h-[170px] object-cover opacity-80"
+                    style="width: 100%; height: 100%; object-fit: cover; display: block;"
                 >
 
-                <div class="absolute inset-0" style="background: rgba(0,0,0,0.35);"></div>
+                <div
+                    class="absolute inset-0"
+                    style="background: rgba(0, 0, 0, 0.58);"
+                ></div>
 
                 <div class="absolute inset-0 flex items-center">
-                    <div class="px-6 sm:px-8">
-                        <p class="text-sm font-semibold text-white/80">
+                    <div class="px-5 sm:px-8">
+                        <p class="text-sm font-semibold" style="color: rgba(255,255,255,0.82);">
                             SiteDesk
                         </p>
 
-                        <h1 class="text-3xl sm:text-4xl font-bold text-white mt-1">
+                        <h1 class="text-3xl sm:text-4xl font-bold mt-1" style="color: #ffffff;">
                             {{ $greeting }}, {{ $firstName }}
                         </h1>
 
-                        <p class="text-sm text-white/90 mt-2 max-w-2xl">
+                        <p class="text-sm sm:text-base mt-2 max-w-2xl" style="color: rgba(255,255,255,0.92);">
                             Manage contractors, invoices, customers, quotes and settings from one place.
                         </p>
                     </div>
                 </div>
             </section>
 
-            <div class="mb-8">
+            <div class="mb-6 sm:mb-8">
                 <h2 class="text-3xl font-bold text-gray-900">
                     Tools
                 </h2>

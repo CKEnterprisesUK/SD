@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\QuotePackController;
 use App\Http\Controllers\Admin\QuotePackTemplateController;
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\SettingsHubController;
+use App\Http\Controllers\Profile\ContractorInvoiceDetailsController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -35,6 +36,9 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
+        
+        Route::patch('/profile/contractor-invoice-details', [ContractorInvoiceDetailsController::class, 'update'])
+    ->name('profile.contractor-invoice-details.update');
 
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');

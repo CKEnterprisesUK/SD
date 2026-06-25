@@ -12,6 +12,13 @@
                     @include('profile.partials.update-profile-information-form')
                 </div>
             </div>
+            @if (auth()->user()?->isContractor())
+    <div class="p-4 sm:p-8 bg-white shadow sm:rounded-none">
+        <div class="max-w-xl">
+            @include('profile.partials.update-contractor-invoice-details-form')
+        </div>
+    </div>
+@endif
 
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">

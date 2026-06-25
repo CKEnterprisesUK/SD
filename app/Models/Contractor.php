@@ -13,6 +13,7 @@ class Contractor extends Model
         'name',
         'email',
         'phone',
+         'address',
         'company_name',
         'day_rate_pence',
         'status',

@@ -29,11 +29,11 @@ return [
     ],
 
     'openai' => [
-        'api_key' => env('OPENAI_API_KEY'),
-        'extract_model' => env('OPENAI_EXTRACT_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini')),
-        'estimate_model' => env('OPENAI_ESTIMATE_MODEL', env('OPENAI_MODEL', 'gpt-4o')),
-        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
-    ],
+    'api_key' => env('OPENAI_API_KEY'),
+    'model' => env('OPENAI_MODEL', 'gpt-4o'),
+    'estimate_model' => env('OPENAI_ESTIMATE_MODEL', env('OPENAI_MODEL', 'gpt-4o')),
+    'wording_model' => env('OPENAI_WORDING_MODEL', env('OPENAI_MODEL', 'gpt-4o')),
+],
 
     'slack' => [
         'notifications' => [

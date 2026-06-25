@@ -264,6 +264,17 @@ Route::middleware(['auth'])
         Route::post('/quotes/{quote}/ai-drafts/{draft}/apply-wording', [QuoteAiDraftController::class, 'applyWording'])
             ->name('quotes.ai-drafts.apply-wording');
 
+
+            // AI NEW
+            Route::post('/quotes/{quote}/generate-ai-estimate', [QuoteAiController::class, 'generateEstimate'])
+                ->name('quotes.generate-ai-estimate');
+
+            Route::post('/quotes/{quote}/generate-ai-wording', [QuoteAiController::class, 'generateWording'])
+                ->name('quotes.generate-ai-wording');
+
+            Route::post('/quotes/{quote}/compile-ai', [QuoteAiController::class, 'compile'])
+                ->name('quotes.compile-ai');
+
         /*
         |--------------------------------------------------------------------------
         | Quote notes

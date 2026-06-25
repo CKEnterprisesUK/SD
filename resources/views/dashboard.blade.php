@@ -25,7 +25,7 @@
          * Replace this URL with your own image later.
          * Good size: wide landscape image, 1600px+ wide.
          */
-        $heroImageUrl = 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80';
+        $heroImageUrl = 'https://greenst.co.uk/wp-content/uploads/2026/04/green-room-22.jpeg';
 
         $settingsRoute = null;
 

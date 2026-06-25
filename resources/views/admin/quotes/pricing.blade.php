@@ -169,8 +169,8 @@
                     </div>
                 @endif
 
-                <div class="p-6 space-y-4">
-                    @forelse ($latestDraft->items as $item)
+<div class="p-6 space-y-4" data-estimate-items-container>
+    @forelse ($latestDraft->items as $item)
                         @php
                             $status = $item->status ?? 'pending';
 
@@ -190,12 +190,16 @@
                             data-item-id="{{ $item->id }}"
                             data-likely="{{ $likelyEstimate }}"
                             class="border transition
+                                @if (in_array($status, ['accepted', 'rejected', 'applied']))
+                                    hidden
+                                @endif
+
                                 @if ($status === 'accepted') border-green-700 bg-green-50
                                 @elseif ($status === 'rejected') border-red-700 bg-red-50
                                 @elseif ($status === 'applied') border-gray-700 bg-gray-50
                                 @else border-gray-300 bg-white
                                 @endif"
-                        >
+>
                             <form
                                 id="draft-item-{{ $item->id }}"
                                 method="POST"
@@ -582,218 +586,255 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const statusBox = document.getElementById('ajax-status');
-            const acceptAllButton = document.getElementById('accept-all-items');
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusBox = document.getElementById('ajax-status');
+        const acceptAllButton = document.getElementById('accept-all-items');
 
-            function showStatus(message, type = 'success') {
-                if (!statusBox) {
-                    return;
-                }
-
-                statusBox.textContent = message;
-                statusBox.className = 'border px-4 py-3 text-sm';
-
-                if (type === 'error') {
-                    statusBox.classList.add('border-red-700', 'bg-red-50', 'text-red-900');
-                } else {
-                    statusBox.classList.add('border-green-700', 'bg-green-50', 'text-green-900');
-                }
-
-                statusBox.classList.remove('hidden');
+        function showStatus(message, type = 'success') {
+            if (!statusBox) {
+                return;
             }
 
-            function setRowState(row, status) {
-                row.dataset.status = status;
+            statusBox.textContent = message;
+            statusBox.className = 'border px-4 py-3 text-sm';
 
-                row.classList.remove(
-                    'border-gray-300',
-                    'border-green-700',
-                    'border-red-700',
-                    'border-gray-700',
-                    'bg-white',
-                    'bg-green-50',
-                    'bg-red-50',
-                    'bg-gray-50'
-                );
+            if (type === 'error') {
+                statusBox.classList.add('border-red-700', 'bg-red-50', 'text-red-900');
+            } else {
+                statusBox.classList.add('border-green-700', 'bg-green-50', 'text-green-900');
+            }
+
+            statusBox.classList.remove('hidden');
+        }
+
+        function setRowState(row, status) {
+            row.dataset.status = status;
+
+            row.classList.remove(
+                'border-gray-300',
+                'border-green-700',
+                'border-red-700',
+                'border-gray-700',
+                'bg-white',
+                'bg-green-50',
+                'bg-red-50',
+                'bg-gray-50'
+            );
+
+            if (status === 'accepted') {
+                row.classList.add('border-green-700', 'bg-green-50');
+            } else if (status === 'rejected') {
+                row.classList.add('border-red-700', 'bg-red-50');
+            } else if (status === 'applied') {
+                row.classList.add('border-gray-700', 'bg-gray-50');
+            } else {
+                row.classList.add('border-gray-300', 'bg-white');
+            }
+
+            const badge = row.querySelector('[data-status-badge]');
+
+            if (badge) {
+                badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                badge.className = 'inline-flex px-3 py-1 border text-xs font-semibold';
 
                 if (status === 'accepted') {
-                    row.classList.add('border-green-700', 'bg-green-50');
+                    badge.classList.add('border-green-700', 'text-green-800', 'bg-green-50');
                 } else if (status === 'rejected') {
-                    row.classList.add('border-red-700', 'bg-red-50');
+                    badge.classList.add('border-red-700', 'text-red-800', 'bg-red-50');
                 } else if (status === 'applied') {
-                    row.classList.add('border-gray-700', 'bg-gray-50');
+                    badge.classList.add('border-gray-700', 'text-gray-800', 'bg-gray-50');
                 } else {
-                    row.classList.add('border-gray-300', 'bg-white');
-                }
-
-                const badge = row.querySelector('[data-status-badge]');
-
-                if (badge) {
-                    badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                    badge.className = 'inline-flex px-3 py-1 border text-xs font-semibold';
-
-                    if (status === 'accepted') {
-                        badge.classList.add('border-green-700', 'text-green-800', 'bg-green-50');
-                    } else if (status === 'rejected') {
-                        badge.classList.add('border-red-700', 'text-red-800', 'bg-red-50');
-                    } else if (status === 'applied') {
-                        badge.classList.add('border-gray-700', 'text-gray-800', 'bg-gray-50');
-                    } else {
-                        badge.classList.add('border-yellow-700', 'text-yellow-800', 'bg-yellow-50');
-                    }
-                }
-
-                updateCounts();
-            }
-
-            function updateRowPrices(row, item) {
-                if (item.likely_total !== undefined && item.likely_total !== null) {
-                    row.dataset.likely = item.likely_total.replace(/,/g, '');
-                }
-
-                const totalEl = row.querySelector('[data-field="total"]');
-
-                if (totalEl && item.total !== undefined && item.total !== null) {
-                    totalEl.textContent = item.total;
-                }
-
-                updateCounts();
-            }
-
-            function updateCounts() {
-                const rows = Array.from(document.querySelectorAll('[data-item-row]'));
-
-                const acceptedRows = rows.filter(row => row.dataset.status === 'accepted');
-                const pendingRows = rows.filter(row => row.dataset.status === 'pending');
-
-                const acceptedEl = document.getElementById('accepted-count');
-                const pendingEl = document.getElementById('pending-count');
-                const acceptedTotalEl = document.getElementById('accepted-total');
-
-                if (acceptedEl) {
-                    acceptedEl.textContent = acceptedRows.length;
-                }
-
-                if (pendingEl) {
-                    pendingEl.textContent = pendingRows.length;
-                }
-
-                if (acceptedTotalEl) {
-                    const total = acceptedRows.reduce(function (sum, row) {
-                        return sum + (parseFloat(row.dataset.likely || '0') || 0);
-                    }, 0);
-
-                    acceptedTotalEl.textContent = total.toLocaleString('en-GB', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
+                    badge.classList.add('border-yellow-700', 'text-yellow-800', 'bg-yellow-50');
                 }
             }
 
-            async function submitAjaxForm(form) {
-                let row = form.closest('[data-item-row]');
-
-                if (!row && form.id && form.id.startsWith('draft-item-')) {
-                    const id = form.id.replace('draft-item-', '');
-                    row = document.querySelector('[data-item-row][data-item-id="' + id + '"]');
-                }
-
-                const button = form.querySelector('button[type="submit"]');
-                const originalText = button ? button.textContent : null;
-
-                if (button) {
-                    button.disabled = true;
-                    button.textContent = 'Saving...';
-                }
-
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        body: new FormData(form),
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        if (data.errors) {
-                            throw new Error(Object.values(data.errors).flat().join(' '));
-                        }
-
-                        throw new Error(data.message || 'The item could not be saved.');
-                    }
-
-                    if (row && data.item) {
-                        setRowState(row, data.item.status);
-                        updateRowPrices(row, data.item);
-                    }
-
-                    return data;
-                } finally {
-                    if (button) {
-                        button.disabled = false;
-                        button.textContent = originalText;
-                    }
-                }
-            }
-
-            document.querySelectorAll('.js-ai-item-form').forEach(function (form) {
-                form.addEventListener('submit', async function (event) {
-                    event.preventDefault();
-
-                    try {
-                        const data = await submitAjaxForm(form);
-                        showStatus(data.message || 'Saved.');
-                    } catch (error) {
-                        showStatus(error.message || 'There was a problem saving this item.', 'error');
-                    }
-                });
-            });
-
-            if (acceptAllButton) {
-                acceptAllButton.addEventListener('click', async function () {
-                    const forms = Array.from(document.querySelectorAll('.js-accept-form'))
-                        .filter(function (form) {
-                            const row = form.closest('[data-item-row]');
-                            return row && row.dataset.status !== 'accepted' && row.dataset.status !== 'applied';
-                        });
-
-                    if (forms.length === 0) {
-                        showStatus('There are no pending items to accept.');
-                        return;
-                    }
-
-                    acceptAllButton.disabled = true;
-                    acceptAllButton.textContent = 'Accepting...';
-
-                    let accepted = 0;
-                    let failed = 0;
-
-                    for (const form of forms) {
-                        try {
-                            await submitAjaxForm(form);
-                            accepted++;
-                        } catch (error) {
-                            failed++;
-                        }
-                    }
-
-                    acceptAllButton.disabled = false;
-                    acceptAllButton.textContent = 'Accept all';
-
-                    if (failed > 0) {
-                        showStatus(accepted + ' items accepted. ' + failed + ' items could not be accepted.', 'error');
-                    } else {
-                        showStatus(accepted + ' items accepted.');
-                    }
-                });
+            if (['accepted', 'rejected', 'applied'].includes(status)) {
+                row.classList.add('hidden');
+            } else {
+                row.classList.remove('hidden');
             }
 
             updateCounts();
+            updateEmptyState();
+        }
+
+        function updateRowPrices(row, item) {
+            if (item.likely_total !== undefined && item.likely_total !== null) {
+                row.dataset.likely = item.likely_total.replace(/,/g, '');
+            }
+
+            const totalEl = row.querySelector('[data-field="total"]');
+
+            if (totalEl && item.total !== undefined && item.total !== null) {
+                totalEl.textContent = item.total;
+            }
+
+            updateCounts();
+        }
+
+        function updateCounts() {
+            const rows = Array.from(document.querySelectorAll('[data-item-row]'));
+
+            const acceptedRows = rows.filter(row => row.dataset.status === 'accepted');
+            const pendingRows = rows.filter(row => row.dataset.status === 'pending');
+
+            const acceptedEl = document.getElementById('accepted-count');
+            const pendingEl = document.getElementById('pending-count');
+            const acceptedTotalEl = document.getElementById('accepted-total');
+
+            if (acceptedEl) {
+                acceptedEl.textContent = acceptedRows.length;
+            }
+
+            if (pendingEl) {
+                pendingEl.textContent = pendingRows.length;
+            }
+
+            if (acceptedTotalEl) {
+                const total = acceptedRows.reduce(function (sum, row) {
+                    return sum + (parseFloat(row.dataset.likely || '0') || 0);
+                }, 0);
+
+                acceptedTotalEl.textContent = total.toLocaleString('en-GB', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        }
+
+        function updateEmptyState() {
+            const visiblePendingRows = Array.from(document.querySelectorAll('[data-item-row]'))
+                .filter(row => row.dataset.status === 'pending' && !row.classList.contains('hidden'));
+
+            let emptyState = document.getElementById('estimate-empty-state');
+
+            if (visiblePendingRows.length === 0) {
+                if (!emptyState) {
+                    const container = document.querySelector('[data-estimate-items-container]');
+
+                    if (container) {
+                        emptyState = document.createElement('div');
+                        emptyState.id = 'estimate-empty-state';
+                        emptyState.className = 'border border-green-700 bg-green-50 p-6 text-sm text-green-900';
+                        emptyState.textContent = 'All estimate items have been reviewed. Apply the accepted items to the quote when ready.';
+
+                        container.appendChild(emptyState);
+                    }
+                }
+            } else if (emptyState) {
+                emptyState.remove();
+            }
+        }
+
+        async function submitAjaxForm(form) {
+            let row = form.closest('[data-item-row]');
+
+            if (!row && form.id && form.id.startsWith('draft-item-')) {
+                const id = form.id.replace('draft-item-', '');
+                row = document.querySelector('[data-item-row][data-item-id="' + id + '"]');
+            }
+
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button ? button.textContent : null;
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Saving...';
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.errors) {
+                        throw new Error(Object.values(data.errors).flat().join(' '));
+                    }
+
+                    throw new Error(data.message || 'The item could not be saved.');
+                }
+
+                if (row && data.item) {
+                    updateRowPrices(row, data.item);
+                    setRowState(row, data.item.status);
+                }
+
+                return data;
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            }
+        }
+
+        document.querySelectorAll('.js-ai-item-form').forEach(function (form) {
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                try {
+                    const data = await submitAjaxForm(form);
+                    showStatus(data.message || 'Saved.');
+                } catch (error) {
+                    showStatus(error.message || 'There was a problem saving this item.', 'error');
+                }
+            });
         });
-    </script>
+
+        if (acceptAllButton) {
+            acceptAllButton.addEventListener('click', async function () {
+                const forms = Array.from(document.querySelectorAll('.js-accept-form'))
+                    .filter(function (form) {
+                        const row = form.closest('[data-item-row]');
+
+                        return row &&
+                            row.dataset.status === 'pending' &&
+                            !row.classList.contains('hidden');
+                    });
+
+                if (forms.length === 0) {
+                    showStatus('There are no pending items to accept.');
+                    return;
+                }
+
+                acceptAllButton.disabled = true;
+                acceptAllButton.textContent = 'Accepting...';
+
+                let accepted = 0;
+                let failed = 0;
+
+                for (const form of forms) {
+                    try {
+                        await submitAjaxForm(form);
+                        accepted++;
+                    } catch (error) {
+                        failed++;
+                    }
+                }
+
+                acceptAllButton.disabled = false;
+                acceptAllButton.textContent = 'Accept all';
+
+                if (failed > 0) {
+                    showStatus(accepted + ' items accepted. ' + failed + ' items could not be accepted.', 'error');
+                } else {
+                    showStatus(accepted + ' items accepted.');
+                }
+
+                updateEmptyState();
+            });
+        }
+
+        updateCounts();
+        updateEmptyState();
+    });
+</script>
 </x-app-layout>

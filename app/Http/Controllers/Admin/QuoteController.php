@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\PortalSetting;
 use App\Models\PricingRateItem;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 
 class QuoteController extends Controller
 {
@@ -64,6 +65,15 @@ class QuoteController extends Controller
 
         $users = User::orderBy('name')->get();
 
+        $assignableUsers = User::query()
+    ->where('role', 'admin')
+    ->where(function ($query) {
+        $query->whereNull('status')
+            ->orWhere('status', 'active');
+    })
+    ->orderBy('name')
+    ->get();
+
         $selectedCustomer = null;
 
         if ($request->filled('customer_id')) {
@@ -83,7 +93,16 @@ class QuoteController extends Controller
 
         $validated = $request->validate([
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
-            'assigned_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'assigned_user_id' => [
+    'nullable',
+    Rule::exists('users', 'id')->where(function ($query) {
+        $query->where('role', 'admin')
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'active');
+            });
+    }),
+],
             'title' => ['required', 'string', 'max:255'],
             'status' => ['required', 'in:draft,survey_in_progress,survey_completed,ai_compiled,sent,accepted,declined,expired,cancelled'],
             'site_address' => ['nullable', 'string', 'max:5000'],
@@ -131,21 +150,28 @@ class QuoteController extends Controller
     }
 
     public function edit(Quote $quote)
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
 
-        $customers = Customer::orderBy('company_name')
-            ->orderBy('name')
-            ->get();
+    $customers = \App\Models\Customer::query()
+        ->orderBy('name')
+        ->get();
 
-        $users = User::orderBy('name')->get();
+    $assignableUsers = User::query()
+        ->where('role', 'admin')
+        ->where(function ($query) {
+            $query->whereNull('status')
+                ->orWhere('status', 'active');
+        })
+        ->orderBy('name')
+        ->get();
 
-        return view('admin.quotes.edit', [
-            'quote' => $quote,
-            'customers' => $customers,
-            'users' => $users,
-        ]);
-    }
+    return view('admin.quotes.edit', [
+        'quote' => $quote,
+        'customers' => $customers,
+        'assignableUsers' => $assignableUsers,
+    ]);
+}
 
     public function update(Request $request, Quote $quote)
     {
@@ -153,7 +179,16 @@ class QuoteController extends Controller
 
         $validated = $request->validate([
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
-            'assigned_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'assigned_user_id' => [
+    'nullable',
+    Rule::exists('users', 'id')->where(function ($query) {
+        $query->where('role', 'admin')
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'active');
+            });
+    }),
+],
             'title' => ['required', 'string', 'max:255'],
             'status' => ['required', 'in:draft,survey_in_progress,survey_completed,ai_compiled,sent,accepted,declined,expired,cancelled'],
             'site_address' => ['nullable', 'string', 'max:5000'],

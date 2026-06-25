@@ -17,6 +17,20 @@
     );
 
     $status = old('status', $quote?->status ?? 'draft');
+
+    /*
+     * The controller may still pass $users.
+     * This form now filters that list so only active admin users appear.
+     */
+    $assignableAdmins = collect($users ?? [])
+        ->filter(function ($user) {
+            return ($user->role ?? null) === 'admin'
+                && in_array(($user->status ?? 'active'), ['active', null], true);
+        })
+        ->sortBy('name')
+        ->values();
+
+    $selectedAssignedUserId = old('assigned_user_id', $quote?->assigned_user_id);
 @endphp
 
 <form method="POST" action="{{ $action }}" class="space-y-8">
@@ -51,7 +65,7 @@
 
             <div>
                 <label for="assigned_user_id" class="block text-sm font-semibold mb-2">
-                    Assigned to
+                    Assigned admin
                 </label>
 
                 <select id="assigned_user_id"
@@ -59,12 +73,22 @@
                         class="w-full border border-gray-400 px-4 py-3 rounded-none">
                     <option value="">Unassigned</option>
 
-                    @foreach ($users as $user)
-                        <option value="{{ $user->id }}" @selected((string) old('assigned_user_id', $quote?->assigned_user_id) === (string) $user->id)>
-                            {{ $user->name }}
+                    @foreach ($assignableAdmins as $assignableAdmin)
+                        <option value="{{ $assignableAdmin->id }}" @selected((string) $selectedAssignedUserId === (string) $assignableAdmin->id)>
+                            {{ $assignableAdmin->name }}
                         </option>
                     @endforeach
                 </select>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Only admin users can be assigned to quotes.
+                </p>
+
+                @if ($assignableAdmins->isEmpty())
+                    <p class="text-xs text-red-700 mt-2">
+                        No active admin users are currently available.
+                    </p>
+                @endif
             </div>
 
             <div>
@@ -231,7 +255,7 @@
 
     <div class="flex items-center gap-4">
         <button type="submit"
-                class="px-5 py-3 bg-black text-white text-sm font-semibold">
+                class="px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
             {{ $quote ? 'Save quote' : 'Create quote' }}
         </button>
 

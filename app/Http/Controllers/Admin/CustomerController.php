@@ -92,16 +92,32 @@ class CustomerController extends Controller
             ->with('status', 'Customer created successfully.');
     }
 
-    public function show(Customer $customer)
-    {
-        abort_unless(auth()->user()->isAdmin(), 403);
+   public function show(Customer $customer)
+{
+    abort_unless(auth()->user()->isAdmin(), 403);
 
-        $customer->load('contacts');
+    $customer->load([
+        'contacts',
+        'primaryContact',
+    ]);
 
-        return view('admin.customers.show', [
-            'customer' => $customer,
-        ]);
-    }
+    $currentQuotes = $customer->quotes()
+        ->whereNotIn('status', ['accepted', 'declined', 'cancelled'])
+        ->latest()
+        ->get();
+
+    $recentQuotes = $customer->quotes()
+        ->whereIn('status', ['accepted', 'declined', 'cancelled'])
+        ->latest()
+        ->limit(5)
+        ->get();
+
+    return view('admin.customers.show', [
+        'customer' => $customer,
+        'currentQuotes' => $currentQuotes,
+        'recentQuotes' => $recentQuotes,
+    ]);
+}
 
     public function edit(Customer $customer)
     {

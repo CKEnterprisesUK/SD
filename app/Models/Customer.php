@@ -25,6 +25,11 @@ class Customer extends Model
             ->orderBy('id');
     }
 
+    public function quotes(): HasMany
+{
+    return $this->hasMany(Quote::class);
+}
+
     public function primaryContact(): HasOne
     {
         return $this->hasOne(CustomerContact::class)

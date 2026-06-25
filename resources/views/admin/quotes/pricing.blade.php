@@ -15,6 +15,13 @@
                     </a>
                 @endif
 
+                @if (Route::has('admin.quotes.pack'))
+                    <a href="{{ route('admin.quotes.pack', $quote) }}"
+                       class="inline-flex px-5 py-3 border border-black text-sm font-semibold rounded-none">
+                        Customer pack
+                    </a>
+                @endif
+
                 <a href="{{ route('admin.quotes.show', $quote) }}"
                    class="inline-flex px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
                     Back to quote
@@ -27,11 +34,11 @@
         $generateEstimateRoute = Route::has('admin.quotes.generate-ai-estimate')
             ? route('admin.quotes.generate-ai-estimate', $quote)
             : route('admin.quotes.compile-ai', $quote);
+
+        $lineItemUpdateRouteExists = Route::has('admin.quotes.line-items.update');
     @endphp
 
     <div class="max-w-7xl mx-auto py-8 px-4 space-y-8">
-        <div id="ajax-status" class="hidden border px-4 py-3 text-sm"></div>
-
         @if (session('status'))
             <div class="border border-green-700 bg-green-50 px-4 py-3 text-sm text-green-900">
                 {{ session('status') }}
@@ -54,11 +61,11 @@
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                 <div>
                     <h1 class="text-2xl font-bold">
-                        AI estimate
+                        Quote pricing
                     </h1>
 
                     <p class="text-sm text-gray-600 mt-2">
-                        Generate a draft, review the wording and prices, then apply accepted items to the quote.
+                        Edit the final quote line items below. These are the items used in the quote total.
                     </p>
                 </div>
 
@@ -80,510 +87,379 @@
         </section>
 
         @if ($latestDraft)
-            <section class="border border-gray-300 bg-white">
-                <div class="p-6 border-b border-gray-300">
-                    <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
-                        <div>
-                            <h2 class="text-xl font-bold">
-                                Review estimate items
-                            </h2>
+            <section class="border border-gray-300 bg-white p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            Latest AI estimate
+                        </h2>
 
-                            <div class="flex flex-wrap gap-2 mt-3 text-xs">
-                                <span class="inline-flex border border-gray-300 px-2 py-1">
-                                    {{ $latestDraft->detected_job_type ?: 'Job type not detected' }}
-                                </span>
+                        <p class="text-sm text-gray-600 mt-1">
+                            {{ $latestDraft->detected_job_type ?: 'Job type not detected' }}
+                            · Confidence: {{ ucfirst($latestDraft->overall_confidence) }}
+                        </p>
+                    </div>
 
-                                <span class="inline-flex border border-gray-300 px-2 py-1">
-                                    Confidence: {{ ucfirst($latestDraft->overall_confidence) }}
-                                </span>
+                    <div class="flex flex-wrap gap-3">
+                        <form method="POST" action="{{ route('admin.quotes.ai-drafts.apply-accepted', [$quote, $latestDraft]) }}">
+                            @csrf
 
-                                <span class="inline-flex border border-gray-300 px-2 py-1">
-                                    <span id="accepted-count">0</span> accepted
-                                </span>
-
-                                <span class="inline-flex border border-gray-300 px-2 py-1">
-                                    <span id="pending-count">0</span> pending
-                                </span>
-
-                                <span class="inline-flex border border-gray-300 px-2 py-1">
-                                    Accepted ex VAT: £<span id="accepted-total">0.00</span>
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-3">
                             <button
-                                type="button"
-                                id="accept-all-items"
-                                class="px-5 py-3 bg-black text-white text-sm font-semibold rounded-none"
+                                type="submit"
+                                class="px-5 py-3 border border-black text-sm font-semibold rounded-none"
+                                onclick="return confirm('Apply accepted AI items to this quote?')"
                             >
-                                Accept all
+                                Apply accepted AI items
                             </button>
-
-                            <form method="POST" action="{{ route('admin.quotes.ai-drafts.apply-accepted', [$quote, $latestDraft]) }}">
-                                @csrf
-
-                                <button
-                                    type="submit"
-                                    class="px-5 py-3 border border-black text-sm font-semibold rounded-none"
-                                    onclick="return confirm('Apply accepted items to this quote?')"
-                                >
-                                    Apply accepted to quote
-                                </button>
-                            </form>
-                        </div>
+                        </form>
                     </div>
-                </div>
-
-                @if (! empty($latestDraft->missing_information) || ! empty($latestDraft->warnings))
-                    <div class="p-6 border-b border-gray-300 bg-gray-50">
-                        @if (! empty($latestDraft->missing_information))
-                            <div class="mb-4">
-                                <h3 class="font-semibold text-sm">
-                                    Missing information
-                                </h3>
-
-                                <ul class="list-disc pl-5 mt-2 text-sm text-gray-700 space-y-1">
-                                    @foreach ($latestDraft->missing_information as $missing)
-                                        <li>
-                                            {{ $missing['question'] ?? ($missing['field'] ?? 'Information missing') }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        @if (! empty($latestDraft->warnings))
-                            <div>
-                                <h3 class="font-semibold text-sm">
-                                    Warnings
-                                </h3>
-
-                                <ul class="list-disc pl-5 mt-2 text-sm text-gray-700 space-y-1">
-                                    @foreach ($latestDraft->warnings as $warning)
-                                        <li>{{ is_array($warning) ? json_encode($warning) : $warning }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
-<div class="p-6 space-y-4" data-estimate-items-container>
-    @forelse ($latestDraft->items as $item)
-                        @php
-                            $status = $item->status ?? 'pending';
-
-                            $warningsText = is_array($item->warnings ?? null)
-                                ? implode("\n", $item->warnings ?? [])
-                                : ($item->warnings ?? '');
-
-                            $lowEstimate = number_format(($item->low_total_pence ?? 0) / 100, 2, '.', '');
-                            $likelyEstimate = number_format(($item->likely_total_pence ?? $item->subtotal_pence ?? 0) / 100, 2, '.', '');
-                            $highEstimate = number_format(($item->high_total_pence ?? 0) / 100, 2, '.', '');
-                            $incVatEstimate = number_format(($item->total_pence ?? 0) / 100, 2, '.', '');
-                        @endphp
-
-                        <article
-                            data-item-row
-                            data-status="{{ $status }}"
-                            data-item-id="{{ $item->id }}"
-                            data-likely="{{ $likelyEstimate }}"
-                            class="border transition
-                                @if (in_array($status, ['accepted', 'rejected', 'applied']))
-                                    hidden
-                                @endif
-
-                                @if ($status === 'accepted') border-green-700 bg-green-50
-                                @elseif ($status === 'rejected') border-red-700 bg-red-50
-                                @elseif ($status === 'applied') border-gray-700 bg-gray-50
-                                @else border-gray-300 bg-white
-                                @endif"
->
-                            <form
-                                id="draft-item-{{ $item->id }}"
-                                method="POST"
-                                action="{{ route('admin.quotes.ai-draft-items.update', [$quote, $item]) }}"
-                                class="js-ai-item-form"
-                            >
-                                @csrf
-                                @method('PUT')
-                            </form>
-
-                            <div class="p-4">
-                                <div class="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-xs font-semibold mb-1">
-                                                Customer line item wording
-                                            </label>
-
-                                            <textarea
-                                                form="draft-item-{{ $item->id }}"
-                                                name="clean_customer_description"
-                                                rows="2"
-                                                class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm font-semibold"
-                                                required
-                                            >{{ $item->clean_customer_description }}</textarea>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Qty
-                                                </label>
-
-                                                <input
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="quantity"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0.01"
-                                                    value="{{ $item->quantity }}"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                    required
-                                                >
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Unit
-                                                </label>
-
-                                                <input
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="unit"
-                                                    value="{{ $item->unit }}"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                    required
-                                                >
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Low
-                                                </label>
-
-                                                <input
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="low_estimate_ex_vat"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value="{{ $lowEstimate }}"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                    required
-                                                >
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Likely
-                                                </label>
-
-                                                <input
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="likely_estimate_ex_vat"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0.01"
-                                                    value="{{ $likelyEstimate }}"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm font-semibold"
-                                                    required
-                                                >
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    High
-                                                </label>
-
-                                                <input
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="high_estimate_ex_vat"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value="{{ $highEstimate }}"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                    required
-                                                >
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Inc VAT
-                                                </label>
-
-                                                <div class="border border-gray-300 bg-gray-50 px-2 py-2 text-sm font-semibold">
-                                                    £<span data-field="total">{{ $item->total ?? $incVatEstimate }}</span>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Confidence
-                                                </label>
-
-                                                <select
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="confidence"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                >
-                                                    <option value="low" @selected($item->confidence === 'low')>Low</option>
-                                                    <option value="medium" @selected($item->confidence === 'medium')>Medium</option>
-                                                    <option value="high" @selected($item->confidence === 'high')>High</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1">
-                                                    Basis
-                                                </label>
-
-                                                <select
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="pricing_basis"
-                                                    class="w-full border border-gray-400 px-2 py-2 rounded-none text-sm"
-                                                >
-                                                    @foreach ([
-                                                        'pricing_guidance' => 'Guidance',
-                                                        'project_template' => 'Template',
-                                                        'historical_guidance' => 'History',
-                                                        'user_hint' => 'User hint',
-                                                        'provisional_allowance' => 'Allowance',
-                                                        'professional_estimate' => 'Estimate',
-                                                        'market_assumption' => 'Market',
-                                                        'ai_estimate' => 'AI estimate',
-                                                    ] as $value => $label)
-                                                        <option value="{{ $value }}" @selected(($item->pricing_basis ?? $item->pricing_source) === $value)>
-                                                            {{ $label }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <details>
-                                            <summary class="cursor-pointer text-xs underline text-gray-700">
-                                                Internal notes and warnings
-                                            </summary>
-
-                                            <div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                                <textarea
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="estimate_explanation"
-                                                    rows="3"
-                                                    class="w-full border border-gray-400 px-3 py-2 rounded-none text-xs"
-                                                    placeholder="Internal note"
-                                                >{{ $item->estimate_explanation }}</textarea>
-
-                                                <textarea
-                                                    form="draft-item-{{ $item->id }}"
-                                                    name="warnings"
-                                                    rows="3"
-                                                    class="w-full border border-gray-400 px-3 py-2 rounded-none text-xs"
-                                                    placeholder="Warnings"
-                                                >{{ $warningsText }}</textarea>
-                                            </div>
-
-                                            @if ($item->internal_reasoning)
-                                                <p class="text-xs text-gray-600 mt-3">
-                                                    {{ $item->internal_reasoning }}
-                                                </p>
-                                            @endif
-                                        </details>
-                                    </div>
-
-                                    <div class="flex flex-col justify-between gap-4">
-                                        <div class="flex xl:justify-end">
-                                            <span
-                                                data-status-badge
-                                                class="inline-flex px-3 py-1 border text-xs font-semibold
-                                                    @if ($status === 'accepted') border-green-700 text-green-800 bg-green-50
-                                                    @elseif ($status === 'rejected') border-red-700 text-red-800 bg-red-50
-                                                    @elseif ($status === 'applied') border-gray-700 text-gray-800 bg-gray-50
-                                                    @else border-yellow-700 text-yellow-800 bg-yellow-50
-                                                    @endif"
-                                            >
-                                                {{ ucfirst($status) }}
-                                            </span>
-                                        </div>
-
-                                        <div class="space-y-2">
-                                            <button
-                                                form="draft-item-{{ $item->id }}"
-                                                type="submit"
-                                                class="w-full px-4 py-2 bg-black text-white text-sm font-semibold rounded-none"
-                                            >
-                                                Save + accept
-                                            </button>
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <form method="POST"
-                                                      action="{{ route('admin.quotes.ai-draft-items.accept', [$quote, $item]) }}"
-                                                      class="js-ai-item-form js-accept-form">
-                                                    @csrf
-
-                                                    <button type="submit" class="w-full px-4 py-2 border border-black text-sm font-semibold rounded-none">
-                                                        Accept
-                                                    </button>
-                                                </form>
-
-                                                <form method="POST"
-                                                      action="{{ route('admin.quotes.ai-draft-items.reject', [$quote, $item]) }}"
-                                                      class="js-ai-item-form">
-                                                    @csrf
-
-                                                    <button type="submit" class="w-full px-4 py-2 border border-red-700 text-red-700 text-sm font-semibold rounded-none">
-                                                        Reject
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                    @empty
-                        <div class="border border-gray-300 bg-gray-50 p-8 text-center text-gray-600">
-                            No AI estimate items yet.
-                        </div>
-                    @endforelse
                 </div>
             </section>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <section class="lg:col-span-2 border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">
-                    Quote line items
-                </h2>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <section class="xl:col-span-2 border border-gray-300 bg-white">
+                <div class="p-6 border-b border-gray-300">
+                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold">
+                                Line items
+                            </h2>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-gray-300 bg-gray-50 text-left">
-                                <th class="px-3 py-2 font-semibold">Description</th>
-                                <th class="px-3 py-2 font-semibold">Qty</th>
-                                <th class="px-3 py-2 font-semibold">Unit</th>
-                                <th class="px-3 py-2 font-semibold">Subtotal</th>
-                                <th class="px-3 py-2 font-semibold">Action</th>
-                            </tr>
-                        </thead>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Edit the items that will appear in the customer quote.
+                            </p>
+                        </div>
 
-                        <tbody>
-                            @forelse ($quote->lineItems as $lineItem)
-                                <tr class="border-b border-gray-200">
-                                    <td class="px-3 py-3">
-                                        <div class="font-semibold">{{ $lineItem->description }}</div>
+                        <div class="border border-gray-300 bg-gray-50 px-4 py-3 text-sm">
+                            <div class="font-semibold">Quote total</div>
+                            <div class="text-xl font-bold">£{{ $quote->total }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    @forelse ($quote->lineItems as $lineItem)
+                        <article class="border border-gray-300 bg-white">
+                            <form
+                                method="POST"
+                                action="{{ $lineItemUpdateRouteExists ? route('admin.quotes.line-items.update', [$quote, $lineItem]) : '#' }}"
+                                class="p-4 space-y-4"
+                            >
+                                @csrf
+
+                                @if ($lineItemUpdateRouteExists)
+                                    @method('PUT')
+                                @endif
+
+                                <div class="grid grid-cols-1 lg:grid-cols-[1fr_180px] gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Description
+                                        </label>
+
+                                        <textarea
+                                            name="description"
+                                            rows="2"
+                                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm font-semibold"
+                                            required
+                                            @disabled(! $lineItemUpdateRouteExists)
+                                        >{{ old('line_items.' . $lineItem->id . '.description', $lineItem->description) }}</textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Subtotal
+                                        </label>
+
+                                        <div class="border border-gray-300 bg-gray-50 px-3 py-2 text-lg font-bold">
+                                            £{{ $lineItem->total }}
+                                        </div>
 
                                         <div class="text-xs text-gray-500 mt-1">
-                                            {{ ucfirst(str_replace('_', ' ', $lineItem->type)) }}
-                                            · {{ $lineItem->source }}
-
-                                            @if ($lineItem->is_optional)
-                                                · Optional
-                                            @endif
+                                            {{ $lineItem->source }}
                                         </div>
-                                    </td>
+                                    </div>
+                                </div>
 
-                                    <td class="px-3 py-3">{{ $lineItem->quantity }}</td>
-                                    <td class="px-3 py-3">£{{ $lineItem->unit_amount }} / {{ $lineItem->unit }}</td>
-                                    <td class="px-3 py-3 font-semibold">£{{ $lineItem->total }}</td>
+                                <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Type
+                                        </label>
 
-                                    <td class="px-3 py-3">
-                                        <form method="POST" action="{{ route('admin.quotes.line-items.destroy', [$quote, $lineItem]) }}">
-                                            @csrf
-                                            @method('DELETE')
+                                        <input
+                                            name="type"
+                                            type="text"
+                                            value="{{ old('line_items.' . $lineItem->id . '.type', $lineItem->type) }}"
+                                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
+                                            required
+                                            @disabled(! $lineItemUpdateRouteExists)
+                                        >
+                                    </div>
 
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Qty
+                                        </label>
+
+                                        <input
+                                            name="quantity"
+                                            type="number"
+                                            min="0.01"
+                                            step="0.01"
+                                            value="{{ old('line_items.' . $lineItem->id . '.quantity', $lineItem->quantity) }}"
+                                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
+                                            required
+                                            @disabled(! $lineItemUpdateRouteExists)
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Unit
+                                        </label>
+
+                                        <input
+                                            name="unit"
+                                            type="text"
+                                            value="{{ old('line_items.' . $lineItem->id . '.unit', $lineItem->unit) }}"
+                                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
+                                            required
+                                            @disabled(! $lineItemUpdateRouteExists)
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Unit amount
+                                        </label>
+
+                                        <input
+                                            name="unit_amount"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ old('line_items.' . $lineItem->id . '.unit_amount', $lineItem->unit_amount) }}"
+                                            class="w-full border border-gray-400 px-3 py-2 rounded-none text-sm"
+                                            required
+                                            @disabled(! $lineItemUpdateRouteExists)
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">
+                                            Optional
+                                        </label>
+
+                                        <label class="flex items-center gap-2 border border-gray-400 px-3 py-2 text-sm h-[38px]">
+                                            <input
+                                                type="checkbox"
+                                                name="is_optional"
+                                                value="1"
+                                                @checked(old('line_items.' . $lineItem->id . '.is_optional', $lineItem->is_optional))
+                                                @disabled(! $lineItemUpdateRouteExists)
+                                            >
+
+                                            Yes
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-end">
+                                        @if ($lineItemUpdateRouteExists)
                                             <button
                                                 type="submit"
-                                                class="text-xs underline text-red-700"
-                                                onclick="return confirm('Delete this line item?')"
+                                                class="w-full px-4 py-2 bg-black text-white text-sm font-semibold rounded-none"
                                             >
-                                                Delete
+                                                Save
                                             </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-3 py-8 text-center text-gray-600">
-                                        No line items have been added yet.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+                                        @else
+                                            <button
+                                                type="button"
+                                                class="w-full px-4 py-2 border border-gray-400 text-gray-500 text-sm font-semibold rounded-none cursor-not-allowed"
+                                                disabled
+                                            >
+                                                Save
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </form>
 
-                        <tfoot>
-                            <tr>
-                                <th colspan="3" class="px-3 py-3 text-right">Subtotal</th>
-                                <th class="px-3 py-3 text-left">£{{ $quote->subtotal }}</th>
-                                <th></th>
-                            </tr>
+                            <div class="border-t border-gray-200 px-4 py-3 flex justify-between items-center">
+                                <div class="text-xs text-gray-500">
+                                    {{ ucfirst(str_replace('_', ' ', $lineItem->type)) }}
+                                    @if ($lineItem->is_optional)
+                                        · Optional
+                                    @endif
+                                </div>
 
-                            <tr>
-                                <th colspan="3" class="px-3 py-3 text-right">VAT</th>
-                                <th class="px-3 py-3 text-left">£{{ $quote->vat }}</th>
-                                <th></th>
-                            </tr>
+                                <form method="POST" action="{{ route('admin.quotes.line-items.destroy', [$quote, $lineItem]) }}">
+                                    @csrf
+                                    @method('DELETE')
 
-                            <tr>
-                                <th colspan="3" class="px-3 py-3 text-right">Total</th>
-                                <th class="px-3 py-3 text-left">£{{ $quote->total }}</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
+                                    <button
+                                        type="submit"
+                                        class="text-xs underline text-red-700"
+                                        onclick="return confirm('Delete this line item?')"
+                                    >
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="border border-gray-300 bg-gray-50 p-8 text-center text-gray-600">
+                            No line items have been added yet.
+                        </div>
+                    @endforelse
+                </div>
+
+                <div class="border-t border-gray-300 bg-gray-50 p-6">
+                    <div class="max-w-md ml-auto space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span class="font-semibold">£{{ $quote->subtotal }}</span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span>VAT</span>
+                            <span class="font-semibold">£{{ $quote->vat }}</span>
+                        </div>
+
+                        <div class="flex justify-between border-t border-gray-300 pt-3 text-lg">
+                            <span class="font-bold">Total</span>
+                            <span class="font-bold">£{{ $quote->total }}</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <section class="border border-gray-300 bg-white p-6">
-                <h2 class="text-lg font-semibold mb-4">
-                    Add manual item
-                </h2>
-
-                <form method="POST" action="{{ route('admin.quotes.line-items.store', $quote) }}" class="space-y-4">
-                    @csrf
-
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Type</label>
-                        <input name="type" type="text" value="works" class="w-full border border-gray-400 px-4 py-3 rounded-none" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Description</label>
-                        <input name="description" type="text" class="w-full border border-gray-400 px-4 py-3 rounded-none" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Quantity</label>
-                        <input name="quantity" type="number" min="0.01" step="0.01" value="1" class="w-full border border-gray-400 px-4 py-3 rounded-none" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Unit</label>
-                        <input name="unit" type="text" value="item" class="w-full border border-gray-400 px-4 py-3 rounded-none" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Unit amount before VAT</label>
-                        <input name="unit_amount" type="number" min="0" step="0.01" value="0.00" class="w-full border border-gray-400 px-4 py-3 rounded-none" required>
-                    </div>
-
-                    <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="is_optional" value="1">
-                        Optional item
-                    </label>
-
-                    <button type="submit" class="w-full px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
+            <aside class="space-y-6">
+                <section class="border border-gray-300 bg-white p-6">
+                    <h2 class="text-lg font-semibold mb-4">
                         Add line item
-                    </button>
-                </form>
-            </section>
+                    </h2>
+
+                    <form method="POST" action="{{ route('admin.quotes.line-items.store', $quote) }}" class="space-y-4">
+                        @csrf
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Type</label>
+
+                            <input
+                                name="type"
+                                type="text"
+                                value="{{ old('type', 'works') }}"
+                                class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Description</label>
+
+                            <textarea
+                                name="description"
+                                rows="3"
+                                class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                                required
+                            >{{ old('description') }}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Qty</label>
+
+                                <input
+                                    name="quantity"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value="{{ old('quantity', '1') }}"
+                                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Unit</label>
+
+                                <input
+                                    name="unit"
+                                    type="text"
+                                    value="{{ old('unit', 'item') }}"
+                                    class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Unit amount before VAT</label>
+
+                            <input
+                                name="unit_amount"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value="{{ old('unit_amount', '0.00') }}"
+                                class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                                required
+                            >
+                        </div>
+
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="is_optional" value="1" @checked(old('is_optional'))>
+                            Optional item
+                        </label>
+
+                        <button type="submit" class="w-full px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
+                            Add line item
+                        </button>
+                    </form>
+                </section>
+
+                <section class="border border-gray-300 bg-white p-6">
+                    <h2 class="text-lg font-semibold mb-4">
+                        Totals
+                    </h2>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span class="font-semibold">£{{ $quote->subtotal }}</span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span>VAT</span>
+                            <span class="font-semibold">£{{ $quote->vat }}</span>
+                        </div>
+
+                        <div class="flex justify-between border-t border-gray-300 pt-3 text-lg">
+                            <span class="font-bold">Total</span>
+                            <span class="font-bold">£{{ $quote->total }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                @unless ($lineItemUpdateRouteExists)
+                    <section class="border border-yellow-700 bg-yellow-50 p-6 text-sm text-yellow-900">
+                        <p class="font-semibold">
+                            Line item editing route missing
+                        </p>
+
+                        <p class="mt-2">
+                            The page is ready for editing, but the update route still needs adding:
+                        </p>
+
+                        <pre class="mt-3 whitespace-pre-wrap text-xs">admin.quotes.line-items.update</pre>
+                    </section>
+                @endunless
+            </aside>
         </div>
     </div>
+</x-app-layout>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\QuoteNoteController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\QuotePackController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -274,6 +275,18 @@ Route::middleware(['auth'])
 
             Route::post('/quotes/{quote}/compile-ai', [QuoteAiController::class, 'compile'])
                 ->name('quotes.compile-ai');
+
+                Route::get('/quotes/{quote}/pack', [QuotePackController::class, 'show'])
+    ->name('quotes.pack');
+
+Route::put('/quotes/{quote}/pack', [QuotePackController::class, 'update'])
+    ->name('quotes.pack.update');
+
+Route::put('/quotes/{quote}/pack/photos', [QuotePackController::class, 'updatePhotos'])
+    ->name('quotes.pack.photos.update');
+
+Route::post('/quotes/{quote}/generate-ai-wording', [QuoteAiController::class, 'generateWording'])
+    ->name('quotes.generate-ai-wording');
 
         /*
         |--------------------------------------------------------------------------

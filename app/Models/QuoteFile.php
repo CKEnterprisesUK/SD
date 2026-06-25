@@ -11,13 +11,20 @@ class QuoteFile extends Model
         'quote_id',
         'uploaded_by_user_id',
         'type',
-        'disk',
         'path',
         'original_name',
         'mime_type',
-        'size_bytes',
-        'caption',
+        'size',
         'room_or_area',
+        'caption',
+        'include_in_quote_pack',
+        'quote_pack_caption',
+        'quote_pack_sort_order',
+    ];
+
+    protected $casts = [
+        'include_in_quote_pack' => 'boolean',
+        'quote_pack_sort_order' => 'integer',
     ];
 
     public function quote(): BelongsTo
@@ -35,8 +42,8 @@ class QuoteFile extends Model
         return asset($this->path);
     }
 
-    public function getIsImageAttribute(): bool
+    public function getQuotePackCaptionDisplayAttribute(): ?string
     {
-        return str_starts_with((string) $this->mime_type, 'image/');
+        return $this->quote_pack_caption ?: $this->caption;
     }
 }

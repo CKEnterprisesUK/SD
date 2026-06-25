@@ -309,6 +309,10 @@ Route::post('/quotes/{quote}/generate-ai-wording', [QuoteAiController::class, 'g
         Route::post('/quotes/{quote}/line-items', [QuoteLineItemController::class, 'store'])
             ->name('quotes.line-items.store');
 
+            Route::put('/quotes/{quote}/line-items/{lineItem}', [QuoteLineItemController::class, 'update'])
+    ->name('quotes.line-items.update');
+
+
         Route::delete('/quotes/{quote}/line-items/{lineItem}', [QuoteLineItemController::class, 'destroy'])
             ->name('quotes.line-items.destroy');
 

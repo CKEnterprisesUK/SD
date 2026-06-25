@@ -298,21 +298,17 @@ public function download(Quote $quote)
     $quote->load([
         'customer.contacts',
         'lineItems',
-        'notes',
         'files',
-        'creator',
-        'assignedUser',
     ]);
 
-    $settings = PortalSetting::first();
+    $portalSettings = \App\Models\PortalSetting::current();
 
-    $pdf = Pdf::loadView('pdf.customer-quote', [
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.customer-quote', [
         'quote' => $quote,
-        'customer' => $quote->customer,
-        'settings' => $settings,
+        'portalSettings' => $portalSettings,
     ])->setPaper('a4');
 
-    return $pdf->download($quote->quote_number . '.pdf');
+    return $pdf->download($quote->quote_number . '-customer-quote.pdf');
 }
 
     private function nextQuoteNumber(): string

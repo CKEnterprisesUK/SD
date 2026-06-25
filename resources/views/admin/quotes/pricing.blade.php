@@ -22,6 +22,13 @@
                     </a>
                 @endif
 
+                @if (Route::has('admin.settings.quote-pack.edit'))
+    <a href="{{ route('admin.settings.quote-pack.edit') }}"
+       class="inline-flex px-5 py-3 border border-black text-sm font-semibold rounded-none">
+        Pack settings
+    </a>
+@endif
+
                 <a href="{{ route('admin.quotes.show', $quote) }}"
                    class="inline-flex px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
                     Back to quote

@@ -16,6 +16,7 @@ use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceContro
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\QuotePackController;
+use App\Http\Controllers\Admin\QuotePackTemplateController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -141,6 +142,12 @@ Route::middleware(['auth'])
 
         Route::put('/settings', [PortalSettingsController::class, 'update'])
             ->name('settings.update');
+
+            Route::get('/settings/quote-pack', [QuotePackTemplateController::class, 'edit'])
+    ->name('settings.quote-pack.edit');
+
+Route::put('/settings/quote-pack', [QuotePackTemplateController::class, 'update'])
+    ->name('settings.quote-pack.update');
 
         /*
         |--------------------------------------------------------------------------

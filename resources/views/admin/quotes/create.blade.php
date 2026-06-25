@@ -12,6 +12,7 @@
             </a>
 
             <h1 class="text-3xl font-bold mt-4">Create quote</h1>
+
             <p class="text-gray-600 mt-2">
                 Create a quote record against a customer. Site notes and line items are added after creation.
             </p>
@@ -20,7 +21,7 @@
         @include('admin.quotes._form', [
             'quote' => null,
             'customers' => $customers,
-            'users' => $users,
+            'users' => $assignableUsers ?? collect(),
             'selectedCustomer' => $selectedCustomer ?? null,
             'action' => route('admin.quotes.store'),
             'method' => 'POST',

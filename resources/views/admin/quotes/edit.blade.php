@@ -12,6 +12,7 @@
             </a>
 
             <h1 class="text-3xl font-bold mt-4">Edit quote</h1>
+
             <p class="text-gray-600 mt-2">
                 Update the quote details and editable customer pack sections.
             </p>
@@ -20,7 +21,7 @@
         @include('admin.quotes._form', [
             'quote' => $quote,
             'customers' => $customers,
-            'users' => $users,
+            'users' => $assignableUsers ?? collect(),
             'selectedCustomer' => null,
             'action' => route('admin.quotes.update', $quote),
             'method' => 'PUT',

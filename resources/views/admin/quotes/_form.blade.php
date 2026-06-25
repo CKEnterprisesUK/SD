@@ -80,9 +80,7 @@
                     @endforeach
                 </select>
 
-                <p class="text-xs text-gray-500 mt-2">
-                    Only admin users can be assigned to quotes.
-                </p>
+            
 
                 @if ($assignableAdmins->isEmpty())
                     <p class="text-xs text-red-700 mt-2">

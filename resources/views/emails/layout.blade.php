@@ -1,99 +1,179 @@
+@php
+    use App\Models\PortalSetting;
+    use Illuminate\Support\Str;
+
+    $portalSettings = PortalSetting::current();
+
+    $portalName = $portalSettings->portal_name ?? config('app.name', 'SiteDesk');
+    $companyName = $portalSettings->company_name ?? $portalName;
+
+    $logoPath = $portalSettings->logo_path ?? null;
+    $logoUrl = null;
+
+    if (is_string($logoPath) && $logoPath !== '') {
+        $logoUrl = Str::startsWith($logoPath, ['http://', 'https://'])
+            ? $logoPath
+            : asset($logoPath);
+    }
+
+    $emailTitle = $title ?? $subject ?? $portalName;
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ $emailTitle ?? 'Notification' }}</title>
+    <meta charset="utf-8">
+    <title>{{ $emailTitle }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f3f4f6;
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.5;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        a {
+            color: #111827;
+        }
+
+        .wrapper {
+            width: 100%;
+            background: #f3f4f6;
+            padding: 24px 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+        }
+
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid #d1d5db;
+            background: #ffffff;
+        }
+
+        .logo {
+            max-width: 180px;
+            max-height: 70px;
+            height: auto;
+            width: auto;
+            display: block;
+        }
+
+        .brand-fallback {
+            display: inline-block;
+            border: 2px solid #111827;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 0.02em;
+        }
+
+        .content {
+            padding: 28px 24px;
+            background: #ffffff;
+        }
+
+        .content h1,
+        .content h2,
+        .content h3 {
+            color: #111827;
+            margin-top: 0;
+        }
+
+        .content p {
+            margin: 0 0 16px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #111827;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .panel {
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            padding: 16px;
+            margin: 18px 0;
+        }
+
+        .footer {
+            padding: 20px 24px;
+            border-top: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
 </head>
 
-@php
-    $companyName = $settings->company_name
-        ?? $settings->portal_name
-        ?? config('app.name', 'SiteDesk');
+<body>
+    <div class="wrapper">
+        <table role="presentation" width="100%">
+            <tr>
+                <td align="center">
+                    <table role="presentation" class="container" width="100%">
+                        <tr>
+                            <td class="header">
+                                @if ($logoUrl)
+                                    <img src="{{ $logoUrl }}" alt="{{ $portalName }}" class="logo">
+                                @else
+                                    <span class="brand-fallback">
+                                        {{ $portalName }}
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
 
-    $logoUrl = null;
+                        <tr>
+                            <td class="content">
+                                @hasSection('content')
+                                    @yield('content')
+                                @elseif (isset($slot))
+                                    {{ $slot }}
+                                @else
+                                    @yield('body')
+                                @endif
+                            </td>
+                        </tr>
 
-    if (!empty($settings?->logo_path)) {
-        $logoUrl = str_starts_with($settings->logo_path, ['http://', 'https://'])
-            ? $settings->logo_path
-            : asset($settings->logo_path);
-    }
-@endphp
-
-<body style="margin: 0; padding: 0; background: #f3f4f6; font-family: Arial, Helvetica, sans-serif; color: #111827;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #f3f4f6; margin: 0; padding: 24px 0;">
-        <tr>
-            <td align="center" style="padding: 0 12px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 680px; background: #ffffff; border: 1px solid #d1d5db;">
-                    <tr>
-                        <td style="border-top: 6px solid #111827; padding: 22px 28px 18px 28px;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                                <tr>
-                                    <td style="vertical-align: middle;">
-                                        @if ($logoUrl)
-                                            <img src="{{ $logoUrl }}"
-                                                 alt="{{ $companyName }}"
-                                                 style="display: block; max-height: 64px; max-width: 220px; width: auto; height: auto; border: 0;">
-                                        @else
-                                            <div style="font-size: 22px; line-height: 1.2; font-weight: bold; color: #111827;">
-                                                {{ $companyName }}
-                                            </div>
-                                        @endif
-                                    </td>
-
-                                    <td align="right" style="vertical-align: middle; font-size: 12px; color: #4b5563;">
-                                        {{ $emailLabel ?? 'Notification' }}
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="padding: 0 28px 28px 28px;">
-                            <h1 style="font-size: 24px; line-height: 1.25; margin: 0 0 16px 0; color: #111827;">
-                                {{ $emailTitle ?? 'Notification' }}
-                            </h1>
-
-                            @if (!empty($emailIntro))
-                                <p style="font-size: 15px; line-height: 1.6; margin: 0 0 20px 0; color: #374151;">
-                                    {{ $emailIntro }}
+                        <tr>
+                            <td class="footer">
+                                <p style="margin: 0 0 6px;">
+                                    {{ $companyName }}
                                 </p>
-                            @endif
 
-                            @yield('content')
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="background: #f9fafb; border-top: 1px solid #d1d5db; padding: 18px 28px;">
-                            @if (!empty($footerNote))
-                                <p style="font-size: 12px; line-height: 1.5; color: #4b5563; margin: 0 0 8px 0;">
-                                    {{ $footerNote }}
+                                <p style="margin: 0;">
+                                    This email was sent from {{ $portalName }}.
                                 </p>
-                            @endif
-
-                            <p style="font-size: 12px; line-height: 1.5; color: #4b5563; margin: 0;">
-                                Sent using SiteDesk —
-                                <a href="https://ckenterprises.co.uk"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   style="color: #111827; text-decoration: underline;">
-                                    A CK Enterprises UK Product
-                                </a>.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 680px;">
-                    <tr>
-                        <td align="center" style="padding: 12px 0 0 0; font-size: 11px; line-height: 1.4; color: #6b7280;">
-                            This is an automated email. Please do not reply directly.
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>

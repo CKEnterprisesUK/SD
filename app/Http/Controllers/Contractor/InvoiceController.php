@@ -477,9 +477,32 @@ class InvoiceController extends Controller
     }
 
     private function nextInvoiceNumber(): string
-    {
-        $nextNumber = (ContractorInvoice::max('id') ?? 0) + 1;
+{
+    $year = now()->format('Y');
 
-        return 'CI-' . now()->format('Y') . '-' . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+    /*
+     * For 2026, start contractor invoice numbers from 11.
+     * First available 2026 number will be CI-2026-00011.
+     * If higher 2026 numbers already exist, it continues from the highest one.
+     */
+    $minimumStartNumber = $year === '2026' ? 11 : 1;
+
+    $lastInvoiceNumber = ContractorInvoice::query()
+        ->where('invoice_number', 'like', 'CI-' . $year . '-%')
+        ->orderByDesc('invoice_number')
+        ->value('invoice_number');
+
+    $lastSequenceNumber = 0;
+
+    if (
+        is_string($lastInvoiceNumber)
+        && preg_match('/^CI-' . preg_quote($year, '/') . '-(\d+)$/', $lastInvoiceNumber, $matches)
+    ) {
+        $lastSequenceNumber = (int) $matches[1];
     }
+
+    $nextNumber = max($lastSequenceNumber + 1, $minimumStartNumber);
+
+    return 'CI-' . $year . '-' . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+}
 }

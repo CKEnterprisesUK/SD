@@ -90,7 +90,7 @@ Test infrastructure notes:
     - **Property 10: For any master template, creating a project produces a library whose top-level folders, order, subfolders, and per-role permissions match the template**
     - **Validates: Requirements 4.5**
 
-- [ ] 5. Implement PermissionResolver service
+- [x] 5. Implement PermissionResolver service
   - [x] 5.1 Implement PermissionResolver core methods
     - `level(User, ProjectFolder): string` — admin => read-write; else project-scope check (customer owns / contractor assigned) else no-access; resolve via `folder.topLevelFolder()` + `FolderPermission` for the role
     - `canRead` (level !== no-access), `canWrite` (level === read-write), `visibleTopLevelFolders(User, Project): Collection`
@@ -100,7 +100,7 @@ Test infrastructure notes:
     - **Property 11: For any folder tree and subfolder, resolved level equals the top-level ancestor's level; new subfolders resolve to the same level**
     - **Validates: Requirements 5.4, 9.4**
 
-  - [-] 5.3 Write property test for project-scope access
+  - [x] 5.3 Write property test for project-scope access
     - **Property 7: Customer access iff `project.customer_id == user.customer_id`; contractor access iff assigned to the project**
     - **Validates: Requirements 3.5, 3.6, 3.7**
 
@@ -108,7 +108,7 @@ Test infrastructure notes:
     - **Property 13: Browsable set equals folders with resolved level !== no-access; a no-access top-level folder excludes its whole subtree**
     - **Validates: Requirements 6.1, 6.3, 6.4**
 
-- [ ] 6. Implement storage and audit services
+- [x] 6. Implement storage and audit services
   - [x] 6.1 Implement AuditLogger service
     - Static helpers to record `document_audit_logs` entries for uploaded/downloaded/deleted/copied documents and created/renamed/reordered/deleted folders, capturing actor, action, target document/folder, project, timestamp, metadata
     - _Requirements: 10.1, 10.2_
@@ -117,47 +117,47 @@ Test infrastructure notes:
     - `store(UploadedFile, ProjectFolder)` writes to `local` disk under `projects/{project}/{folder}/{ulid}.{ext}` and creates a `ProjectDocument`; `copy(ProjectDocument, destinationFolder)` duplicates file + record; `delete(ProjectDocument)` removes file and record; each op calls `AuditLogger`
     - _Requirements: 7.1, 8.1, 9.2, 9.3_
 
-  - [-] 6.3 Write property test for private upload storage
+  - [x] 6.3 Write property test for private upload storage
     - **Property 14: Uploading stores the file on the private disk and creates a folder-linked Document; every stored Document resides on the private disk**
     - **Validates: Requirements 7.1, 8.1**
 
-  - [~] 6.4 Write property test for delete and copy
+  - [x] 6.4 Write property test for delete and copy
     - **Property 19: Delete removes both record and private file**
     - **Property 20: Copy creates a new record + new private file with identical contents, original unchanged**
     - **Validates: Requirements 9.2, 9.3**
 
-  - [~] 6.5 Write property test for no public URL
+  - [x] 6.5 Write property test for no public URL
     - **Property 18: No public URL is generated for any document; files reside only on the private disk (assert no URL accessor on ProjectDocument)**
     - **Validates: Requirements 8.2, 8.6**
 
-- [~] 7. Checkpoint - services green
+- [x] 7. Checkpoint - services green
   - Ensure all service-level tests pass, ask the user if questions arise.
 
 - [ ] 8. Implement authorization policies and read-only middleware
-  - [~] 8.1 Implement ProjectPolicy, FolderPolicy, DocumentPolicy
+  - [x] 8.1 Implement ProjectPolicy, FolderPolicy, DocumentPolicy
     - `ProjectPolicy`: `create`/`update`/`changeState`/`manage`/`viewAudit` admin-only; `view` admin or owning customer or assigned contractor
     - `FolderPolicy`: `view` => `canRead`; `manage` admin-only + not Complete; `createSubfolder` => `canWrite` + not Complete
     - `DocumentPolicy`: `view`/`download` => `canRead`; `upload`/`delete`/`copy` => `canWrite` + not Complete
     - Register policies in `AppServiceProvider::boot()`
     - _Requirements: 1.4, 1.5, 4.4, 5.5, 6.4, 7.3, 8.5, 9.5, 10.4_
 
-  - [~] 8.2 Implement EnsureProjectWritable middleware
+  - [x] 8.2 Implement EnsureProjectWritable middleware
     - Resolve `Project` from route; abort 403 read-only error when `state === 'Complete'`; register in HTTP kernel/route alias
     - _Requirements: 2.1, 2.2, 2.4_
 
-  - [~] 8.3 Write feature/property test for admin-only management
+  - [-] 8.3 Write feature/property test for admin-only management
     - **Property 3: Non-admin project create/state-change denied**
     - **Property 12: Per-project folder management admin-only and blocked when Complete**
     - **Property 23: Audit log viewing admin-only**
     - **Validates: Requirements 1.4, 1.5, 5.1, 5.2, 5.5, 10.4**
 
-  - [~] 8.4 Write property test for read-only enforcement
+  - [-] 8.4 Write property test for read-only enforcement
     - **Property 4: Complete projects reject all modifying document/folder operations**
     - **Property 5: Complete projects still allow reading/downloading**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
 - [ ] 9. Implement Project management controller and routes
-  - [~] 9.1 Implement ProjectController (CRUD) and routes
+  - [-] 9.1 Implement ProjectController (CRUD) and routes
     - `index`, `create`, `store` (authorize create, `state=Draft`, run `ProjectSeeder::seed`), `show`, `edit`, `update`; register under `admin` prefix / `admin.` name group with route-model binding
     - _Requirements: 1.1, 1.2, 1.6, 4.5_
 

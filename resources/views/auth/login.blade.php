@@ -115,17 +115,17 @@
                         </div>
                     </form>
 
-                    <div class="mt-10 border-t border-gray-300 pt-5 text-sm text-gray-600">
-                        <span>Powered by SiteDesk</span>
-                        <span class="mx-1">—</span>
-                        <a
-                            href="https://ckenterprises.co.uk"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="underline hover:text-gray-900"
-                        >
-                            A CK Enterprises Group Product
-                        </a>
+                    <div class="mt-10 border-t border-gray-300 pt-6 space-y-4">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <span class="text-gray-400">Powered by</span>
+                            <x-brand-logo size="sm" />
+                        </div>
+
+                        <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-500">
+                            <a href="{{ route('legal.privacy') }}" class="hover:text-gray-900">Privacy Notice</a>
+                            <a href="{{ route('legal.terms') }}" class="hover:text-gray-900">Terms of Service</a>
+                            <a href="{{ route('legal.cookies') }}" class="hover:text-gray-900">Cookies Policy</a>
+                        </nav>
                     </div>
                 </div>
             </div>

@@ -22,5 +22,5 @@
 >
     <span style="font-weight: 700; font-size: {{ $s['site'] }}; color: #dc2626;">SiteDesk</span>
     <span style="font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: {{ $s['by'] }}; letter-spacing: 0.08em; color: #9ca3af; margin: 0 5px;">BY</span>
-    <span style="font-weight: 700; font-size: {{ $s['company'] }}; color: #374151;">CK Enterprises</span>
+    <span style="font-weight: 700; font-size: {{ $s['company'] }}; color: #374151;">CK Enterprises UK</span>
 </{{ $tag }}>

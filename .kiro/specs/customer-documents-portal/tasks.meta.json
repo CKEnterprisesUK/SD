@@ -7,6 +7,14 @@
     "5.4 Write property test for browsable folder set": {
       "status": "passed",
       "lastRunTimestamp": 1788810931053
+    },
+    "5.3 Write property test for project-scope access": {
+      "status": "passed",
+      "lastRunTimestamp": 1788811033091
+    },
+    "6.5 Write property test for no public URL": {
+      "status": "passed",
+      "lastRunTimestamp": 1788811054752
     }
   },
   "executionHistory": {
@@ -326,6 +334,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810844411
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811077103
       }
     ],
     "5.4 Write property test for browsable folder set": [
@@ -389,6 +402,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810949314
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811073732
       }
     ],
     "6.4 Write property test for delete and copy": [
@@ -396,6 +414,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852486
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810950628
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811076081
       }
     ],
     "6.5 Write property test for no public URL": [
@@ -403,6 +431,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852523
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810951570
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811075111
       }
     ],
     "7. Checkpoint - services green": [
@@ -410,6 +448,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852574
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811151370
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811164152
       }
     ],
     "8.1 Implement ProjectPolicy, FolderPolicy, DocumentPolicy": [
@@ -417,6 +465,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852610
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810952638
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811072767
       }
     ],
     "8.2 Implement EnsureProjectWritable middleware": [
@@ -424,6 +482,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852648
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811082359
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811150570
       }
     ],
     "8.3 Write feature/property test for admin-only management": [
@@ -431,6 +499,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852676
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811179916
       }
     ],
     "8.4 Write property test for read-only enforcement": [
@@ -438,6 +511,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852711
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811180901
       }
     ],
     "9.1 Implement ProjectController (CRUD) and routes": [
@@ -445,6 +523,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852763
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811178934
       }
     ],
     "9.2 Implement project state change and contractor assignment": [
@@ -599,6 +682,20 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810839653
+      }
+    ],
+    "6. Implement storage and audit services": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811076114
+      }
+    ],
+    "5. Implement PermissionResolver service": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811077144
       }
     ]
   }

@@ -1,5 +1,14 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "4.4 Write property test for template save round-trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1788810798059
+    },
+    "5.4 Write property test for browsable folder set": {
+      "status": "passed",
+      "lastRunTimestamp": 1788810931053
+    }
+  },
   "executionHistory": {
     "1.1 Add `customer_id` to users and create `folder_templates` migration": [
       {
@@ -181,6 +190,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810545862
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810703295
       }
     ],
     "4.2 Write property test for default seeder structure": [
@@ -188,6 +202,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852077
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810711716
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810839611
       }
     ],
     "4.3 Implement FolderTemplateService (all/sync)": [
@@ -200,6 +224,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810547254
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810702339
       }
     ],
     "4.4 Write property test for template save round-trip": [
@@ -207,6 +236,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852143
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810712593
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810836535
       }
     ],
     "4.5 Implement ProjectSeeder service": [
@@ -219,6 +258,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810548206
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810701000
       }
     ],
     "4.6 Write property test for template-to-project seeding": [
@@ -226,6 +270,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852210
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810714030
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810835268
       }
     ],
     "5.1 Implement PermissionResolver core methods": [
@@ -238,6 +292,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810549680
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810705542
       }
     ],
     "5.2 Write property test for subfolder permission inheritance": [
@@ -245,6 +304,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852285
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810714954
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810838895
       }
     ],
     "5.3 Write property test for project-scope access": [
@@ -252,6 +321,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852317
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810844411
       }
     ],
     "5.4 Write property test for browsable folder set": [
@@ -259,6 +333,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852355
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810845180
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810944794
       }
     ],
     "6.1 Implement AuditLogger service": [
@@ -271,6 +355,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810550376
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810704693
       }
     ],
     "6.2 Implement DocumentStorageService (private disk)": [
@@ -278,6 +367,16 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852419
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810710228
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810837626
       }
     ],
     "6.3 Write property test for private upload storage": [
@@ -285,6 +384,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852452
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810949314
       }
     ],
     "6.4 Write property test for delete and copy": [
@@ -488,6 +592,13 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788810304727
+      }
+    ],
+    "4. Implement master folder template seeding": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788810839653
       }
     ]
   }

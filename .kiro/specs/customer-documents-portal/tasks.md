@@ -65,59 +65,59 @@ Test infrastructure notes:
 - [x] 3. Checkpoint - migrate and verify models
   - Run migrations against the test database and instantiate each model relation. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement master folder template seeding
-  - [-] 4.1 Create FolderTemplateSeeder with default structure
+- [x] 4. Implement master folder template seeding
+  - [x] 4.1 Create FolderTemplateSeeder with default structure
     - Seed the five top-level folders in order with default subfolders and per-role permissions from `FolderTemplate::DEFAULT_TEMPLATE` (Planning and Design docs, Quotes, Build Stage, Health and Safety, SiteDesk Admin Only)
     - _Requirements: 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12_
 
-  - [~] 4.2 Write property test for default seeder structure
+  - [x] 4.2 Write property test for default seeder structure
     - **Property 10 (default case): Project libraries seeded faithfully — validates the five named folders and their default permissions per 4.8-4.12**
     - **Validates: Requirements 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12**
 
-  - [-] 4.3 Implement FolderTemplateService (all/sync)
+  - [x] 4.3 Implement FolderTemplateService (all/sync)
     - `all()` returns ordered `FolderTemplate` rows; `sync(array $folders)` replaces the master template (set, order, permissions) transactionally
     - _Requirements: 4.1, 4.2, 4.3_
 
-  - [~] 4.4 Write property test for template save round-trip
+  - [x] 4.4 Write property test for template save round-trip
     - **Property 8: Master template save round-trips — random set/order/permission levels saved then reloaded are identical**
     - **Validates: Requirements 4.2, 4.3**
 
-  - [-] 4.5 Implement ProjectSeeder service
+  - [x] 4.5 Implement ProjectSeeder service
     - `seed(Project $project)` inside a DB transaction: for each ordered template row create a top-level `ProjectFolder` (`is_top_level=true`, `sort_order`), create `FolderPermission` rows per role, then create child `ProjectFolder` rows for each subfolder (no permission rows on subfolders)
     - _Requirements: 4.5_
 
-  - [~] 4.6 Write property test for template-to-project seeding
+  - [x] 4.6 Write property test for template-to-project seeding
     - **Property 10: For any master template, creating a project produces a library whose top-level folders, order, subfolders, and per-role permissions match the template**
     - **Validates: Requirements 4.5**
 
 - [ ] 5. Implement PermissionResolver service
-  - [-] 5.1 Implement PermissionResolver core methods
+  - [x] 5.1 Implement PermissionResolver core methods
     - `level(User, ProjectFolder): string` — admin => read-write; else project-scope check (customer owns / contractor assigned) else no-access; resolve via `folder.topLevelFolder()` + `FolderPermission` for the role
     - `canRead` (level !== no-access), `canWrite` (level === read-write), `visibleTopLevelFolders(User, Project): Collection`
     - _Requirements: 3.5, 3.6, 3.7, 5.4, 6.1, 6.3, 9.4_
 
-  - [~] 5.2 Write property test for subfolder permission inheritance
+  - [x] 5.2 Write property test for subfolder permission inheritance
     - **Property 11: For any folder tree and subfolder, resolved level equals the top-level ancestor's level; new subfolders resolve to the same level**
     - **Validates: Requirements 5.4, 9.4**
 
-  - [~] 5.3 Write property test for project-scope access
+  - [-] 5.3 Write property test for project-scope access
     - **Property 7: Customer access iff `project.customer_id == user.customer_id`; contractor access iff assigned to the project**
     - **Validates: Requirements 3.5, 3.6, 3.7**
 
-  - [~] 5.4 Write property test for browsable folder set
+  - [x] 5.4 Write property test for browsable folder set
     - **Property 13: Browsable set equals folders with resolved level !== no-access; a no-access top-level folder excludes its whole subtree**
     - **Validates: Requirements 6.1, 6.3, 6.4**
 
 - [ ] 6. Implement storage and audit services
-  - [-] 6.1 Implement AuditLogger service
+  - [x] 6.1 Implement AuditLogger service
     - Static helpers to record `document_audit_logs` entries for uploaded/downloaded/deleted/copied documents and created/renamed/reordered/deleted folders, capturing actor, action, target document/folder, project, timestamp, metadata
     - _Requirements: 10.1, 10.2_
 
-  - [~] 6.2 Implement DocumentStorageService (private disk)
+  - [x] 6.2 Implement DocumentStorageService (private disk)
     - `store(UploadedFile, ProjectFolder)` writes to `local` disk under `projects/{project}/{folder}/{ulid}.{ext}` and creates a `ProjectDocument`; `copy(ProjectDocument, destinationFolder)` duplicates file + record; `delete(ProjectDocument)` removes file and record; each op calls `AuditLogger`
     - _Requirements: 7.1, 8.1, 9.2, 9.3_
 
-  - [~] 6.3 Write property test for private upload storage
+  - [-] 6.3 Write property test for private upload storage
     - **Property 14: Uploading stores the file on the private disk and creates a folder-linked Document; every stored Document resides on the private disk**
     - **Validates: Requirements 7.1, 8.1**
 

@@ -6,25 +6,16 @@
 
 <x-layouts.legal pageTitle="Terms of Service">
     <p>
-        These Terms of Service ("Terms") govern your access to and use of SiteDesk, a construction quoting and
-        project management platform provided by {{ $companyName }} ("we", "us", "our"). SiteDesk is used to
-        prepare and manage quotes, maintain customer and contractor records, submit and review contractor
-        invoices, and share project documents. By accessing or using the platform, you agree to these Terms.
+        These Terms of Service ("Terms") govern your access to and use of SiteDesk, our online platform provided by
+        {{ $companyName }} ("we", "us", "our"). As a customer, SiteDesk lets you view the quotes we prepare for you
+        and access the documents relating to your projects. By accessing or using the platform, you agree to these Terms.
     </p>
 
     <h2>Accounts and access</h2>
     <p>
-        Access to SiteDesk is by invitation and is limited to authorised users. Different roles have different
-        levels of access:
-    </p>
-    <ul>
-        <li><strong>Staff (admin) users</strong> have full access to operate the platform.</li>
-        <li><strong>Contractors</strong> can submit and view their own invoices and access the projects assigned to them.</li>
-        <li><strong>Customers</strong> can view the projects and documents that belong to them.</li>
-    </ul>
-    <p>
-        You are responsible for keeping your login credentials secure, for all activity carried out under your
-        account, and for notifying us promptly of any unauthorised use.
+        Access to SiteDesk is by invitation. When you are given login access, you can view the projects, quotes, and
+        documents that belong to you. You are responsible for keeping your login credentials secure, for all activity
+        carried out under your account, and for notifying us promptly of any unauthorised use.
     </p>
 
     <h2>Acceptable use</h2>
@@ -37,20 +28,11 @@
         <li>Upload content that is unlawful or that infringes the rights of others.</li>
     </ul>
 
-    <h2>Quotes, estimates, and AI-assisted content</h2>
+    <h2>Quotes and estimates</h2>
     <p>
-        SiteDesk includes tools that help our team produce pricing estimates and customer-facing wording, some of
-        which are generated with the assistance of artificial intelligence. AI-generated content is provided as a
-        draft only and is reviewed by our team before use. Quotes and estimates produced through the platform are
-        indicative and are subject to our formal written quotation and any agreed contract.
-    </p>
-
-    <h2>Contractor invoices</h2>
-    <p>
-        Where you submit invoices through SiteDesk, you are responsible for ensuring the information you provide is
-        accurate and complete. Submitting an invoice does not by itself constitute approval or agreement to pay;
-        invoices are subject to review, and may be returned for correction. SiteDesk does not process payments —
-        any payment is handled separately in line with our agreed terms.
+        Quotes and quote packs made available to you through SiteDesk are indicative and are subject to our formal
+        written quotation and any agreed contract for the work. The platform is provided for your convenience in
+        viewing and managing this information and does not itself form a contract for works.
     </p>
 
     <h2>Your content</h2>

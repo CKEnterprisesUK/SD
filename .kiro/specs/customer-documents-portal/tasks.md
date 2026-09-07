@@ -33,40 +33,40 @@ Test infrastructure notes:
     - Write `..._create_customer_invitations_table.php`: `customer_id` (constrained, cascade), nullable `customer_contact_id`, `email`, nullable `invited_by_user_id`, nullable `user_id`, nullable `accepted_at`, timestamps, index `[customer_id, email]`
     - _Requirements: 10.1, 10.2, 3.2_
 
-- [ ] 2. Implement Eloquent models and relationships
-  - [-] 2.1 Extend User model with customer role support
+- [x] 2. Implement Eloquent models and relationships
+  - [x] 2.1 Extend User model with customer role support
     - Add `customer_id` to `$fillable`, add `customer(): BelongsTo`, add `isCustomer(): bool` (`role === 'customer'`)
     - _Requirements: 3.1, 3.5_
 
-  - [-] 2.2 Create Project model and factory
+  - [x] 2.2 Create Project model and factory
     - `$fillable`, `STATES` const, relations `customer`, `folders`, `topLevelFolders` (`is_top_level`, ordered by `sort_order`), `documents` (hasManyThrough), `contractors` (belongsToMany via `project_contractors`), `auditLogs`; add `isComplete(): bool`
     - Create `ProjectFactory` (random state, linked customer)
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 3.7_
 
-  - [-] 2.3 Create ProjectFolder model and factory
+  - [x] 2.3 Create ProjectFolder model and factory
     - `$fillable`, cast `is_top_level` boolean, relations `project`, `parent`, `children` (ordered), `documents`, `permissions`; implement `topLevelFolder(): self` that walks up parents to the top-level ancestor
     - Create `ProjectFolderFactory` supporting top-level and child folders
     - _Requirements: 4.5, 5.1, 5.3, 5.4, 9.4_
 
-  - [-] 2.4 Create FolderPermission, ProjectDocument, ProjectContractor models and factories
+  - [x] 2.4 Create FolderPermission, ProjectDocument, ProjectContractor models and factories
     - `FolderPermission`: `$fillable` (`project_folder_id`, `role`, `level`), `folder` relation
     - `ProjectDocument`: `$fillable`, relations `folder`, `uploader`; explicitly NO URL accessor
     - `ProjectContractor`: pivot-style model with `project`, `contractor`, `assignedBy` relations
     - Create matching factories
     - _Requirements: 4.2, 7.1, 8.1, 8.6, 3.7_
 
-  - [-] 2.5 Create DocumentAuditLog, FolderTemplate, CustomerInvitation models and factories
+  - [x] 2.5 Create DocumentAuditLog, FolderTemplate, CustomerInvitation models and factories
     - `DocumentAuditLog`: `$fillable`, `metadata` json cast, `$timestamps=false` semantics with `created_at`, relations `project`, `user`, `document`, `folder`
     - `FolderTemplate`: `$fillable`, `subfolders`/`permissions` json casts, `DEFAULT_TEMPLATE` const holding the five default folders per design
     - `CustomerInvitation`: `$fillable`, `accepted_at` datetime cast, relations `customer`, `invitedBy`, `user`
     - Create matching factories
     - _Requirements: 10.1, 10.2, 4.6, 3.2_
 
-- [~] 3. Checkpoint - migrate and verify models
+- [x] 3. Checkpoint - migrate and verify models
   - Run migrations against the test database and instantiate each model relation. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Implement master folder template seeding
-  - [~] 4.1 Create FolderTemplateSeeder with default structure
+  - [-] 4.1 Create FolderTemplateSeeder with default structure
     - Seed the five top-level folders in order with default subfolders and per-role permissions from `FolderTemplate::DEFAULT_TEMPLATE` (Planning and Design docs, Quotes, Build Stage, Health and Safety, SiteDesk Admin Only)
     - _Requirements: 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12_
 
@@ -74,7 +74,7 @@ Test infrastructure notes:
     - **Property 10 (default case): Project libraries seeded faithfully — validates the five named folders and their default permissions per 4.8-4.12**
     - **Validates: Requirements 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12**
 
-  - [~] 4.3 Implement FolderTemplateService (all/sync)
+  - [-] 4.3 Implement FolderTemplateService (all/sync)
     - `all()` returns ordered `FolderTemplate` rows; `sync(array $folders)` replaces the master template (set, order, permissions) transactionally
     - _Requirements: 4.1, 4.2, 4.3_
 
@@ -82,7 +82,7 @@ Test infrastructure notes:
     - **Property 8: Master template save round-trips — random set/order/permission levels saved then reloaded are identical**
     - **Validates: Requirements 4.2, 4.3**
 
-  - [~] 4.5 Implement ProjectSeeder service
+  - [-] 4.5 Implement ProjectSeeder service
     - `seed(Project $project)` inside a DB transaction: for each ordered template row create a top-level `ProjectFolder` (`is_top_level=true`, `sort_order`), create `FolderPermission` rows per role, then create child `ProjectFolder` rows for each subfolder (no permission rows on subfolders)
     - _Requirements: 4.5_
 
@@ -91,7 +91,7 @@ Test infrastructure notes:
     - **Validates: Requirements 4.5**
 
 - [ ] 5. Implement PermissionResolver service
-  - [~] 5.1 Implement PermissionResolver core methods
+  - [-] 5.1 Implement PermissionResolver core methods
     - `level(User, ProjectFolder): string` — admin => read-write; else project-scope check (customer owns / contractor assigned) else no-access; resolve via `folder.topLevelFolder()` + `FolderPermission` for the role
     - `canRead` (level !== no-access), `canWrite` (level === read-write), `visibleTopLevelFolders(User, Project): Collection`
     - _Requirements: 3.5, 3.6, 3.7, 5.4, 6.1, 6.3, 9.4_
@@ -109,7 +109,7 @@ Test infrastructure notes:
     - **Validates: Requirements 6.1, 6.3, 6.4**
 
 - [ ] 6. Implement storage and audit services
-  - [~] 6.1 Implement AuditLogger service
+  - [-] 6.1 Implement AuditLogger service
     - Static helpers to record `document_audit_logs` entries for uploaded/downloaded/deleted/copied documents and created/renamed/reordered/deleted folders, capturing actor, action, target document/folder, project, timestamp, metadata
     - _Requirements: 10.1, 10.2_
 

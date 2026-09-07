@@ -21,7 +21,12 @@ class CustomerInvitationFactory extends Factory
     public function definition(): array
     {
         return [
-            'customer_id' => Customer::factory(),
+            // Customer has no factory yet (added by a sibling task); create a real
+            // linked customer inline so the invitation is always associated with one.
+            'customer_id' => fn () => Customer::create([
+                'name' => fake()->company(),
+                'status' => 'active',
+            ])->id,
             'customer_contact_id' => null,
             'email' => fake()->unique()->safeEmail(),
             'invited_by_user_id' => null,

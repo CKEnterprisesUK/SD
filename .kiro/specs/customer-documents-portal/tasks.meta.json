@@ -1,0 +1,375 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add `customer_id` to users and create `folder_templates` migration": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851667
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809862260
+      }
+    ],
+    "1.2 Create `projects` and `project_folders` migrations": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851709
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809865744
+      }
+    ],
+    "1.3 Create `folder_permissions`, `project_documents`, and `project_contractors` migrations": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851744
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809867140
+      }
+    ],
+    "1.4 Create `document_audit_logs` and `customer_invitations` migrations": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851776
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809868100
+      }
+    ],
+    "2.1 Extend User model with customer role support": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851812
+      }
+    ],
+    "2.2 Create Project model and factory": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851886
+      }
+    ],
+    "2.3 Create ProjectFolder model and factory": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851921
+      }
+    ],
+    "2.4 Create FolderPermission, ProjectDocument, ProjectContractor models and factories": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851950
+      }
+    ],
+    "2.5 Create DocumentAuditLog, FolderTemplate, CustomerInvitation models and factories": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809851982
+      }
+    ],
+    "3. Checkpoint - migrate and verify models": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852010
+      }
+    ],
+    "4.1 Create FolderTemplateSeeder with default structure": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852043
+      }
+    ],
+    "4.2 Write property test for default seeder structure": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852077
+      }
+    ],
+    "4.3 Implement FolderTemplateService (all/sync)": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852113
+      }
+    ],
+    "4.4 Write property test for template save round-trip": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852143
+      }
+    ],
+    "4.5 Implement ProjectSeeder service": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852178
+      }
+    ],
+    "4.6 Write property test for template-to-project seeding": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852210
+      }
+    ],
+    "5.1 Implement PermissionResolver core methods": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852252
+      }
+    ],
+    "5.2 Write property test for subfolder permission inheritance": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852285
+      }
+    ],
+    "5.3 Write property test for project-scope access": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852317
+      }
+    ],
+    "5.4 Write property test for browsable folder set": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852355
+      }
+    ],
+    "6.1 Implement AuditLogger service": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852388
+      }
+    ],
+    "6.2 Implement DocumentStorageService (private disk)": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852419
+      }
+    ],
+    "6.3 Write property test for private upload storage": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852452
+      }
+    ],
+    "6.4 Write property test for delete and copy": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852486
+      }
+    ],
+    "6.5 Write property test for no public URL": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852523
+      }
+    ],
+    "7. Checkpoint - services green": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852574
+      }
+    ],
+    "8.1 Implement ProjectPolicy, FolderPolicy, DocumentPolicy": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852610
+      }
+    ],
+    "8.2 Implement EnsureProjectWritable middleware": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852648
+      }
+    ],
+    "8.3 Write feature/property test for admin-only management": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852676
+      }
+    ],
+    "8.4 Write property test for read-only enforcement": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852711
+      }
+    ],
+    "9.1 Implement ProjectController (CRUD) and routes": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852763
+      }
+    ],
+    "9.2 Implement project state change and contractor assignment": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852794
+      }
+    ],
+    "9.3 Write property test for project creation and state changes": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852852
+      }
+    ],
+    "10.1 Implement ProjectFolderController and routes": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852901
+      }
+    ],
+    "10.2 Write feature test for folder operation auditing": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852951
+      }
+    ],
+    "11.1 Implement FolderTemplateSettingsController and settings routes": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809852988
+      }
+    ],
+    "11.2 Write feature test for settings admin-only access": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853018
+      }
+    ],
+    "12.1 Implement ProjectLibraryController (browsing)": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853051
+      }
+    ],
+    "12.2 Implement DocumentServeController (secure streaming)": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853092
+      }
+    ],
+    "12.3 Implement document upload/delete/copy controller actions and routes": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853126
+      }
+    ],
+    "12.4 Write property test for secure serving": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853164
+      }
+    ],
+    "12.5 Write property test for upload permission and validation": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853194
+      }
+    ],
+    "12.6 Write feature test for document operation auditing": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853227
+      }
+    ],
+    "13.1 Implement ProjectAuditLogController and route": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853285
+      }
+    ],
+    "13.2 Implement CustomerInviteController (invite flow)": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853314
+      }
+    ],
+    "13.3 Write feature test for the invite flow": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853347
+      }
+    ],
+    "14.1 Implement admin project views": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853398
+      }
+    ],
+    "14.2 Implement folder management and settings views": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853427
+      }
+    ],
+    "14.3 Implement audit log and portal views": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853467
+      }
+    ],
+    "15. Final checkpoint - full suite green": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788809853520
+      }
+    ]
+  }
+}

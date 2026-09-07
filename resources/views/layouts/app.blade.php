@@ -10,6 +10,9 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -36,13 +39,20 @@
 @endphp
 
 <footer class="border-t border-gray-300 bg-white mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-sm text-gray-600 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            {{ $portalSettings->company_name ?: $portalSettings->portal_name }}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-gray-600 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <span>{{ $portalSettings->company_name ?: $portalSettings->portal_name }}</span>
+
+            <nav class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <a href="{{ route('legal.privacy') }}" class="hover:text-gray-900">Privacy Notice</a>
+                <a href="{{ route('legal.terms') }}" class="hover:text-gray-900">Terms of Service</a>
+                <a href="{{ route('legal.cookies') }}" class="hover:text-gray-900">Cookies Policy</a>
+            </nav>
         </div>
 
-        <div>
-            {{ $portalSettings->pdf_footer ?: 'Powered by SiteDesk — A CK Enterprises Product' }}
+        <div class="flex items-center gap-2">
+            <span class="text-gray-400">Powered by</span>
+            <x-brand-logo size="sm" />
         </div>
     </div>
 </footer>

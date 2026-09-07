@@ -30,6 +30,16 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Legal pages (public)
+|--------------------------------------------------------------------------
+*/
+
+Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
+Route::view('/terms', 'legal.terms')->name('legal.terms');
+Route::view('/cookies', 'legal.cookies')->name('legal.cookies');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

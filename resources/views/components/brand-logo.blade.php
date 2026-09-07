@@ -1,5 +1,6 @@
 @props([
-    'size' => 'md', // sm | md | lg
+    'size' => 'md',                                  // sm | md | lg
+    'href' => 'https://ckenterprises.co.uk/sitedesk', // set to null to render without a link
 ])
 
 @php
@@ -10,10 +11,16 @@
     ];
 
     $s = $sizes[$size] ?? $sizes['md'];
+
+    $tag = $href ? 'a' : 'span';
 @endphp
 
-<span {{ $attributes->merge(['class' => 'inline-flex items-baseline']) }} style="font-family: 'Cabin Sketch', 'Comic Sans MS', cursive, sans-serif; line-height: 1; white-space: nowrap;">
+<{{ $tag }}
+    @if ($href) href="{{ $href }}" target="_blank" rel="noopener noreferrer" @endif
+    {{ $attributes->merge(['class' => 'inline-flex items-baseline no-underline']) }}
+    style="font-family: 'Cabin Sketch', 'Comic Sans MS', cursive, sans-serif; line-height: 1; white-space: nowrap; text-decoration: none;"
+>
     <span style="font-weight: 700; font-size: {{ $s['site'] }}; color: #dc2626;">SiteDesk</span>
     <span style="font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: {{ $s['by'] }}; letter-spacing: 0.08em; color: #9ca3af; margin: 0 5px;">BY</span>
     <span style="font-weight: 700; font-size: {{ $s['company'] }}; color: #374151;">CK Enterprises</span>
-</span>
+</{{ $tag }}>

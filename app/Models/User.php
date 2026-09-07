@@ -11,9 +11,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Notifications\SiteDeskResetPasswordNotification;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'customer_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -49,5 +50,15 @@ public function contractorInvoices(): HasMany
 public function isContractor(): bool
 {
     return $this->role === 'contractor';
+}
+
+public function customer(): BelongsTo
+{
+    return $this->belongsTo(Customer::class);
+}
+
+public function isCustomer(): bool
+{
+    return $this->role === 'customer';
 }
 }

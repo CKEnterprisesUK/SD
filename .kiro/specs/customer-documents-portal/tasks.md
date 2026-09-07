@@ -11,51 +11,51 @@ Test infrastructure notes:
 
 ## Tasks
 
-- [ ] 1. Create database migrations for schema foundation
-  - [-] 1.1 Add `customer_id` to users and create `folder_templates` migration
+- [x] 1. Create database migrations for schema foundation
+  - [x] 1.1 Add `customer_id` to users and create `folder_templates` migration
     - Write `..._add_customer_id_to_users_table.php` adding nullable `customer_id` foreign key (constrained `customers`, `nullOnDelete`) after `status`, with an index
     - Write `..._create_folder_templates_table.php` with `name`, `sort_order`, `subfolders` (json), `permissions` (json), timestamps, index on `sort_order`
     - _Requirements: 3.1, 4.1, 4.2, 4.3_
 
-  - [-] 1.2 Create `projects` and `project_folders` migrations
+  - [x] 1.2 Create `projects` and `project_folders` migrations
     - Write `..._create_projects_table.php` with `customer_id` (constrained, cascade), `created_by_user_id` (nullable), `name`, `reference` (nullable), `state` default `Draft`, `description` (nullable), timestamps, index `[customer_id, state]`
     - Write `..._create_project_folders_table.php` self-referential tree: `project_id`, nullable `parent_id` (constrained self, cascade), `name`, `is_top_level` default false, `sort_order`, timestamps, index `[project_id, parent_id, sort_order]`
     - _Requirements: 1.1, 1.2, 1.3, 4.5, 5.1, 5.3_
 
-  - [-] 1.3 Create `folder_permissions`, `project_documents`, and `project_contractors` migrations
+  - [x] 1.3 Create `folder_permissions`, `project_documents`, and `project_contractors` migrations
     - Write `..._create_folder_permissions_table.php`: `project_folder_id` (constrained, cascade), `role`, `level`, timestamps, unique `[project_folder_id, role]`
     - Write `..._create_project_documents_table.php`: `project_folder_id` (constrained, cascade), `uploaded_by_user_id` (nullable), `original_name`, `storage_path`, `mime_type` (nullable), `size_bytes` default 0, timestamps, index `project_folder_id`
     - Write `..._create_project_contractors_table.php`: `project_id`, `contractor_id` (constrained, cascade), `assigned_by_user_id` (nullable), timestamps, unique `[project_id, contractor_id]`
     - _Requirements: 4.2, 7.1, 8.1, 3.7_
 
-  - [-] 1.4 Create `document_audit_logs` and `customer_invitations` migrations
+  - [x] 1.4 Create `document_audit_logs` and `customer_invitations` migrations
     - Write `..._create_document_audit_logs_table.php`: `project_id`, `user_id` (nullable), `action`, `target_type`, nullable `project_document_id`, nullable `project_folder_id`, `metadata` (json nullable), `created_at` useCurrent, index `[project_id, created_at]`
     - Write `..._create_customer_invitations_table.php`: `customer_id` (constrained, cascade), nullable `customer_contact_id`, `email`, nullable `invited_by_user_id`, nullable `user_id`, nullable `accepted_at`, timestamps, index `[customer_id, email]`
     - _Requirements: 10.1, 10.2, 3.2_
 
 - [ ] 2. Implement Eloquent models and relationships
-  - [~] 2.1 Extend User model with customer role support
+  - [-] 2.1 Extend User model with customer role support
     - Add `customer_id` to `$fillable`, add `customer(): BelongsTo`, add `isCustomer(): bool` (`role === 'customer'`)
     - _Requirements: 3.1, 3.5_
 
-  - [~] 2.2 Create Project model and factory
+  - [-] 2.2 Create Project model and factory
     - `$fillable`, `STATES` const, relations `customer`, `folders`, `topLevelFolders` (`is_top_level`, ordered by `sort_order`), `documents` (hasManyThrough), `contractors` (belongsToMany via `project_contractors`), `auditLogs`; add `isComplete(): bool`
     - Create `ProjectFactory` (random state, linked customer)
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 3.7_
 
-  - [~] 2.3 Create ProjectFolder model and factory
+  - [-] 2.3 Create ProjectFolder model and factory
     - `$fillable`, cast `is_top_level` boolean, relations `project`, `parent`, `children` (ordered), `documents`, `permissions`; implement `topLevelFolder(): self` that walks up parents to the top-level ancestor
     - Create `ProjectFolderFactory` supporting top-level and child folders
     - _Requirements: 4.5, 5.1, 5.3, 5.4, 9.4_
 
-  - [~] 2.4 Create FolderPermission, ProjectDocument, ProjectContractor models and factories
+  - [-] 2.4 Create FolderPermission, ProjectDocument, ProjectContractor models and factories
     - `FolderPermission`: `$fillable` (`project_folder_id`, `role`, `level`), `folder` relation
     - `ProjectDocument`: `$fillable`, relations `folder`, `uploader`; explicitly NO URL accessor
     - `ProjectContractor`: pivot-style model with `project`, `contractor`, `assignedBy` relations
     - Create matching factories
     - _Requirements: 4.2, 7.1, 8.1, 8.6, 3.7_
 
-  - [~] 2.5 Create DocumentAuditLog, FolderTemplate, CustomerInvitation models and factories
+  - [-] 2.5 Create DocumentAuditLog, FolderTemplate, CustomerInvitation models and factories
     - `DocumentAuditLog`: `$fillable`, `metadata` json cast, `$timestamps=false` semantics with `created_at`, relations `project`, `user`, `document`, `folder`
     - `FolderTemplate`: `$fillable`, `subfolders`/`permissions` json casts, `DEFAULT_TEMPLATE` const holding the five default folders per design
     - `CustomerInvitation`: `$fillable`, `accepted_at` datetime cast, relations `customer`, `invitedBy`, `user`

@@ -203,7 +203,9 @@
                                 </p>
 
                                 <p style="margin: 0;" class="brand-mark">
-                                    <span class="brand-site">SiteDesk</span><span class="brand-by">BY</span><span class="brand-company">CK Enterprises</span>
+                                    <a href="https://ckenterprises.co.uk/sitedesk" target="_blank" style="text-decoration: none;">
+                                        <span class="brand-site">SiteDesk</span><span class="brand-by">BY</span><span class="brand-company">CK Enterprises</span>
+                                    </a>
                                 </p>
                             </td>
                         </tr>

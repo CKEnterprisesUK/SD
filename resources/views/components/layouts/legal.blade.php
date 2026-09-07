@@ -26,9 +26,7 @@
     <div class="min-h-screen flex flex-col">
         <header class="bg-white border-b border-gray-300">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <a href="{{ url('/') }}" class="inline-flex">
-                    <x-brand-logo size="md" />
-                </a>
+                <x-brand-logo size="md" />
             </div>
         </header>
 

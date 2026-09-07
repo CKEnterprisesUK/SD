@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\ContractorController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
+use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProjectFolderController;
 use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\Admin\QuoteAiController;
 use App\Http\Controllers\Admin\QuoteAiDraftController;
@@ -245,6 +247,58 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
 
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])
             ->name('customers.update');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Projects
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/projects', [ProjectController::class, 'index'])
+            ->name('projects.index');
+
+        Route::get('/projects/create', [ProjectController::class, 'create'])
+            ->name('projects.create');
+
+        Route::post('/projects', [ProjectController::class, 'store'])
+            ->name('projects.store');
+
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])
+            ->name('projects.show');
+
+        Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
+            ->name('projects.edit');
+
+        Route::put('/projects/{project}', [ProjectController::class, 'update'])
+            ->name('projects.update');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Project folders
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/projects/{project}/folders', [ProjectFolderController::class, 'store'])
+            ->middleware('project.writable')
+            ->name('projects.folders.store');
+
+        // Define the reorder route before the {folder} routes so the literal
+        // "reorder" segment is not captured as a folder id.
+        Route::put('/projects/{project}/folders/reorder', [ProjectFolderController::class, 'reorder'])
+            ->middleware('project.writable')
+            ->name('projects.folders.reorder');
+
+        Route::put('/projects/{project}/folders/{folder}', [ProjectFolderController::class, 'update'])
+            ->middleware('project.writable')
+            ->name('projects.folders.update');
+
+        Route::delete('/projects/{project}/folders/{folder}', [ProjectFolderController::class, 'destroy'])
+            ->middleware('project.writable')
+            ->name('projects.folders.destroy');
+
+        Route::put('/projects/{project}/folders/{folder}/permissions', [ProjectFolderController::class, 'permissionsUpdate'])
+            ->middleware('project.writable')
+            ->name('projects.folders.permissions.update');
 
         /*
         |--------------------------------------------------------------------------

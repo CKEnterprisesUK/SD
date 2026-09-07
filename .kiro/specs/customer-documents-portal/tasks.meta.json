@@ -15,6 +15,10 @@
     "6.5 Write property test for no public URL": {
       "status": "passed",
       "lastRunTimestamp": 1788811054752
+    },
+    "8.4 Write property test for read-only enforcement": {
+      "status": "passed",
+      "lastRunTimestamp": 1788811329381
     }
   },
   "executionHistory": {
@@ -504,6 +508,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788811179916
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811345442
       }
     ],
     "8.4 Write property test for read-only enforcement": [
@@ -516,6 +525,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788811180901
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811346829
       }
     ],
     "9.1 Implement ProjectController (CRUD) and routes": [
@@ -528,6 +542,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788811178934
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811347880
       }
     ],
     "9.2 Implement project state change and contractor assignment": [
@@ -549,6 +568,11 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788809852901
+      },
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811353194
       }
     ],
     "10.2 Write feature test for folder operation auditing": [
@@ -696,6 +720,13 @@
         "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
         "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
         "timestamp": 1788811077144
+      }
+    ],
+    "8. Implement authorization policies and read-only middleware": [
+      {
+        "executionId": "70075f15-6824-4dcd-a53f-95e92bd15145",
+        "chatSessionId": "sess_75aaebfa-a047-4f17-987f-0636a7f52e74",
+        "timestamp": 1788811346874
       }
     ]
   }

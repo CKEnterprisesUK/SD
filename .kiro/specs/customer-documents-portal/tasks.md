@@ -133,7 +133,7 @@ Test infrastructure notes:
 - [x] 7. Checkpoint - services green
   - Ensure all service-level tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement authorization policies and read-only middleware
+- [x] 8. Implement authorization policies and read-only middleware
   - [x] 8.1 Implement ProjectPolicy, FolderPolicy, DocumentPolicy
     - `ProjectPolicy`: `create`/`update`/`changeState`/`manage`/`viewAudit` admin-only; `view` admin or owning customer or assigned contractor
     - `FolderPolicy`: `view` => `canRead`; `manage` admin-only + not Complete; `createSubfolder` => `canWrite` + not Complete
@@ -145,19 +145,19 @@ Test infrastructure notes:
     - Resolve `Project` from route; abort 403 read-only error when `state === 'Complete'`; register in HTTP kernel/route alias
     - _Requirements: 2.1, 2.2, 2.4_
 
-  - [-] 8.3 Write feature/property test for admin-only management
+  - [x] 8.3 Write feature/property test for admin-only management
     - **Property 3: Non-admin project create/state-change denied**
     - **Property 12: Per-project folder management admin-only and blocked when Complete**
     - **Property 23: Audit log viewing admin-only**
     - **Validates: Requirements 1.4, 1.5, 5.1, 5.2, 5.5, 10.4**
 
-  - [-] 8.4 Write property test for read-only enforcement
+  - [x] 8.4 Write property test for read-only enforcement
     - **Property 4: Complete projects reject all modifying document/folder operations**
     - **Property 5: Complete projects still allow reading/downloading**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
 - [ ] 9. Implement Project management controller and routes
-  - [-] 9.1 Implement ProjectController (CRUD) and routes
+  - [x] 9.1 Implement ProjectController (CRUD) and routes
     - `index`, `create`, `store` (authorize create, `state=Draft`, run `ProjectSeeder::seed`), `show`, `edit`, `update`; register under `admin` prefix / `admin.` name group with route-model binding
     - _Requirements: 1.1, 1.2, 1.6, 4.5_
 
@@ -171,7 +171,7 @@ Test infrastructure notes:
     - **Validates: Requirements 1.1, 1.2, 1.3**
 
 - [ ] 10. Implement per-project folder management controller and routes
-  - [~] 10.1 Implement ProjectFolderController and routes
+  - [-] 10.1 Implement ProjectFolderController and routes
     - `store` (top-level/sub), `update` (rename), `reorder`, `destroy`, `permissions.update` (top-level only); routes under `admin` + `EnsureProjectWritable`, authorized via `FolderPolicy`; new subfolders inherit top-level permission at resolution time; each op calls `AuditLogger`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.4, 10.2_
 

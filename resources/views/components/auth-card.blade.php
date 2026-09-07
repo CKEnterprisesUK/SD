@@ -16,26 +16,28 @@
             class="hidden lg:block bg-gray-900 bg-cover bg-center bg-no-repeat"
             style="background-image: linear-gradient(rgba(17, 24, 39, 0.25), rgba(17, 24, 39, 0.25)), url('https://greenst.co.uk/wp-content/uploads/2026/04/project-patios-10.png');"
         >
-            <div class="h-full w-full flex items-end p-10">
-                <div class="text-white">
-                    <div class="text-sm uppercase tracking-widest opacity-80">
-                        SiteDesk
-                    </div>
-                    <div class="mt-2 text-3xl font-bold">
-                        {{ $appName }}
-                    </div>
-                </div>
-            </div>
         </div>
 
         {{-- Form panel --}}
         <div class="flex min-h-screen items-center justify-center px-6 py-12 sm:px-10 lg:px-16">
             <div class="w-full max-w-md">
-                {{-- Logo / brand --}}
+                {{-- Company logo --}}
                 <div class="mb-10">
-                    <a href="{{ url('/') }}" class="inline-block">
-                        <x-brand-logo size="lg" :href="null" />
-                    </a>
+                    <div class="flex items-center gap-4">
+                        <div class="h-12 w-12 flex items-center justify-center border-2 border-gray-900 font-bold text-sm">
+                            SD
+                        </div>
+
+                        <div>
+                            <div class="text-2xl font-bold text-gray-900">
+                                {{ $appName }}
+                            </div>
+
+                            <div class="text-sm text-gray-600">
+                                SiteDesk
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Heading --}}

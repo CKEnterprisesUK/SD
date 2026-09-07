@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ContractorController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\FolderTemplateSettingsController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -184,6 +185,12 @@ Route::post('/settings/users/{user}/send-password-reset', [UserController::class
 
 Route::put('/settings/quote-pack', [QuotePackTemplateController::class, 'update'])
     ->name('settings.quote-pack.update');
+
+    Route::get('/settings/folder-template', [FolderTemplateSettingsController::class, 'edit'])
+    ->name('settings.folder-template.edit');
+
+Route::put('/settings/folder-template', [FolderTemplateSettingsController::class, 'update'])
+    ->name('settings.folder-template.update');
 
     Route::get('/settings/overview', [SettingsHubController::class, 'index'])
     ->name('settings.index');

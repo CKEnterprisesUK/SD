@@ -171,7 +171,7 @@ Test infrastructure notes:
     - **Validates: Requirements 1.1, 1.2, 1.3**
 
 - [ ] 10. Implement per-project folder management controller and routes
-  - [-] 10.1 Implement ProjectFolderController and routes
+  - [x] 10.1 Implement ProjectFolderController and routes
     - `store` (top-level/sub), `update` (rename), `reorder`, `destroy`, `permissions.update` (top-level only); routes under `admin` + `EnsureProjectWritable`, authorized via `FolderPolicy`; new subfolders inherit top-level permission at resolution time; each op calls `AuditLogger`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.4, 10.2_
 
@@ -180,7 +180,7 @@ Test infrastructure notes:
     - **Validates: Requirements 10.2**
 
 - [ ] 11. Implement master folder template settings screen
-  - [~] 11.1 Implement FolderTemplateSettingsController and settings routes
+  - [-] 11.1 Implement FolderTemplateSettingsController and settings routes
     - `edit`/`update` under `admin.settings.folder-template.*` (inline admin check), delegating persistence to `FolderTemplateService::sync`; add a card to `SettingsHubController`/settings index
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 

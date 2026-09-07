@@ -87,6 +87,23 @@
                             </a>
                         @endif
 
+                        @if (Route::has('admin.settings.folder-template.edit'))
+                            <a href="{{ route('admin.settings.folder-template.edit') }}"
+                               class="block border border-gray-300 bg-white p-5 hover:border-black">
+                                <h2 class="text-lg font-bold">
+                                    Folder template
+                                </h2>
+
+                                <p class="text-sm text-gray-600 mt-2">
+                                    Master folder structure and per-role permissions applied to new project libraries.
+                                </p>
+
+                                <span class="inline-flex mt-5 px-4 py-2 bg-black text-white text-sm font-semibold">
+                                    Open
+                                </span>
+                            </a>
+                        @endif
+
                         @if (Route::has('admin.settings.quote-pack.edit'))
                             <a href="{{ route('admin.settings.quote-pack.edit') }}"
                                class="block border border-gray-300 bg-white p-5 hover:border-black">

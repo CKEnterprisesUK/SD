@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contractor;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Services\ProjectSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
@@ -150,5 +152,59 @@ class ProjectController extends Controller
         return redirect()
             ->route('admin.projects.show', $project)
             ->with('status', 'Project updated successfully.');
+    }
+
+    /**
+     * Change a project's workflow state (admin only).
+     */
+    public function updateState(Request $request, Project $project)
+    {
+        $this->authorize('changeState', $project);
+
+        $validated = $request->validate([
+            'state' => ['required', Rule::in(Project::STATES)],
+        ]);
+
+        $project->update([
+            'state' => $validated['state'],
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Project state updated successfully.');
+    }
+
+    /**
+     * Assign a contractor to the project.
+     */
+    public function assignContractor(Request $request, Project $project)
+    {
+        $this->authorize('manage', $project);
+
+        $validated = $request->validate([
+            'contractor_id' => ['required', 'exists:contractors,id'],
+        ]);
+
+        $project->contractors()->syncWithoutDetaching([
+            $validated['contractor_id'] => ['assigned_by_user_id' => auth()->id()],
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Contractor assigned successfully.');
+    }
+
+    /**
+     * Remove a contractor assignment from the project.
+     */
+    public function unassignContractor(Project $project, Contractor $contractor)
+    {
+        $this->authorize('manage', $project);
+
+        $project->contractors()->detach($contractor->id);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Contractor unassigned successfully.');
     }
 }

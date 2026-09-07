@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\ContractorController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\CustomerInviteController;
 use App\Http\Controllers\Admin\FolderTemplateSettingsController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
+use App\Http\Controllers\Admin\ProjectAuditLogController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProjectFolderController;
 use App\Http\Controllers\Admin\PricingSettingsController;
@@ -255,6 +257,9 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])
             ->name('customers.update');
 
+        Route::post('/customers/{customer}/invite', [CustomerInviteController::class, 'send'])
+            ->name('customers.invite');
+
         /*
         |--------------------------------------------------------------------------
         | Projects
@@ -278,6 +283,18 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
 
         Route::put('/projects/{project}', [ProjectController::class, 'update'])
             ->name('projects.update');
+
+        Route::put('/projects/{project}/state', [ProjectController::class, 'updateState'])
+            ->name('projects.state.update');
+
+        Route::post('/projects/{project}/contractors', [ProjectController::class, 'assignContractor'])
+            ->name('projects.contractors.store');
+
+        Route::delete('/projects/{project}/contractors/{contractor}', [ProjectController::class, 'unassignContractor'])
+            ->name('projects.contractors.destroy');
+
+        Route::get('/projects/{project}/audit-log', [ProjectAuditLogController::class, 'index'])
+            ->name('projects.audit-log.index');
 
         /*
         |--------------------------------------------------------------------------

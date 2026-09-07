@@ -156,35 +156,35 @@ Test infrastructure notes:
     - **Property 5: Complete projects still allow reading/downloading**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
-- [ ] 9. Implement Project management controller and routes
+- [x] 9. Implement Project management controller and routes
   - [x] 9.1 Implement ProjectController (CRUD) and routes
     - `index`, `create`, `store` (authorize create, `state=Draft`, run `ProjectSeeder::seed`), `show`, `edit`, `update`; register under `admin` prefix / `admin.` name group with route-model binding
     - _Requirements: 1.1, 1.2, 1.6, 4.5_
 
-  - [~] 9.2 Implement project state change and contractor assignment
+  - [x] 9.2 Implement project state change and contractor assignment
     - `updateState` (authorize `changeState`, validate against `Project::STATES`), contractor assign/unassign endpoints writing `project_contractors`
     - _Requirements: 1.3, 1.4, 1.5, 3.7_
 
-  - [~] 9.3 Write property test for project creation and state changes
+  - [x] 9.3 Write property test for project creation and state changes
     - **Property 1: New projects start in Draft with exactly one customer**
     - **Property 2: State changes persist the selected valid state**
     - **Validates: Requirements 1.1, 1.2, 1.3**
 
-- [ ] 10. Implement per-project folder management controller and routes
+- [x] 10. Implement per-project folder management controller and routes
   - [x] 10.1 Implement ProjectFolderController and routes
     - `store` (top-level/sub), `update` (rename), `reorder`, `destroy`, `permissions.update` (top-level only); routes under `admin` + `EnsureProjectWritable`, authorized via `FolderPolicy`; new subfolders inherit top-level permission at resolution time; each op calls `AuditLogger`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.4, 10.2_
 
-  - [~] 10.2 Write feature test for folder operation auditing
+  - [x] 10.2 Write feature test for folder operation auditing
     - **Property 22: Folder create/rename/reorder/delete each records an audit entry with actor/action/target/timestamp**
     - **Validates: Requirements 10.2**
 
-- [ ] 11. Implement master folder template settings screen
-  - [-] 11.1 Implement FolderTemplateSettingsController and settings routes
+- [x] 11. Implement master folder template settings screen
+  - [x] 11.1 Implement FolderTemplateSettingsController and settings routes
     - `edit`/`update` under `admin.settings.folder-template.*` (inline admin check), delegating persistence to `FolderTemplateService::sync`; add a card to `SettingsHubController`/settings index
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [~] 11.2 Write feature test for settings admin-only access
+  - [x] 11.2 Write feature test for settings admin-only access
     - **Property 9: Non-admin master template configuration denied with authorization error**
     - **Validates: Requirements 4.4**
 
@@ -193,7 +193,7 @@ Test infrastructure notes:
     - `show` (permission-filtered top-level tree via `PermissionResolver::visibleTopLevelFolders`), `folder` (subfolders + documents, deny direct no-access request); routes under `auth` reachable by admin/customer/contractor
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [~] 12.2 Implement DocumentServeController (secure streaming)
+  - [-] 12.2 Implement DocumentServeController (secure streaming)
     - `show` authorizes `download` (canRead), streams from `local` disk, 404 if key absent, records download audit; only route producing document bytes
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 9.1_
 
@@ -214,16 +214,16 @@ Test infrastructure notes:
     - **Property 21: Upload/download/delete/copy each records an audit entry with actor/action/target document/folder/timestamp**
     - **Validates: Requirements 10.1**
 
-- [ ] 13. Implement audit log viewing and customer invite flow
-  - [~] 13.1 Implement ProjectAuditLogController and route
+- [x] 13. Implement audit log viewing and customer invite flow
+  - [x] 13.1 Implement ProjectAuditLogController and route
     - `index` (admin-only inline check) displaying entries for the project; route under `admin`
     - _Requirements: 10.3, 10.4_
 
-  - [~] 13.2 Implement CustomerInviteController (invite flow)
+  - [x] 13.2 Implement CustomerInviteController (invite flow)
     - `send` mirrors `ContractorController@sendInvite`: create/find `customer`-role User linked via `customer_id`, create `CustomerInvitation`, dispatch `Password::sendResetLink` (delivers `SiteDeskResetPasswordNotification`)
     - _Requirements: 3.2, 3.3, 3.4_
 
-  - [~] 13.3 Write feature test for the invite flow
+  - [x] 13.3 Write feature test for the invite flow
     - **Property 6: Invite creates a pending customer invitation; on acceptance the resulting User has role `customer` linked to the Customer (assert Notification::fake reset link sent)**
     - **Validates: Requirements 3.2, 3.3**
 

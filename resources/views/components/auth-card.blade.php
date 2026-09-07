@@ -23,21 +23,29 @@
             <div class="w-full max-w-md">
                 {{-- Company logo --}}
                 <div class="mb-10">
-                    <div class="flex items-center gap-4">
-                        <div class="h-12 w-12 flex items-center justify-center border-2 border-gray-900 font-bold text-sm">
-                            SD
-                        </div>
-
-                        <div>
-                            <div class="text-2xl font-bold text-gray-900">
-                                {{ $appName }}
+                    @if ($portalSettings->logo_path)
+                        <img
+                            src="{{ asset($portalSettings->logo_path) }}"
+                            alt="{{ $appName }} logo"
+                            style="max-height:56px; max-width:220px; width:auto; height:auto; object-fit:contain;"
+                        >
+                    @else
+                        <div class="flex items-center gap-4">
+                            <div class="h-12 w-12 flex items-center justify-center border-2 border-gray-900 font-bold text-sm">
+                                SD
                             </div>
 
-                            <div class="text-sm text-gray-600">
-                                SiteDesk
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">
+                                    {{ $appName }}
+                                </div>
+
+                                <div class="text-sm text-gray-600">
+                                    SiteDesk
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 {{-- Heading --}}

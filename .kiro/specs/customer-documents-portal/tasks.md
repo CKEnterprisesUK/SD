@@ -227,20 +227,20 @@ Test infrastructure notes:
     - **Property 6: Invite creates a pending customer invitation; on acceptance the resulting User has role `customer` linked to the Customer (assert Notification::fake reset link sent)**
     - **Validates: Requirements 3.2, 3.3**
 
-- [ ] 14. Implement Blade views
+- [x] 14. Implement Blade views
   - [x] 14.1 Implement admin project views
     - `admin/projects/index` (project + customer + state), `create`, `edit`, `show` (library tree, contractor assignment, audit-log link) extending `layouts.app`
     - _Requirements: 1.6, 6.2_
 
-  - [-] 14.2 Implement folder management and settings views
+  - [x] 14.2 Implement folder management and settings views
     - `admin/projects/folders/*` partials (create/rename/reorder + per-role permission matrix); `admin/settings/folder-template.blade.php` master template editor reached from settings hub
     - _Requirements: 4.1, 4.2, 5.1, 5.2_
 
-  - [-] 14.3 Implement audit log and portal views
+  - [x] 14.3 Implement audit log and portal views
     - `admin/projects/audit-log.blade.php` (actor/action/target/timestamp); `portal/projects/index` and `portal/library` (permission-filtered tree, upload forms for read-write folders, download links to `documents.serve`)
     - _Requirements: 6.1, 6.2, 7.1, 9.1, 10.3_
 
-- [~] 15. Final checkpoint - full suite green
+- [-] 15. Final checkpoint - full suite green
   - Run migrations + seeders and the full feature/property test suite. Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

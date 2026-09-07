@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\Admin\ProjectAuditLogController;
 use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProjectDocumentController;
 use App\Http\Controllers\Admin\ProjectFolderController;
 use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\Admin\QuoteAiController;
@@ -18,7 +19,9 @@ use App\Http\Controllers\Admin\QuoteFollowUpController;
 use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
+use App\Http\Controllers\DocumentServeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectLibraryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\QuotePackController;
 use App\Http\Controllers\Admin\QuotePackTemplateController;
@@ -99,6 +102,28 @@ Route::middleware(['auth'])
         Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])
             ->name('show');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Documents (admin + customer + contractor)
+|--------------------------------------------------------------------------
+| Secure document streaming reachable by any authenticated role. Access is
+| gated per-document by DocumentPolicy@download (PermissionResolver::canRead),
+| so this route lives under `auth` but NOT under the `admin.` group.
+*/
+
+Route::middleware(['auth'])->group(function () {
+    // Permission-filtered library browsing, reachable by admin/customer/contractor.
+    // Access is gated per action by ProjectPolicy@view / FolderPolicy@view.
+    Route::get('/projects/{project}/library', [ProjectLibraryController::class, 'show'])
+        ->name('projects.library');
+
+    Route::get('/projects/{project}/folders/{folder}', [ProjectLibraryController::class, 'folder'])
+        ->name('projects.folders.show');
+
+    Route::get('/documents/{document}', [DocumentServeController::class, 'show'])
+        ->name('documents.serve');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -323,6 +348,28 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
         Route::put('/projects/{project}/folders/{folder}/permissions', [ProjectFolderController::class, 'permissionsUpdate'])
             ->middleware('project.writable')
             ->name('projects.folders.permissions.update');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Project documents (upload / delete / copy)
+        |--------------------------------------------------------------------------
+        | Write-side document operations. Wrapped by `project.writable`
+        | (EnsureProjectWritable) so a Complete project rejects all modifying
+        | operations; per-operation authorization is enforced by DocumentPolicy
+        | (upload/delete/copy => canWrite + project not Complete).
+        */
+
+        Route::post('/projects/{project}/folders/{folder}/documents', [ProjectDocumentController::class, 'store'])
+            ->middleware('project.writable')
+            ->name('projects.documents.store');
+
+        Route::delete('/projects/{project}/documents/{document}', [ProjectDocumentController::class, 'destroy'])
+            ->middleware('project.writable')
+            ->name('projects.documents.destroy');
+
+        Route::post('/projects/{project}/documents/{document}/copy', [ProjectDocumentController::class, 'copy'])
+            ->middleware('project.writable')
+            ->name('projects.documents.copy');
 
         /*
         |--------------------------------------------------------------------------

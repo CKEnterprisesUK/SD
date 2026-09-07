@@ -188,29 +188,29 @@ Test infrastructure notes:
     - **Property 9: Non-admin master template configuration denied with authorization error**
     - **Validates: Requirements 4.4**
 
-- [ ] 12. Implement document browsing, serving, and operations
-  - [~] 12.1 Implement ProjectLibraryController (browsing)
+- [x] 12. Implement document browsing, serving, and operations
+  - [x] 12.1 Implement ProjectLibraryController (browsing)
     - `show` (permission-filtered top-level tree via `PermissionResolver::visibleTopLevelFolders`), `folder` (subfolders + documents, deny direct no-access request); routes under `auth` reachable by admin/customer/contractor
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [-] 12.2 Implement DocumentServeController (secure streaming)
+  - [x] 12.2 Implement DocumentServeController (secure streaming)
     - `show` authorizes `download` (canRead), streams from `local` disk, 404 if key absent, records download audit; only route producing document bytes
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 9.1_
 
-  - [~] 12.3 Implement document upload/delete/copy controller actions and routes
+  - [x] 12.3 Implement document upload/delete/copy controller actions and routes
     - Upload (validate size/type incl. `.docx`/`.pdf`/images), delete, copy — via `DocumentStorageService`, authorized via `DocumentPolicy`, wrapped by `EnsureProjectWritable`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 9.2, 9.3, 9.5_
 
-  - [~] 12.4 Write property test for secure serving
+  - [x] 12.4 Write property test for secure serving
     - **Property 17: Unauthenticated => auth error; no-access => 403; >=read-only => exact stored bytes**
     - **Validates: Requirements 8.3, 8.4, 8.5, 9.1**
 
-  - [~] 12.5 Write property test for upload permission and validation
+  - [x] 12.5 Write property test for upload permission and validation
     - **Property 15: Non-write users denied upload/delete/copy/subfolder-create**
     - **Property 16: Oversized/disallowed uploads rejected with validation error, no file written**
     - **Validates: Requirements 7.3, 7.4, 9.5**
 
-  - [~] 12.6 Write feature test for document operation auditing
+  - [x] 12.6 Write feature test for document operation auditing
     - **Property 21: Upload/download/delete/copy each records an audit entry with actor/action/target document/folder/timestamp**
     - **Validates: Requirements 10.1**
 
@@ -228,15 +228,15 @@ Test infrastructure notes:
     - **Validates: Requirements 3.2, 3.3**
 
 - [ ] 14. Implement Blade views
-  - [~] 14.1 Implement admin project views
+  - [x] 14.1 Implement admin project views
     - `admin/projects/index` (project + customer + state), `create`, `edit`, `show` (library tree, contractor assignment, audit-log link) extending `layouts.app`
     - _Requirements: 1.6, 6.2_
 
-  - [~] 14.2 Implement folder management and settings views
+  - [-] 14.2 Implement folder management and settings views
     - `admin/projects/folders/*` partials (create/rename/reorder + per-role permission matrix); `admin/settings/folder-template.blade.php` master template editor reached from settings hub
     - _Requirements: 4.1, 4.2, 5.1, 5.2_
 
-  - [~] 14.3 Implement audit log and portal views
+  - [-] 14.3 Implement audit log and portal views
     - `admin/projects/audit-log.blade.php` (actor/action/target/timestamp); `portal/projects/index` and `portal/library` (permission-filtered tree, upload forms for read-write folders, download links to `documents.serve`)
     - _Requirements: 6.1, 6.2, 7.1, 9.1, 10.3_
 

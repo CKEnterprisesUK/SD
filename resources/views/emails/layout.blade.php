@@ -26,7 +26,12 @@
     <title>{{ $emailTitle }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&display=swap');
         body {
             margin: 0;
             padding: 0;
@@ -126,6 +131,34 @@
             font-size: 12px;
             color: #6b7280;
         }
+
+        .brand-mark {
+            font-family: 'Cabin Sketch', 'Comic Sans MS', cursive, sans-serif;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .brand-mark .brand-site {
+            font-weight: 700;
+            font-size: 22px;
+            color: #dc2626;
+        }
+
+        .brand-mark .brand-by {
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin: 0 4px;
+            vertical-align: middle;
+        }
+
+        .brand-mark .brand-company {
+            font-weight: 700;
+            font-size: 20px;
+            color: #374151;
+        }
     </style>
 </head>
 
@@ -165,8 +198,12 @@
                                     {{ $companyName }}
                                 </p>
 
-                                <p style="margin: 0;">
+                                <p style="margin: 0 0 14px;">
                                     This email was sent from {{ $portalName }}.
+                                </p>
+
+                                <p style="margin: 0;" class="brand-mark">
+                                    <span class="brand-site">SiteDesk</span><span class="brand-by">BY</span><span class="brand-company">CK Enterprises</span>
                                 </p>
                             </td>
                         </tr>

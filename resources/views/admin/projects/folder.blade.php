@@ -44,16 +44,15 @@
         };
 
         // Colour-coded permission badge for a resolved access level.
+        // Full class strings are written as literals (not concatenated) so
+        // Tailwind's JIT scanner can see and compile them.
         $permissionBadge = function (?string $level) {
-            $map = [
-                'read-write' => ['label' => 'Read / write', 'class' => 'bg-green-100 text-green-800 border-green-200'],
-                'read-only' => ['label' => 'Read only', 'class' => 'bg-amber-100 text-amber-800 border-amber-200'],
-                'no-access' => ['label' => 'No access', 'class' => 'bg-gray-100 text-gray-500 border-gray-200'],
-            ];
-            $meta = $map[$level] ?? ['label' => '—', 'class' => 'bg-gray-50 text-gray-400 border-gray-200'];
-
-            return '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium '
-                . $meta['class'] . '">' . e($meta['label']) . '</span>';
+            return match ($level) {
+                'read-write' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 border-green-300">Read / write</span>',
+                'read-only' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 border-amber-300">Read only</span>',
+                'no-access' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 border-gray-300">No access</span>',
+                default => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-gray-50 text-gray-400 border-gray-200">—</span>',
+            };
         };
 
         // The current folder's resolved access level applies to the documents

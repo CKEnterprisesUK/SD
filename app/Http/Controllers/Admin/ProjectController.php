@@ -158,6 +158,11 @@ class ProjectController extends Controller
             ->mapWithKeys(fn (ProjectFolder $f) => [$f->id => $permissions->level($user, $f)])
             ->all();
 
+        // Flat list of every folder in the project, each with an indented
+        // "path" label, used to populate the move-destination pickers. Built by
+        // walking the tree depth-first from the top-level folders.
+        $moveTargets = $this->flattenFolderTree($project);
+
         return view('admin.projects.folder', [
             'project' => $project,
             'folder' => $folder,
@@ -165,7 +170,41 @@ class ProjectController extends Controller
             'documents' => $folder->documents,
             'breadcrumbs' => $breadcrumbs,
             'folderPermissions' => $folderPermissions,
+            'moveTargets' => $moveTargets,
         ]);
+    }
+
+    /**
+     * Build a flat, depth-ordered list of every folder in the project for the
+     * move-destination pickers. Each entry is ['id' => int, 'label' => string]
+     * where the label is indented to reflect the folder's depth.
+     *
+     * @return array<int, array{id:int, label:string}>
+     */
+    private function flattenFolderTree(Project $project): array
+    {
+        $roots = $project->topLevelFolders()
+            ->with('children')
+            ->get();
+
+        $flat = [];
+
+        $walk = function (ProjectFolder $node, int $depth) use (&$walk, &$flat) {
+            $flat[] = [
+                'id' => $node->id,
+                'label' => str_repeat('— ', $depth).$node->name,
+            ];
+
+            foreach ($node->children as $child) {
+                $walk($child, $depth + 1);
+            }
+        };
+
+        foreach ($roots as $root) {
+            $walk($root, 0);
+        }
+
+        return $flat;
     }
 
     /**

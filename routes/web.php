@@ -389,6 +389,10 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
             ->middleware('project.writable')
             ->name('projects.folders.reorder');
 
+        Route::put('/projects/{project}/folders/{folder}/move', [ProjectFolderController::class, 'move'])
+            ->middleware('project.writable')
+            ->name('projects.folders.move');
+
         Route::put('/projects/{project}/folders/{folder}', [ProjectFolderController::class, 'update'])
             ->middleware('project.writable')
             ->name('projects.folders.update');
@@ -422,6 +426,14 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
         Route::post('/projects/{project}/documents/{document}/copy', [ProjectDocumentController::class, 'copy'])
             ->middleware('project.writable')
             ->name('projects.documents.copy');
+
+        Route::put('/projects/{project}/documents/{document}/move', [ProjectDocumentController::class, 'move'])
+            ->middleware('project.writable')
+            ->name('projects.documents.move');
+
+        Route::put('/projects/{project}/documents/{document}', [ProjectDocumentController::class, 'update'])
+            ->middleware('project.writable')
+            ->name('projects.documents.update');
 
         /*
         |--------------------------------------------------------------------------

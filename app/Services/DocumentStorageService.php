@@ -92,6 +92,48 @@ class DocumentStorageService
     }
 
     /**
+     * Move a document into a destination folder within the same project.
+     *
+     * For a project-owned upload the bytes are relocated to a fresh key under
+     * the destination folder's key space and the same record is repointed
+     * (project_folder_id + storage_path updated) so the document's identity,
+     * audit history, and shared references are preserved.
+     *
+     * A shared reference owns no bytes of its own, so only its
+     * project_folder_id is repointed; the canonical file is left untouched.
+     */
+    public function move(ProjectDocument $document, ProjectFolder $destination): ProjectDocument
+    {
+        // No-op if it's already in the destination folder.
+        if ($document->project_folder_id === $destination->getKey()) {
+            return $document;
+        }
+
+        $sourceFolderId = $document->project_folder_id;
+
+        if ($document->isSharedReference()) {
+            $document->update(['project_folder_id' => $destination->getKey()]);
+        } else {
+            $extension = pathinfo($document->storage_path, PATHINFO_EXTENSION);
+            $newKey = $this->buildKey($destination, $extension);
+
+            $this->disk()->move($document->storage_path, $newKey);
+
+            $document->update([
+                'project_folder_id' => $destination->getKey(),
+                'storage_path' => $newKey,
+            ]);
+        }
+
+        AuditLogger::documentMoved($document, [
+            'source_folder_id' => $sourceFolderId,
+            'destination_folder_id' => $destination->getKey(),
+        ]);
+
+        return $document;
+    }
+
+    /**
      * Remove a document's private file and its database record.
      *
      * The audit entry is recorded BEFORE the record is deleted so the target

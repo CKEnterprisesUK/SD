@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectDocument;
 use App\Models\ProjectFolder;
+use App\Services\AuditLogger;
 use App\Services\DocumentStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -135,5 +136,69 @@ class ProjectDocumentController extends Controller
         app(DocumentStorageService::class)->copy($document, $destination);
 
         return back()->with('status', 'Document copied successfully.');
+    }
+
+    /**
+     * Move a document into a destination folder within the same project.
+     *
+     * The source document must belong to the requested project (404 otherwise),
+     * the destination folder id must reference a folder in this project, and the
+     * user must hold write access on both the source (delete-style) and the
+     * destination folder with the project not Complete.
+     */
+    public function move(Request $request, Project $project, ProjectDocument $document): RedirectResponse
+    {
+        // The source document's folder must belong to the requested project.
+        abort_unless($document->folder->project_id === $project->id, 404);
+
+        // Source-side write access (a locked document may not be moved).
+        $this->authorize('delete', $document);
+
+        $validated = $request->validate([
+            'destination_folder_id' => [
+                'required',
+                Rule::exists('project_folders', 'id')->where('project_id', $project->id),
+            ],
+        ]);
+
+        $destination = ProjectFolder::where('project_id', $project->id)
+            ->findOrFail($validated['destination_folder_id']);
+
+        // Write access to the destination folder + project not Complete. The
+        // `move` ability lives on DocumentPolicy, so pass the destination folder
+        // as the array target so it resolves to DocumentPolicy@move.
+        $this->authorize('move', [ProjectDocument::class, $destination]);
+
+        app(DocumentStorageService::class)->move($document, $destination);
+
+        return back()->with('status', 'Document moved successfully.');
+    }
+
+    /**
+     * Rename a document (its display / original name).
+     *
+     * The document must belong to the requested project (404 otherwise) and the
+     * user must hold write access on the containing folder with the project not
+     * Complete. Locked references cannot be renamed (DocumentPolicy@rename).
+     */
+    public function update(Request $request, Project $project, ProjectDocument $document): RedirectResponse
+    {
+        abort_unless($document->folder->project_id === $project->id, 404);
+
+        $this->authorize('rename', $document);
+
+        $validated = $request->validate([
+            'original_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $previousName = $document->original_name;
+
+        $document->update(['original_name' => $validated['original_name']]);
+
+        AuditLogger::documentRenamed($document, [
+            'previous_name' => $previousName,
+        ]);
+
+        return back()->with('status', 'Document renamed successfully.');
     }
 }

@@ -199,7 +199,7 @@
                 <span class="w-20 text-right">Size</span>
                 <span class="w-28 text-right">Modified</span>
                 <span class="w-28">Access</span>
-                <span class="w-16 text-right">Actions</span>
+                <span class="w-40 text-right">Actions</span>
             </div>
 
             {{-- Rows: folders first, then files --}}
@@ -219,7 +219,30 @@
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($subfolder->updated_at)->format('d M Y') ?? '—' }}</span>
                         <span class="hidden sm:block w-28">{!! $permissionBadge($folderPermissions[$subfolder->id] ?? null) !!}</span>
 
-                        <div class="w-16 flex justify-end">
+                        <div class="w-40 flex justify-end items-center gap-2">
+                            @if ($isWritable && Route::has('admin.projects.folders.update'))
+                                <button type="button" title="Rename folder"
+                                        data-rename-folder="{{ $subfolder->id }}"
+                                        data-rename-name="{{ $subfolder->name }}"
+                                        class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            @endif
+
+                            @if ($isWritable && Route::has('admin.projects.folders.move'))
+                                <button type="button" title="Move folder"
+                                        data-move-folder="{{ $subfolder->id }}"
+                                        data-move-name="{{ $subfolder->name }}"
+                                        class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 14h6m0 0l-2-2m2 2l-2 2" />
+                                    </svg>
+                                </button>
+                            @endif
+
                             @if ($isWritable && Route::has('admin.projects.folders.destroy'))
                                 <form method="POST"
                                       action="{{ route('admin.projects.folders.destroy', [$project, $subfolder]) }}"
@@ -260,7 +283,7 @@
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($document->created_at)->format('d M Y') ?? '—' }}</span>
                         <span class="hidden sm:block w-28">{!! $permissionBadge($folderLevel) !!}</span>
 
-                        <div class="w-16 flex justify-end items-center gap-2">
+                        <div class="w-40 flex justify-end items-center gap-2">
                             @if (Route::has('documents.serve') && $isViewable($document->mime_type))
                                 <a href="{{ route('documents.serve', $document) }}" target="_blank" rel="noopener" title="View"
                                    class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -278,6 +301,29 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
                                     </svg>
                                 </a>
+                            @endif
+
+                            @if ($isWritable && ! $document->isLocked() && Route::has('admin.projects.documents.update'))
+                                <button type="button" title="Rename file"
+                                        data-rename-document="{{ $document->id }}"
+                                        data-rename-name="{{ $document->original_name }}"
+                                        class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            @endif
+
+                            @if ($isWritable && ! $document->isLocked() && Route::has('admin.projects.documents.move'))
+                                <button type="button" title="Move file"
+                                        data-move-document="{{ $document->id }}"
+                                        data-move-name="{{ $document->original_name }}"
+                                        class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 14h6m0 0l-2-2m2 2l-2 2" />
+                                    </svg>
+                                </button>
                             @endif
 
                             @if ($isWritable && Route::has('admin.projects.documents.destroy'))
@@ -321,4 +367,198 @@
             <p class="mt-3 text-xs text-gray-400">Tip: use the Upload button above to add files to this folder.</p>
         @endif
     </div>
+
+    @if ($isWritable)
+        {{-- Rename / Move dialogs. A single dialog of each kind is reused for
+             every row; JS rewrites the form action and prefilled values when a
+             row's rename/move button is clicked. --}}
+
+        {{-- Rename dialog --}}
+        <div id="rename-dialog"
+             class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+             role="dialog" aria-modal="true" aria-labelledby="rename-title">
+            <div class="w-full max-w-md bg-white border border-gray-300 shadow-lg">
+                <form id="rename-form" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="px-5 py-4 border-b border-gray-200">
+                        <h2 id="rename-title" class="text-base font-semibold text-gray-900">Rename</h2>
+                    </div>
+                    <div class="px-5 py-4">
+                        <label for="rename-input" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input id="rename-input" type="text" required maxlength="255"
+                               class="w-full border border-gray-300 px-3 py-2 rounded-none text-sm">
+                    </div>
+                    <div class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+                        <button type="button" data-close-dialog
+                                class="px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-none hover:bg-gray-100">Cancel</button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-black text-white text-sm font-semibold rounded-none hover:bg-gray-800">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Move dialog --}}
+        <div id="move-dialog"
+             class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+             role="dialog" aria-modal="true" aria-labelledby="move-title">
+            <div class="w-full max-w-md bg-white border border-gray-300 shadow-lg">
+                <form id="move-form" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="px-5 py-4 border-b border-gray-200">
+                        <h2 id="move-title" class="text-base font-semibold text-gray-900">Move</h2>
+                        <p id="move-subtitle" class="text-xs text-gray-500 mt-0.5"></p>
+                    </div>
+                    <div class="px-5 py-4">
+                        <label for="move-select" class="block text-sm font-medium text-gray-700 mb-1">Destination folder</label>
+                        <select id="move-select" name="destination_folder_id"
+                                class="w-full border border-gray-300 px-3 py-2 rounded-none text-sm bg-white">
+                            {{-- Top-level option only shown for folders (documents must live in a folder) --}}
+                            <option id="move-top-level-option" value="">Top level</option>
+                            @foreach ($moveTargets as $target)
+                                <option value="{{ $target['id'] }}">{{ $target['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+                        <button type="button" data-close-dialog
+                                class="px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-none hover:bg-gray-100">Cancel</button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-black text-white text-sm font-semibold rounded-none hover:bg-gray-800">Move here</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const currentFolderId = @json($folder->id);
+
+                const renameDialog = document.getElementById('rename-dialog');
+                const renameForm = document.getElementById('rename-form');
+                const renameInput = document.getElementById('rename-input');
+                const renameTitle = document.getElementById('rename-title');
+
+                const moveDialog = document.getElementById('move-dialog');
+                const moveForm = document.getElementById('move-form');
+                const moveSelect = document.getElementById('move-select');
+                const moveTitle = document.getElementById('move-title');
+                const moveSubtitle = document.getElementById('move-subtitle');
+                const moveTopLevelOption = document.getElementById('move-top-level-option');
+
+                // URL templates with a __ID__ placeholder swapped per row.
+                const routes = {
+                    folderRename: @json($isWritable && Route::has('admin.projects.folders.update') ? route('admin.projects.folders.update', [$project, '__ID__']) : null),
+                    folderMove: @json($isWritable && Route::has('admin.projects.folders.move') ? route('admin.projects.folders.move', [$project, '__ID__']) : null),
+                    documentRename: @json($isWritable && Route::has('admin.projects.documents.update') ? route('admin.projects.documents.update', [$project, '__ID__']) : null),
+                    documentMove: @json($isWritable && Route::has('admin.projects.documents.move') ? route('admin.projects.documents.move', [$project, '__ID__']) : null),
+                };
+
+                function openDialog(el) { el.classList.remove('hidden'); }
+                function closeDialog(el) { el.classList.add('hidden'); }
+
+                function fillRoute(template, id) {
+                    return template ? template.replace('__ID__', id) : null;
+                }
+
+                // --- Rename wiring ---
+                document.querySelectorAll('[data-rename-folder]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const id = btn.getAttribute('data-rename-folder');
+                        renameForm.action = fillRoute(routes.folderRename, id);
+                        renameForm.dataset.field = 'name';
+                        renameInput.name = 'name';
+                        renameInput.value = btn.getAttribute('data-rename-name') || '';
+                        renameTitle.textContent = 'Rename folder';
+                        openDialog(renameDialog);
+                        renameInput.focus();
+                        renameInput.select();
+                    });
+                });
+
+                document.querySelectorAll('[data-rename-document]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const id = btn.getAttribute('data-rename-document');
+                        renameForm.action = fillRoute(routes.documentRename, id);
+                        renameInput.name = 'original_name';
+                        renameInput.value = btn.getAttribute('data-rename-name') || '';
+                        renameTitle.textContent = 'Rename file';
+                        openDialog(renameDialog);
+                        renameInput.focus();
+                        renameInput.select();
+                    });
+                });
+
+                // --- Move wiring ---
+                function prepareMoveSelect(disableId, allowTopLevel) {
+                    moveTopLevelOption.hidden = !allowTopLevel;
+                    moveTopLevelOption.disabled = !allowTopLevel;
+                    // Re-enable everything, then disable the current location and,
+                    // for folders, the folder itself (its own subtree is handled
+                    // server-side as a hard guard).
+                    Array.prototype.forEach.call(moveSelect.options, function (opt) {
+                        opt.disabled = false;
+                    });
+                    Array.prototype.forEach.call(moveSelect.options, function (opt) {
+                        if (disableId !== null && opt.value === String(disableId)) {
+                            opt.disabled = true;
+                        }
+                    });
+                    // Default selection: first enabled option.
+                    for (let i = 0; i < moveSelect.options.length; i++) {
+                        const opt = moveSelect.options[i];
+                        if (!opt.hidden && !opt.disabled) { moveSelect.selectedIndex = i; break; }
+                    }
+                }
+
+                document.querySelectorAll('[data-move-folder]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const id = btn.getAttribute('data-move-folder');
+                        moveForm.action = fillRoute(routes.folderMove, id);
+                        moveTitle.textContent = 'Move folder';
+                        moveSubtitle.textContent = btn.getAttribute('data-move-name') || '';
+                        // Folders can go to top level; disable moving into itself.
+                        prepareMoveSelect(id, true);
+                        openDialog(moveDialog);
+                    });
+                });
+
+                document.querySelectorAll('[data-move-document]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const id = btn.getAttribute('data-move-document');
+                        moveForm.action = fillRoute(routes.documentMove, id);
+                        moveTitle.textContent = 'Move file';
+                        moveSubtitle.textContent = btn.getAttribute('data-move-name') || '';
+                        // Documents must live in a folder: no top-level option.
+                        // Disable the folder it's already in (the current folder).
+                        prepareMoveSelect(currentFolderId, false);
+                        openDialog(moveDialog);
+                    });
+                });
+
+                // --- Close handlers ---
+                document.querySelectorAll('[data-close-dialog]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        closeDialog(renameDialog);
+                        closeDialog(moveDialog);
+                    });
+                });
+
+                [renameDialog, moveDialog].forEach(function (dialog) {
+                    dialog.addEventListener('click', function (e) {
+                        if (e.target === dialog) closeDialog(dialog);
+                    });
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeDialog(renameDialog);
+                        closeDialog(moveDialog);
+                    }
+                });
+            })();
+        </script>
+    @endif
 </x-app-layout>

@@ -73,4 +73,32 @@ class DocumentPolicy
         return $this->resolver->canWrite($user, $destination)
             && ! $destination->project->isComplete();
     }
+
+    /**
+     * Move a document into a destination folder: write access to the
+     * destination and non-Complete project. Authorized against the
+     * destination folder (source write access is enforced separately via the
+     * delete-style check in the controller).
+     */
+    public function move(User $user, ProjectFolder $destination): bool
+    {
+        return $this->resolver->canWrite($user, $destination)
+            && ! $destination->project->isComplete();
+    }
+
+    /**
+     * Rename a document: write access to its folder and non-Complete project.
+     * Locked (shared, undeletable) references cannot be renamed here.
+     */
+    public function rename(User $user, ProjectDocument $document): bool
+    {
+        if ($document->isLocked()) {
+            return false;
+        }
+
+        $folder = $document->folder;
+
+        return $this->resolver->canWrite($user, $folder)
+            && ! $folder->project->isComplete();
+    }
 }

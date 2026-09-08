@@ -246,6 +246,102 @@ class ProjectFolderController extends Controller
     }
 
     /**
+     * Move a folder under a different parent (or to the top level).
+     *
+     * A destination of null makes the folder top-level; a destination folder id
+     * nests it beneath that folder. Moving a folder into itself or any of its
+     * own descendants is rejected (cycle guard).
+     *
+     * Permission model side effects (subfolders inherit their top-level
+     * ancestor's permissions via PermissionResolver::topLevelFolder):
+     *  - Moving TO top level: the folder becomes top-level and receives default
+     *    FolderPermission rows if it has none yet.
+     *  - Moving UNDER a parent: the folder becomes a subfolder; any permission
+     *    rows it carried are removed since it now inherits from the ancestor.
+     */
+    public function move(Request $request, Project $project, ProjectFolder $folder)
+    {
+        $this->ensureFolderInProject($project, $folder);
+
+        Gate::authorize('manage', $folder);
+
+        $validated = $request->validate([
+            'destination_folder_id' => [
+                'nullable',
+                Rule::exists('project_folders', 'id')->where('project_id', $project->id),
+            ],
+        ]);
+
+        $destination = null;
+
+        if (! empty($validated['destination_folder_id'])) {
+            $destination = ProjectFolder::where('project_id', $project->id)
+                ->findOrFail($validated['destination_folder_id']);
+        }
+
+        // A move must actually change the parent.
+        if ($destination?->id === $folder->parent_id
+            || ($destination === null && $folder->parent_id === null)) {
+            return back()->with('status', 'Folder is already in that location.');
+        }
+
+        // Cycle guard: cannot move a folder into itself or its own subtree.
+        if ($destination !== null
+            && in_array($destination->id, $folder->selfAndDescendantIds(), true)) {
+            throw ValidationException::withMessages([
+                'destination_folder_id' => 'A folder cannot be moved into itself or one of its subfolders.',
+            ]);
+        }
+
+        $previousParentId = $folder->parent_id;
+
+        DB::transaction(function () use ($project, $folder, $destination) {
+            $isTopLevel = $destination === null;
+
+            $sortOrder = ProjectFolder::where('project_id', $project->id)
+                ->where('parent_id', $destination?->id)
+                ->max('sort_order');
+            $sortOrder = $sortOrder === null ? 0 : $sortOrder + 1;
+
+            $folder->update([
+                'parent_id' => $destination?->id,
+                'is_top_level' => $isTopLevel,
+                'sort_order' => $sortOrder,
+            ]);
+
+            if ($isTopLevel) {
+                // Newly top-level: seed default permission rows if absent.
+                if ($folder->permissions()->count() === 0) {
+                    $defaults = [
+                        'admin' => PermissionResolver::READ_WRITE,
+                        'contractor' => PermissionResolver::NO_ACCESS,
+                        'customer' => PermissionResolver::NO_ACCESS,
+                    ];
+
+                    foreach (self::ROLES as $role) {
+                        FolderPermission::create([
+                            'project_folder_id' => $folder->id,
+                            'role' => $role,
+                            'level' => $defaults[$role],
+                        ]);
+                    }
+                }
+            } else {
+                // Now a subfolder: it inherits from its top-level ancestor, so
+                // any permission rows it used to carry are no longer meaningful.
+                $folder->permissions()->delete();
+            }
+        });
+
+        AuditLogger::folderMoved($folder, [
+            'previous_parent_id' => $previousParentId,
+            'parent_id' => $folder->parent_id,
+        ]);
+
+        return back()->with('status', 'Folder moved successfully.');
+    }
+
+    /**
      * Ensure the folder belongs to the given project (guards manual id tampering
      * when route-model binding is not scoped).
      */

@@ -39,6 +39,16 @@ class AuditLogger
         return self::recordDocument('copied', $document, $metadata);
     }
 
+    public static function documentMoved(ProjectDocument $document, array $metadata = []): DocumentAuditLog
+    {
+        return self::recordDocument('moved', $document, $metadata);
+    }
+
+    public static function documentRenamed(ProjectDocument $document, array $metadata = []): DocumentAuditLog
+    {
+        return self::recordDocument('renamed', $document, $metadata);
+    }
+
     // --- Folder operations ---------------------------------------------------
 
     public static function folderCreated(ProjectFolder $folder, array $metadata = []): DocumentAuditLog
@@ -54,6 +64,11 @@ class AuditLogger
     public static function folderReordered(ProjectFolder $folder, array $metadata = []): DocumentAuditLog
     {
         return self::recordFolder('folder_reordered', $folder, $metadata);
+    }
+
+    public static function folderMoved(ProjectFolder $folder, array $metadata = []): DocumentAuditLog
+    {
+        return self::recordFolder('folder_moved', $folder, $metadata);
     }
 
     public static function folderDeleted(ProjectFolder $folder, array $metadata = []): DocumentAuditLog

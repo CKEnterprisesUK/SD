@@ -62,4 +62,23 @@ class ProjectFolder extends Model
 
         return $node;
     }
+
+    /**
+     * The ids of this folder and every folder beneath it (its whole subtree).
+     *
+     * Used to guard a move against creating a cycle: a folder may not be moved
+     * into itself or any of its own descendants.
+     *
+     * @return array<int, int>
+     */
+    public function selfAndDescendantIds(): array
+    {
+        $ids = [$this->getKey()];
+
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->selfAndDescendantIds());
+        }
+
+        return $ids;
+    }
 }

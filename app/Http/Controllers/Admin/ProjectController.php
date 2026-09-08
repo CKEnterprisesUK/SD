@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contractor;
 use App\Models\Customer;
 use App\Models\Project;
+use App\Models\ProjectFolder;
 use App\Services\ProjectSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -121,6 +122,38 @@ class ProjectController extends Controller
 
         return view('admin.projects.show', [
             'project' => $project,
+        ]);
+    }
+
+    /**
+     * Browse a single folder within a project (OneDrive-style, one level at a
+     * time). Shows the folder's immediate subfolders and documents plus a
+     * breadcrumb trail built by walking up the parent chain.
+     */
+    public function folder(Project $project, ProjectFolder $folder)
+    {
+        $this->authorize('view', $project);
+
+        // Guard against a folder id from another project.
+        abort_unless($folder->project_id === $project->id, 404);
+
+        $folder->load(['children', 'documents']);
+
+        // Build breadcrumb from the top-level ancestor down to this folder.
+        $breadcrumbs = collect();
+        $node = $folder;
+
+        while ($node !== null) {
+            $breadcrumbs->prepend($node);
+            $node = $node->parent;
+        }
+
+        return view('admin.projects.folder', [
+            'project' => $project,
+            'folder' => $folder,
+            'subfolders' => $folder->children,
+            'documents' => $folder->documents,
+            'breadcrumbs' => $breadcrumbs,
         ]);
     }
 

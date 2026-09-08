@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerInvitation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -70,6 +75,7 @@ class CustomerController extends Controller
             'contacts.*.phone' => ['nullable', 'string', 'max:255'],
             'contacts.*.role' => ['nullable', 'string', 'max:255'],
             'primary_contact_index' => ['nullable', 'integer'],
+            'invite_to_portal' => ['nullable', 'boolean'],
         ]);
 
         $customer = DB::transaction(function () use ($validated) {
@@ -87,9 +93,63 @@ class CustomerController extends Controller
             return $customer;
         });
 
+        $status = 'Customer created successfully.';
+
+        if (! empty($validated['invite_to_portal'])) {
+            $contact = $customer->fresh('contacts')->primaryContact
+                ?? $customer->contacts()->whereNotNull('email')->first();
+
+            if ($contact && $contact->email) {
+                $this->sendPortalInvite($customer, $contact->email, $contact->name ?: $customer->name, $contact->id);
+                $status = 'Customer created and Green Street Portal invite sent.';
+            } else {
+                $status = 'Customer created. No contact email was available to send a portal invite.';
+            }
+        }
+
         return redirect()
             ->route('admin.customers.show', $customer)
-            ->with('status', 'Customer created successfully.');
+            ->with('status', $status);
+    }
+
+    /**
+     * Provision (or reuse) a customer portal User and send the Green Street
+     * Portal password-setup email. Mirrors CustomerInviteController@send so the
+     * create-time invite and the dashboard button behave identically.
+     */
+    private function sendPortalInvite(Customer $customer, string $email, string $name, ?int $customerContactId = null): void
+    {
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            // `role` and `status` are not mass-assignable on User, so set them
+            // explicitly to guarantee an active customer-role account.
+            $user = new User([
+                'name' => $name,
+                'email' => $email,
+                'customer_id' => $customer->id,
+            ]);
+            $user->password = Hash::make(Str::random(40));
+            $user->role = 'customer';
+            $user->status = 'active';
+            $user->save();
+        }
+
+        CustomerInvitation::create([
+            'customer_id' => $customer->id,
+            'customer_contact_id' => $customerContactId,
+            'email' => $user->email,
+            'invited_by_user_id' => auth()->id(),
+            'user_id' => $user->id,
+        ]);
+
+        if ($customerContactId) {
+            $customer->contacts()->whereKey($customerContactId)->update([
+                'portal_access_enabled' => true,
+            ]);
+        }
+
+        Password::sendResetLink(['email' => $user->email]);
     }
 
    public function show(Customer $customer)

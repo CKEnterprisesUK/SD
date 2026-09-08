@@ -56,6 +56,14 @@ class CustomerInviteController extends Controller
             'user_id' => $user->id,
         ]);
 
+        // Mark the invited contact as having portal access so the dashboard
+        // reflects the invite state (Portal badge / "Resend invite").
+        if (! empty($validated['customer_contact_id'])) {
+            $customer->contacts()->whereKey($validated['customer_contact_id'])->update([
+                'portal_access_enabled' => true,
+            ]);
+        }
+
         Password::sendResetLink([
             'email' => $user->email,
         ]);

@@ -136,6 +136,25 @@
                           rows="4"
                           class="w-full border border-gray-400 px-4 py-3 rounded-none">{{ old('notes', $customer?->notes) }}</textarea>
             </div>
+
+            @unless ($customer)
+                <div class="md:col-span-2 border border-gray-300 bg-gray-50 p-4">
+                    <label class="flex items-start gap-3 text-sm">
+                        <input type="checkbox"
+                               name="invite_to_portal"
+                               value="1"
+                               class="mt-1"
+                               @checked(old('invite_to_portal'))>
+
+                        <span>
+                            <span class="font-semibold">Invite to the Green Street Portal</span>
+                            <span class="block text-gray-600 mt-1">
+                                Sends the primary contact a password-setup email so they can sign in to the portal and view their project documents. You can also send this later from the customer dashboard.
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            @endunless
         </div>
     </section>
 

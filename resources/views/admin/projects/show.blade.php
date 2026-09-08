@@ -150,15 +150,72 @@
         </div>
 
         <section class="border border-gray-300 bg-white p-6 mt-6">
-            <h2 class="text-lg font-semibold mb-4">Document library</h2>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-semibold">Document library</h2>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Click a folder to open it. Subfolders and documents open one level at a time.
+                    </p>
+                </div>
 
-            @forelse ($project->topLevelFolders as $folder)
-                @include('admin.projects.partials.folder-node', ['folder' => $folder, 'depth' => 0])
-            @empty
-                <p class="text-sm text-gray-600">
-                    This project has no folders yet.
-                </p>
-            @endforelse
+                @unless ($project->isComplete())
+                    @if (Route::has('admin.projects.folders.store'))
+                        <button type="button"
+                                onclick="document.getElementById('new-top-folder').classList.toggle('hidden')"
+                                class="inline-flex px-4 py-2 border border-gray-900 text-sm font-semibold rounded-none">
+                            New folder
+                        </button>
+                    @endif
+                @endunless
+            </div>
+
+            @unless ($project->isComplete())
+                @if (Route::has('admin.projects.folders.store'))
+                    <form id="new-top-folder" method="POST"
+                          action="{{ route('admin.projects.folders.store', $project) }}"
+                          class="hidden mb-4 flex flex-col sm:flex-row gap-3">
+                        @csrf
+                        <input type="text" name="name" required placeholder="Folder name"
+                               class="flex-1 border border-gray-400 px-3 py-2 rounded-none text-sm">
+                        <button type="submit"
+                                class="px-4 py-2 bg-black text-white text-sm font-semibold rounded-none">
+                            Create folder
+                        </button>
+                    </form>
+                @endif
+            @endunless
+
+            <div class="divide-y divide-gray-200 border-t border-gray-200">
+                @forelse ($project->topLevelFolders as $folder)
+                    <div class="flex items-center justify-between gap-3 py-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                            </svg>
+
+                            @if (Route::has('admin.projects.folders.browse'))
+                                <a href="{{ route('admin.projects.folders.browse', [$project, $folder]) }}"
+                                   class="font-semibold underline">
+                                    {{ $folder->name }}
+                                </a>
+                            @else
+                                <span class="font-semibold">{{ $folder->name }}</span>
+                            @endif
+                        </div>
+
+                        @if (Route::has('admin.projects.folders.browse'))
+                            <a href="{{ route('admin.projects.folders.browse', [$project, $folder]) }}"
+                               class="text-sm underline text-gray-600">
+                                Open
+                            </a>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600 py-3">
+                        This project has no folders yet.
+                    </p>
+                @endforelse
+            </div>
         </section>
     </div>
 </x-app-layout>

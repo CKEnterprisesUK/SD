@@ -320,6 +320,12 @@ Route::put('/settings/ai', [AiSettingsController::class, 'update'])
         Route::get('/projects/{project}/audit-log', [ProjectAuditLogController::class, 'index'])
             ->name('projects.audit-log.index');
 
+        // OneDrive-style folder browsing for admins: view one folder level at a
+        // time. Read-only navigation; write actions live under the folder/
+        // document routes below.
+        Route::get('/projects/{project}/browse/{folder}', [ProjectController::class, 'folder'])
+            ->name('projects.folders.browse');
+
         /*
         |--------------------------------------------------------------------------
         | Project folders

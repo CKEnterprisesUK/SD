@@ -188,6 +188,49 @@
                             </p>
                         </a>
                     @endif
+
+                    @if (Route::has('admin.customers.invite'))
+                        @php
+                            $portalContact = $primaryContact && $primaryContact->email
+                                ? $primaryContact
+                                : $customer->contacts->firstWhere(fn ($c) => filled($c->email));
+                            $portalActive = $customer->contacts->contains(fn ($c) => $c->portal_access_enabled);
+                        @endphp
+
+                        @if ($portalContact)
+                            <div class="block border border-gray-300 bg-white p-5">
+                                <div class="font-bold text-lg">
+                                    {{ $portalActive ? 'Resend portal invite' : 'Invite to Green Street Portal' }}
+                                </div>
+
+                                <p class="text-sm text-gray-600 mt-2">
+                                    Send {{ $portalContact->name ?: $portalContact->email }} a password-setup email for the portal.
+                                </p>
+
+                                <form method="POST" action="{{ route('admin.customers.invite', $customer) }}" class="mt-3">
+                                    @csrf
+                                    <input type="hidden" name="email" value="{{ $portalContact->email }}">
+                                    <input type="hidden" name="name" value="{{ $portalContact->name ?: $customer->name }}">
+                                    <input type="hidden" name="customer_contact_id" value="{{ $portalContact->id }}">
+
+                                    <button type="submit"
+                                            class="inline-flex px-4 py-2 bg-black text-white text-sm font-semibold rounded-none">
+                                        {{ $portalActive ? 'Resend invite' : 'Send invite' }}
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="block border border-gray-300 bg-gray-50 p-5">
+                                <div class="font-bold text-lg text-gray-700">
+                                    Green Street Portal
+                                </div>
+
+                                <p class="text-sm text-gray-600 mt-2">
+                                    Add a contact with an email address to invite this customer to the portal.
+                                </p>
+                            </div>
+                        @endif
+                    @endif
                 </div>
             </div>
         </section>

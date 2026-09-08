@@ -96,12 +96,26 @@ class DocumentStorageService
      *
      * The audit entry is recorded BEFORE the record is deleted so the target
      * document id and its details are captured while they still exist.
+     *
+     * Locked documents (shared, undeletable references) are never removed here:
+     * they are managed centrally on the folder-template settings page. A
+     * shared reference that is somehow unlocked deletes only its reference row
+     * — never the canonical file, which other projects still reference.
      */
     public function delete(ProjectDocument $document): void
     {
+        // A locked document cannot be deleted from a project library at all.
+        if ($document->isLocked()) {
+            throw new \RuntimeException('This document is locked and cannot be deleted.');
+        }
+
         AuditLogger::documentDeleted($document);
 
-        $this->disk()->delete($document->storage_path);
+        // A shared reference owns no bytes of its own; only drop the row so the
+        // canonical file remains available to other projects.
+        if (! $document->isSharedReference()) {
+            $this->disk()->delete($document->storage_path);
+        }
 
         $document->delete();
     }

@@ -259,6 +259,12 @@ Route::put('/settings/quote-pack', [QuotePackTemplateController::class, 'update'
 Route::put('/settings/folder-template', [FolderTemplateSettingsController::class, 'update'])
     ->name('settings.folder-template.update');
 
+Route::post('/settings/folder-template/{folderTemplate}/shared-documents', [FolderTemplateSettingsController::class, 'storeSharedDocument'])
+    ->name('settings.folder-template.shared-documents.store');
+
+Route::delete('/settings/folder-template/shared-documents/{sharedDocument}', [FolderTemplateSettingsController::class, 'destroySharedDocument'])
+    ->name('settings.folder-template.shared-documents.destroy');
+
     Route::get('/settings/overview', [SettingsHubController::class, 'index'])
     ->name('settings.index');
 

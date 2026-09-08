@@ -6,6 +6,7 @@ use App\Models\FolderPermission;
 use App\Models\FolderTemplate;
 use App\Models\Project;
 use App\Models\ProjectFolder;
+use App\Models\SharedDocument;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,7 +27,9 @@ class ProjectSeeder
      */
     public function seed(Project $project): void
     {
-        DB::transaction(function () use ($project) {
+        $sharedDocuments = app(SharedDocumentService::class);
+
+        DB::transaction(function () use ($project, $sharedDocuments) {
             $templates = FolderTemplate::orderBy('sort_order')->get();
 
             foreach ($templates as $template) {
@@ -54,6 +57,18 @@ class ProjectSeeder
                         'is_top_level' => false,
                         'sort_order' => $index,
                     ]);
+                }
+
+                // Reference any shared documents attached to this template
+                // folder into the project's copy. The bytes are never
+                // duplicated — each reference points at the canonical file.
+                $shared = SharedDocument::where('folder_template_id', $template->id)
+                    ->orWhere('folder_template_name', $template->name)
+                    ->get()
+                    ->unique('id');
+
+                foreach ($shared as $sharedDocument) {
+                    $sharedDocuments->reference($sharedDocument, $topLevel);
                 }
             }
         });

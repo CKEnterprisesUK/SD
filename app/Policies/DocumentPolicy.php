@@ -51,6 +51,13 @@ class DocumentPolicy
      */
     public function delete(User $user, ProjectDocument $document): bool
     {
+        // Locked documents (shared, undeletable references) can never be
+        // deleted from a project library — they are managed centrally on the
+        // folder-template settings page.
+        if ($document->isLocked()) {
+            return false;
+        }
+
         $folder = $document->folder;
 
         return $this->resolver->canWrite($user, $folder)

@@ -39,8 +39,12 @@ class DocumentServeController extends Controller
         // they are never served from the public disk (req 8.2).
         $disk = Storage::disk('local');
 
+        // Shared documents are referenced, not duplicated: resolve to the
+        // canonical file's key when this row points at a SharedDocument.
+        $storagePath = $document->resolvedStoragePath();
+
         // Missing storage key -> 404 (req 8.3).
-        abort_unless($disk->exists($document->storage_path), 404);
+        abort_unless($storagePath !== null && $disk->exists($storagePath), 404);
 
         // Record the read in the audit log (req 9.1).
         AuditLogger::documentDownloaded($document);
@@ -53,14 +57,14 @@ class DocumentServeController extends Controller
         $forceDownload = $request->boolean('download');
 
         if (! $forceDownload && self::isInlineViewable($mime)) {
-            return $disk->response($document->storage_path, $document->original_name, [
+            return $disk->response($storagePath, $document->original_name, [
                 'Content-Type' => $mime,
                 'Content-Disposition' => 'inline; filename="' . addslashes($document->original_name) . '"',
             ]);
         }
 
         // Stream the file back with its original name and stored mime type.
-        return $disk->download($document->storage_path, $document->original_name, [
+        return $disk->download($storagePath, $document->original_name, [
             'Content-Type' => $mime,
         ]);
     }

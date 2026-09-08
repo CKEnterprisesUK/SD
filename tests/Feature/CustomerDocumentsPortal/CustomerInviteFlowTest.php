@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\CustomerDocumentsPortal;
 
+use App\Mail\CustomerPortalInvite;
 use App\Models\Customer;
 use App\Models\CustomerInvitation;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
@@ -16,17 +16,17 @@ use Tests\TestCase;
  * Feature: customer-documents-portal, Property 6: customer invite flow
  *
  * Property 6: Invite creates a pending customer invitation; on acceptance the
- * resulting User has role `customer` linked to the Customer (assert
- * Notification::fake reset link sent).
+ * resulting User has role `customer` linked to the Customer (assert a branded
+ * portal invitation email is sent via Mail).
  *
- * The invite endpoint (admin.customers.invite) mirrors the contractor invite
- * flow: it creates/finds a `customer`-role User linked to the Customer via
- * `customer_id`, records a pending CustomerInvitation (accepted_at null), and
- * dispatches a password-reset link via Password::sendResetLink — the mechanism
- * used to deliver the SiteDeskResetPasswordNotification for password setup.
+ * The invite endpoint (admin.customers.invite) delegates to
+ * CustomerPortalInviteService: it creates/finds a `customer`-role User linked to
+ * the Customer via `customer_id`, records a pending CustomerInvitation
+ * (accepted_at null), and dispatches a branded App\Mail\CustomerPortalInvite
+ * mailable that carries the password-setup link for portal access.
  *
- * Acceptance is exercised by completing the actual password-reset route with the
- * emailed token; after acceptance the customer-role User can authenticate and
+ * Acceptance is exercised by completing the actual password-reset route with a
+ * real token; after acceptance the customer-role User can authenticate and
  * remains linked to the Customer via customer_id.
  *
  * Validates: Requirements 3.2, 3.3
@@ -39,12 +39,13 @@ class CustomerInviteFlowTest extends TestCase
 
     /**
      * Property 6: invite creates a pending invitation + linked customer-role user
-     * and sends the reset-link notification. Runs several randomized iterations.
+     * and sends the branded portal invitation email. Runs several randomized
+     * iterations.
      */
-    public function test_invite_creates_pending_invitation_and_sends_reset_link(): void
+    public function test_invite_creates_pending_invitation_and_sends_branded_email(): void
     {
         for ($i = 0; $i < self::ITERATIONS; $i++) {
-            Notification::fake();
+            Mail::fake();
 
             $admin = User::factory()->create(['role' => 'admin']);
             $customer = Customer::create([
@@ -88,27 +89,23 @@ class CustomerInviteFlowTest extends TestCase
             );
             $this->assertSame($user->id, $invitation->user_id);
 
-            // A reset-link notification was sent to the invited user (3.4 mechanism).
-            // Password::sendResetLink dispatches a ResetPassword notification on the
-            // notifiable User; SiteDeskResetPasswordNotification extends ResetPassword,
-            // so accept either the base or the SiteDesk subclass.
-            Notification::assertSentTo(
-                $user,
-                ResetPassword::class,
-                function ($notification) {
-                    return $notification instanceof ResetPassword;
-                }
+            // The branded portal invitation email was sent to the invited address.
+            Mail::assertSent(
+                CustomerPortalInvite::class,
+                fn ($mail) => $mail->hasTo($email)
             );
         }
     }
 
     /**
-     * Acceptance: completing the password-reset flow with the emailed token sets a
+     * Acceptance: completing the password-reset flow with a real token sets a
      * password; the customer-role User can then authenticate and stays linked to
      * the Customer. (Requirements 3.2, 3.3)
      */
     public function test_invited_customer_can_accept_and_authenticate(): void
     {
+        Mail::fake();
+
         $admin = User::factory()->create(['role' => 'admin']);
         $customer = Customer::create([
             'name' => fake()->company(),

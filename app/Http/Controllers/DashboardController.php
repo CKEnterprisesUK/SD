@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -10,17 +9,12 @@ class DashboardController extends Controller
     /**
      * Display the dashboard.
      *
-     * Admins receive a paginated list of projects to render in the
-     * projects table; other roles receive null.
+     * The dashboard is a role-aware grid of tool tiles (Contractors, Customers,
+     * Quotes, Projects, etc.). The full projects listing lives on its own page
+     * at admin.projects.index, reached via the Projects tile.
      */
     public function index(): View
     {
-        $user = auth()->user();
-
-        $projects = $user->isAdmin()
-            ? Project::with('customer')->latest()->paginate(15)
-            : null;
-
-        return view('dashboard', ['projects' => $projects]);
+        return view('dashboard');
     }
 }

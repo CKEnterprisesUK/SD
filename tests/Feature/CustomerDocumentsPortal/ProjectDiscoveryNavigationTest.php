@@ -22,11 +22,11 @@ use Tests\TestCase;
  *   - The customer record is admin-only (403 for customer/contractor roles).
  *   Validates: Requirements 1.7, 11.1, 11.2.
  *
- * Property 25: The dashboard lists all projects paginated for admins and is
- *   not shown to non-admins.
- *   - Admin dashboard renders a paginated Projects table (paginate 15).
- *   - Admin dashboard with zero projects still returns 200.
- *   - Non-admins do not see the Projects table / any project.
+ * Property 25: The dashboard exposes Projects via an admin-only tile linking
+ *   to the projects index page (its own page); non-admins do not see it.
+ *   - Admin dashboard shows a Projects tile linking to admin.projects.index.
+ *   - Non-admins do not see the Projects tile.
+ *   - The projects index page is admin-only and lists projects.
  *   Validates: Requirements 11.3, 11.4, 11.5.
  *
  * Validates: Requirements 1.7, 11.1, 11.2, 11.3, 11.4, 11.5
@@ -138,24 +138,53 @@ class ProjectDiscoveryNavigationTest extends TestCase
     }
 
     // ---------------------------------------------------------------------
-    // Property 25: dashboard projects table (admin-only, paginated)
+    // Property 25: dashboard Projects tile (admin-only) + projects index page
     // ---------------------------------------------------------------------
 
     /**
-     * Property 25: As an admin with more than one page of projects, the
-     * dashboard shows the Projects table with pagination. The most-recent
-     * project appears on page 1; an older project appears on page 2.
+     * Property 25: As an admin, the dashboard shows a Projects tile linking to
+     * the projects index page.
      */
-    public function test_admin_dashboard_lists_projects_paginated(): void
+    public function test_admin_dashboard_shows_projects_tile(): void
     {
         $this->actingAs($this->makeAdmin());
 
+        $response = $this->get(route('dashboard'));
+
+        $response->assertOk();
+        // The tile links to the projects index page and carries its label.
+        $response->assertSee(route('admin.projects.index'), false);
+        $response->assertSee('Open projects', false);
+    }
+
+    /**
+     * Property 25: Non-admins never see admin tiles. A contractor loading the
+     * dashboard must not see the Projects tile.
+     */
+    public function test_non_admin_dashboard_hides_projects_tile(): void
+    {
+        $contractor = User::factory()->create(['role' => 'contractor']);
+
+        $response = $this->actingAs($contractor)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertDontSee(route('admin.projects.index'), false);
+        $response->assertDontSee('Open projects', false);
+    }
+
+    /**
+     * Property 25: The projects index page (its own page) is admin-only and
+     * lists projects. Admins see each project's name; contractor- and
+     * customer-role users receive 403 (ProjectController@index aborts unless
+     * the actor isAdmin()).
+     */
+    public function test_projects_index_page_is_admin_only_and_lists_projects(): void
+    {
         $customer = $this->makeCustomer();
 
-        // Create 20 projects (> paginate(15)) so pagination is exercised.
         $names = [];
-        for ($i = 0; $i < 20; $i++) {
-            $name = 'DashProject '.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 3; $i++) {
+            $name = 'IndexProject '.fake()->unique()->bothify('??-####');
             Project::factory()->create([
                 'customer_id' => $customer->id,
                 'name' => $name,
@@ -163,83 +192,26 @@ class ProjectDiscoveryNavigationTest extends TestCase
             $names[] = $name;
         }
 
-        $page1 = $this->get(route('dashboard'));
-        $page1->assertOk();
-        $page1->assertSee('Projects', false);
+        // Admin sees the projects index page with each project listed.
+        $adminResponse = $this->actingAs($this->makeAdmin())
+            ->get(route('admin.projects.index'));
 
-        // With paginate(15), page 1 shows at most 15 of the 20 project rows.
-        // Determine which names render on page 1 vs page 2 without depending on
-        // the exact ordering (timestamp ties make id-order the tiebreaker).
-        $page1Content = $page1->getContent();
-        $onPage1 = array_values(array_filter(
-            $names,
-            fn (string $name) => str_contains($page1Content, $name)
-        ));
-
-        // Some projects appear on page 1 (the table is populated) but not all
-        // 20 — pagination limits the page to 15 rows.
-        $this->assertNotEmpty($onPage1, 'Page 1 must list some projects.');
-        $this->assertLessThanOrEqual(
-            15,
-            count($onPage1),
-            'Page 1 must show at most 15 project rows (paginate(15)).'
-        );
-        $this->assertLessThan(
-            count($names),
-            count($onPage1),
-            'Not all 20 projects should fit on page 1 — pagination must split them.'
-        );
-
-        // The projects not shown on page 1 must appear on page 2.
-        $notOnPage1 = array_values(array_diff($names, $onPage1));
-        $this->assertNotEmpty($notOnPage1, 'There must be overflow projects for page 2.');
-
-        $page2 = $this->get(route('dashboard', ['page' => 2]));
-        $page2->assertOk();
-        foreach ($notOnPage1 as $name) {
-            $page2->assertSee($name, false);
+        $adminResponse->assertOk();
+        foreach ($names as $name) {
+            $adminResponse->assertSee($name, false);
         }
-    }
 
-    /**
-     * Property 25: As an admin with zero projects, the dashboard still renders
-     * (200) and shows the empty state for the projects table.
-     */
-    public function test_admin_dashboard_with_no_projects_still_renders(): void
-    {
-        $this->actingAs($this->makeAdmin());
+        // The projects index page is admin-only.
+        $contractorUser = User::factory()->create(['role' => 'contractor']);
+        $customerUser = User::factory()->create(['role' => 'customer']);
 
-        $response = $this->get(route('dashboard'));
+        $this->actingAs($contractorUser)
+            ->get(route('admin.projects.index'))
+            ->assertForbidden();
 
-        $response->assertOk();
-        // Empty LengthAwarePaginator is not empty() == false, so the section
-        // renders with its empty-state row.
-        $response->assertSee('No projects have been created yet.', false);
-    }
-
-    /**
-     * Property 25: The projects table is not shown to non-admins. A contractor
-     * loading the dashboard must not see any project (their $projects is null,
-     * so the section is not rendered).
-     */
-    public function test_non_admin_dashboard_does_not_show_projects(): void
-    {
-        $customer = $this->makeCustomer();
-
-        for ($i = 0; $i < 5; $i++) {
-            $name = 'HiddenProject '.fake()->unique()->bothify('??-####');
-            Project::factory()->create([
-                'customer_id' => $customer->id,
-                'name' => $name,
-            ]);
-
-            $contractor = User::factory()->create(['role' => 'contractor']);
-
-            $response = $this->actingAs($contractor)->get(route('dashboard'));
-
-            $response->assertOk();
-            $response->assertDontSee($name, false);
-        }
+        $this->actingAs($customerUser)
+            ->get(route('admin.projects.index'))
+            ->assertForbidden();
 
         fake()->unique(true);
     }

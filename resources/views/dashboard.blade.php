@@ -210,6 +210,37 @@
                         </a>
                     @endif
 
+                    @if (Route::has('admin.projects.index'))
+                        <a href="{{ route('admin.projects.index') }}"
+                           class="group flex flex-col border border-gray-300 bg-white hover:border-gray-900 focus:border-gray-900 focus:outline-none transition min-h-[320px]">
+                            <div class="h-36 bg-gray-100 border-b border-gray-300 flex items-center justify-center">
+                                <svg class="h-16 w-16 text-gray-700 group-hover:text-gray-900 transition"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     fill="none"
+                                     viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                                </svg>
+                            </div>
+
+                            <div class="p-6 flex flex-col flex-1">
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    Projects
+                                </h2>
+
+                                <p class="text-sm text-gray-600 mt-3 flex-1">
+                                    Manage customer projects, document libraries, folders and permissions.
+                                </p>
+
+                                <span class="mt-6 inline-flex w-fit px-4 py-2 bg-black text-white text-sm font-semibold rounded-none">
+                                    Open projects
+                                </span>
+                            </div>
+                        </a>
+                    @endif
+
                     @if (Route::has('admin.users.index'))
                         <a href="{{ route('admin.users.index') }}"
                            class="group flex flex-col border border-gray-300 bg-white hover:border-gray-900 focus:border-gray-900 focus:outline-none transition min-h-[320px]">
@@ -339,69 +370,7 @@
                 @endif
             </div>
 
-            @if ($user->isAdmin() && !empty($projects))
-                <section class="mt-6 sm:mt-8">
-                    <div class="mb-4">
-                        <h2 class="text-3xl font-bold text-gray-900">
-                            Projects
-                        </h2>
 
-                        <p class="text-gray-600 mt-2 max-w-2xl">
-                            Recently created customer projects and their document libraries.
-                        </p>
-                    </div>
-
-                    <div class="border border-gray-300 bg-white">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-300 bg-gray-50 text-left">
-                                    <th class="px-4 py-3 font-semibold">Project</th>
-                                    <th class="px-4 py-3 font-semibold">Customer</th>
-                                    <th class="px-4 py-3 font-semibold">State</th>
-                                    <th class="px-4 py-3 font-semibold">Created</th>
-                                    <th class="px-4 py-3 font-semibold">Actions</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @forelse ($projects as $project)
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-4 py-3 font-semibold">{{ $project->name }}</td>
-                                        <td class="px-4 py-3">
-                                            {{ optional($project->customer)->company_name ?: optional($project->customer)->name ?: '—' }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span class="inline-block border border-gray-400 px-2 py-1 text-xs font-semibold">
-                                                {{ $project->state }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3">{{ $project->created_at?->format('d M Y') ?: '—' }}</td>
-                                        <td class="px-4 py-3">
-                                            @if (Route::has('admin.projects.show'))
-                                                <a href="{{ route('admin.projects.show', $project) }}" class="underline">
-                                                    Open
-                                                </a>
-                                            @else
-                                                <span class="text-gray-400">—</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-4 py-8 text-center text-gray-600">
-                                            No projects have been created yet.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-6">
-                        {{ $projects->links() }}
-                    </div>
-                </section>
-            @endif
         </div>
     </div>
 </x-app-layout>

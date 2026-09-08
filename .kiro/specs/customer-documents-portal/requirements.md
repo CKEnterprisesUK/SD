@@ -162,6 +162,6 @@ The Customer Documents Portal adds a SharePoint-style document library to the Si
 
 1. WHEN an Admin views a Customer record, THE SiteDesk SHALL display the Projects belonging to that Customer, each with its current Project_State, and provide an action to open each Project.
 2. WHEN an Admin views a Customer record, THE SiteDesk SHALL provide an action to create a new Project that is pre-scoped to that Customer.
-3. WHEN an Admin views the main dashboard, THE SiteDesk SHALL display all Projects in a paginated table showing the Project name, associated Customer, Project_State, and creation date, with an action to open each Project.
-4. THE SiteDesk SHALL restrict the dashboard Projects table and the Customer-record Projects listing to Admin users.
-5. IF a non-Admin user is presented the main dashboard, THEN THE SiteDesk SHALL NOT display the Projects table to that user.
+3. WHEN an Admin views the main dashboard, THE SiteDesk SHALL present a Projects navigation entry that links to the Projects list page.
+4. THE SiteDesk SHALL display all Projects on the Projects list page in a paginated table showing the Project name, associated Customer, Project_State, and creation date, with an action to open each Project, restricted to Admin users.
+5. IF a non-Admin user is presented the main dashboard, THEN THE SiteDesk SHALL NOT display the Projects navigation entry to that user.

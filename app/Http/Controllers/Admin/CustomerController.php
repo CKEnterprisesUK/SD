@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\CustomerInvitation;
-use App\Models\User;
+use App\Services\CustomerActivityLogger;
+use App\Services\CustomerPortalInviteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -58,7 +55,7 @@ class CustomerController extends Controller
         return view('admin.customers.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, CustomerPortalInviteService $inviter)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
@@ -93,6 +90,8 @@ class CustomerController extends Controller
             return $customer;
         });
 
+        CustomerActivityLogger::created($customer);
+
         $status = 'Customer created successfully.';
 
         if (! empty($validated['invite_to_portal'])) {
@@ -100,7 +99,7 @@ class CustomerController extends Controller
                 ?? $customer->contacts()->whereNotNull('email')->first();
 
             if ($contact && $contact->email) {
-                $this->sendPortalInvite($customer, $contact->email, $contact->name ?: $customer->name, $contact->id);
+                $inviter->invite($customer, $contact->email, $contact->name ?: $customer->name, $contact->id);
                 $status = 'Customer created and Green Street Portal invite sent.';
             } else {
                 $status = 'Customer created. No contact email was available to send a portal invite.';
@@ -112,46 +111,6 @@ class CustomerController extends Controller
             ->with('status', $status);
     }
 
-    /**
-     * Provision (or reuse) a customer portal User and send the Green Street
-     * Portal password-setup email. Mirrors CustomerInviteController@send so the
-     * create-time invite and the dashboard button behave identically.
-     */
-    private function sendPortalInvite(Customer $customer, string $email, string $name, ?int $customerContactId = null): void
-    {
-        $user = User::where('email', $email)->first();
-
-        if (! $user) {
-            // `role` and `status` are not mass-assignable on User, so set them
-            // explicitly to guarantee an active customer-role account.
-            $user = new User([
-                'name' => $name,
-                'email' => $email,
-                'customer_id' => $customer->id,
-            ]);
-            $user->password = Hash::make(Str::random(40));
-            $user->role = 'customer';
-            $user->status = 'active';
-            $user->save();
-        }
-
-        CustomerInvitation::create([
-            'customer_id' => $customer->id,
-            'customer_contact_id' => $customerContactId,
-            'email' => $user->email,
-            'invited_by_user_id' => auth()->id(),
-            'user_id' => $user->id,
-        ]);
-
-        if ($customerContactId) {
-            $customer->contacts()->whereKey($customerContactId)->update([
-                'portal_access_enabled' => true,
-            ]);
-        }
-
-        Password::sendResetLink(['email' => $user->email]);
-    }
-
    public function show(Customer $customer)
 {
     abort_unless(auth()->user()->isAdmin(), 403);
@@ -159,6 +118,7 @@ class CustomerController extends Controller
     $customer->load([
         'contacts',
         'primaryContact',
+        'activityLogs.user',
     ]);
 
     $currentQuotes = $customer->quotes()
@@ -212,7 +172,11 @@ class CustomerController extends Controller
             'primary_contact_index' => ['nullable', 'integer'],
         ]);
 
-        DB::transaction(function () use ($customer, $validated) {
+        $tracked = ['name', 'company_name', 'status', 'address', 'notes'];
+
+        DB::transaction(function () use ($customer, $validated, $tracked, &$changes) {
+            $original = $customer->only($tracked);
+
             $customer->update([
                 'name' => $validated['name'],
                 'company_name' => $validated['company_name'] ?? null,
@@ -221,10 +185,21 @@ class CustomerController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            // Capture field-level changes for the audit feed.
+            $changes = [];
+
+            foreach ($tracked as $field) {
+                if (($original[$field] ?? null) !== $customer->{$field}) {
+                    $changes[$field] = [$original[$field] ?? null, $customer->{$field}];
+                }
+            }
+
             $customer->contacts()->delete();
 
             $this->syncContacts($customer, $validated);
         });
+
+        CustomerActivityLogger::updated($customer, $changes ?? []);
 
         return redirect()
             ->route('admin.customers.show', $customer)

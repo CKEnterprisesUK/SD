@@ -41,6 +41,11 @@ class Customer extends Model
             ->where('is_primary', true);
     }
 
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(CustomerActivityLog::class)->latest();
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return $this->company_name ?: $this->name;

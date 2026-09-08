@@ -541,6 +541,76 @@
                     </div>
                 </section>
 
+                <section class="border border-gray-300 bg-white">
+                    <div class="p-6 border-b border-gray-300">
+                        <h2 class="text-lg font-bold text-gray-900">
+                            Activity
+                        </h2>
+
+                        <p class="text-sm text-gray-600 mt-1">
+                            Recent changes to this customer, and who made them.
+                        </p>
+                    </div>
+
+                    @php
+                        $activityLogs = $customer->activityLogs;
+
+                        $activityMeta = function (string $action) {
+                            return match ($action) {
+                                'created' => ['label' => 'Created', 'class' => 'border-green-700 bg-green-50 text-green-900'],
+                                'updated' => ['label' => 'Updated', 'class' => 'border-blue-700 bg-blue-50 text-blue-900'],
+                                'invited' => ['label' => 'Invited', 'class' => 'border-purple-700 bg-purple-50 text-purple-900'],
+                                'logged_in' => ['label' => 'Signed in', 'class' => 'border-gray-700 bg-gray-50 text-gray-900'],
+                                'logged_out' => ['label' => 'Signed out', 'class' => 'border-gray-400 bg-white text-gray-600'],
+                                'password_reset' => ['label' => 'Password reset', 'class' => 'border-amber-700 bg-amber-50 text-amber-900'],
+                                default => ['label' => ucfirst(str_replace('_', ' ', $action)), 'class' => 'border-gray-500 bg-gray-50 text-gray-800'],
+                            };
+                        };
+                    @endphp
+
+                    @if ($activityLogs->count())
+                        <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                            @foreach ($activityLogs as $log)
+                                @php $meta = $activityMeta($log->action); @endphp
+
+                                <div class="p-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex px-2 py-1 border text-xs font-semibold {{ $meta['class'] }}">
+                                            {{ $meta['label'] }}
+                                        </span>
+
+                                        <span class="text-xs text-gray-500">
+                                            {{ $log->created_at ? $log->created_at->format('d M Y H:i') : '' }}
+                                        </span>
+                                    </div>
+
+                                    @if ($log->description)
+                                        <p class="text-sm text-gray-800 mt-2">
+                                            {{ $log->description }}
+                                        </p>
+                                    @endif
+
+                                    @php $selfService = in_array($log->action, ['logged_in', 'logged_out', 'password_reset'], true); @endphp
+
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        @if ($selfService)
+                                            by the customer{{ $log->user?->name ? ' (' . $log->user->name . ')' : '' }}
+                                        @else
+                                            by {{ $log->user?->name ?? 'System' }}
+                                        @endif
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-6">
+                            <p class="text-sm text-gray-600">
+                                No activity recorded yet.
+                            </p>
+                        </div>
+                    @endif
+                </section>
+
                 @if ($recentQuotes->count())
                     <section class="border border-gray-300 bg-white">
                         <div class="p-6 border-b border-gray-300">

@@ -251,9 +251,8 @@ Test infrastructure notes:
     - `admin/customers/show.blade.php`: add a "Create project" action (links to `admin.projects.create` with `?customer_id=`) and a "Projects" table (name, state, created, Open) mirroring the current-quotes section, guarded with `Route::has`
     - _Requirements: 1.7, 11.1, 11.2_
 
-  - [x] 16.2 Dashboard projects table (replace Jobs card)
-    - Convert the dashboard route from a view closure to `DashboardController@index`; for admins pass `$projects = Project::with('customer')->latest()->paginate(15)`
-    - Replace the disabled "Jobs" placeholder card in `dashboard.blade.php` with a full-width, paginated Projects table (name, customer, state, created, Open link); render only for admins
+  - [x] 16.2 Dashboard Projects tile (replace Jobs card)
+    - Serve the dashboard via `DashboardController@index`; replace the disabled "Jobs" placeholder card in `dashboard.blade.php` with a working "Projects" tile in the admin tools grid linking to the existing `admin.projects.index` page (its own paginated Projects table); admin-only tile
     - _Requirements: 11.3, 11.4, 11.5_
 
   - [x] 16.3 Feature tests for discovery and navigation

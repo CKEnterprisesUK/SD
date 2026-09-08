@@ -13,7 +13,7 @@
         @endif
 
         <div class="mb-8">
-            <h1 class="text-3xl font-bold">Your projects</h1>
+            <h1 class="text-3xl font-bold">My Projects</h1>
             <p class="text-gray-600 mt-1">Open a project to view its documents.</p>
         </div>
 
@@ -45,9 +45,7 @@
                     </div>
                 </div>
             @empty
-                <div class="p-6">
-                    <p class="text-sm text-gray-600">You don't have any projects yet.</p>
-                </div>
+                <x-empty-state heading="No projects yet" message="You don't have any projects yet." />
             @endforelse
         </div>
 

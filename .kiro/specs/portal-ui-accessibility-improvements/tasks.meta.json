@@ -1,0 +1,265 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Update shared buttons, links, and inputs to the focus-ring convention": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118296
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869127251
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869244874
+      }
+    ],
+    "2.1 Implement `resources/views/components/icon-button.blade.php`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118339
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869128804
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869246258
+      }
+    ],
+    "3.1 Implement `resources/views/components/document-icon.blade.php`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118374
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869130096
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869247216
+      }
+    ],
+    "4.1 Implement `resources/views/components/empty-state.blade.php`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118403
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869130965
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869248374
+      }
+    ],
+    "5. Checkpoint - shared components complete": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118429
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869391776
+      }
+    ],
+    "6.1 Make the hamburger toggle accessible": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118462
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869257797
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869312674
+      }
+    ],
+    "6.2 Give the dropdown/user-menu chevron triggers accessible names and focus rings": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118487
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869313853
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869380868
+      }
+    ],
+    "7.1 Add file-type icons and phone-friendly rows": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118513
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869404995
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869485613
+      }
+    ],
+    "7.2 Convert row actions and the up-one-level control to `x-icon-button`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118544
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869491642
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869565734
+      }
+    ],
+    "8.1 Route empty branches through `x-empty-state`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118578
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869566659
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869643415
+      }
+    ],
+    "8.2 Resolve the customer projects heading mismatch": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118605
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869644421
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869679790
+      }
+    ],
+    "9. Checkpoint - per-view fixes complete": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118639
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869683616
+      }
+    ],
+    "10. Run the suite and document manual WCAG verification scope": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869118670
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869684745
+      },
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869805573
+      }
+    ],
+    "1. Apply the focus-ring convention to shared components": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869244914
+      }
+    ],
+    "2. Create the `x-icon-button` shared component": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869246293
+      }
+    ],
+    "3. Create the `x-document-icon` shared component": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869247256
+      }
+    ],
+    "4. Create the `x-empty-state` shared component": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869248409
+      }
+    ],
+    "6. Fix the mobile navigation toggle and dropdown triggers in `layouts/navigation.blade.php`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869380902
+      }
+    ],
+    "7. Make document/folder rows responsive and touch-reachable in `portal/folder.blade.php`": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869565782
+      }
+    ],
+    "8. Apply empty-state and heading consistency to portal views": [
+      {
+        "executionId": "dd80cb7e-6172-48fc-896b-598689f0082d",
+        "chatSessionId": "sess_063a5457-437f-420a-8b7a-2daa64158639",
+        "timestamp": 1788869679830
+      }
+    ]
+  }
+}

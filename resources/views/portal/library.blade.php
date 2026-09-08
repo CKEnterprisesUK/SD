@@ -67,13 +67,7 @@
                         @endif
                     </div>
                 @empty
-                    <div class="px-4 py-16 text-center">
-                        <svg width="48" height="48" class="mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-                        </svg>
-                        <p class="mt-3 text-sm font-medium text-gray-700">No folders available</p>
-                        <p class="mt-1 text-sm text-gray-500">There are no folders available to you in this project.</p>
-                    </div>
+                    <x-empty-state heading="No folders available" message="There are no folders available to you in this project." />
                 @endforelse
             </div>
         </div>

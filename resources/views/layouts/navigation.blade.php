@@ -49,7 +49,7 @@
                                     <x-slot name="trigger">
                                         <button
                                             type="button"
-                                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none
+                                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2
                                                 {{ $contractorAdminActive
                                                     ? 'border-gray-900 text-gray-900'
                                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
@@ -121,7 +121,7 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="56">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-none text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150">
+                        <button aria-label="Open user menu" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-none text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 transition ease-in-out duration-150">
                             <div>
                                 <div class="font-semibold text-gray-900">
                                     {{ $user->name }}
@@ -133,7 +133,7 @@
                             </div>
 
                             <div class="ms-2">
-                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                                <svg class="fill-current h-4 w-4" aria-hidden="true" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </div>
@@ -182,9 +182,12 @@
             <div class="-me-2 flex items-center sm:hidden">
                 <button
                     @click="open = ! open"
-                    class="inline-flex items-center justify-center p-2 border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900 transition duration-150 ease-in-out"
+                    :aria-expanded="open.toString()"
+                    aria-controls="mobile-navigation"
+                    aria-label="Toggle navigation menu"
+                    class="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2 border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus:bg-gray-100 focus:text-gray-900 transition duration-150 ease-in-out"
                 >
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <svg class="h-6 w-6" aria-hidden="true" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path
                             :class="{'hidden': open, 'inline-flex': ! open }"
                             class="inline-flex"
@@ -207,7 +210,7 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-gray-300">
+    <div id="mobile-navigation" :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-gray-300">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 Dashboard

@@ -92,13 +92,13 @@
                     @endphp
 
                     @if ($upHref)
-                        <a href="{{ $upHref }}"
-                           title="{{ $folder->parent ? 'Up one level' : 'Back to library' }}"
-                           class="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-gray-700 hover:bg-gray-50">
+                        <x-icon-button :href="$upHref"
+                                       :label="$folder->parent ? 'Up one level' : 'Back to library'"
+                                       class="border border-gray-300 text-gray-700 hover:bg-gray-50">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
                             </svg>
-                        </a>
+                        </x-icon-button>
                     @endif
 
                     <div class="min-w-0">
@@ -157,7 +157,11 @@
                             <svg class="w-5 h-5 text-yellow-500 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                             </svg>
-                            <span class="font-medium text-gray-900 truncate group-hover:text-blue-700">{{ $subfolder->name }}</span>
+                            <div class="min-w-0">
+                                <span class="block font-medium text-gray-900 truncate group-hover:text-blue-700">{{ $subfolder->name }}</span>
+                                {{-- Phone-only stacked metadata --}}
+                                <p class="sm:hidden mt-0.5 text-xs text-gray-500 truncate">Folder</p>
+                            </div>
                         </a>
 
                         <span class="hidden sm:block w-32 text-sm text-gray-500">Folder</span>
@@ -170,41 +174,49 @@
                 @foreach ($documents as $document)
                     <div class="group flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/60">
                         <div class="flex flex-1 items-center gap-3 min-w-0">
-                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 3h6l4 4v13a1 1 0 01-1 1H8a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4h4" />
-                            </svg>
-                            @if (Route::has('documents.serve'))
-                                <a href="{{ route('documents.serve', $document) }}"
-                                   @if ($isViewable($document->mime_type)) target="_blank" rel="noopener" @endif
-                                   class="text-gray-900 truncate hover:text-blue-700 hover:underline">{{ $document->original_name }}</a>
-                            @else
-                                <span class="text-gray-900 truncate">{{ $document->original_name }}</span>
-                            @endif
+                            <x-document-icon :name="$document->original_name" :mime="$document->mime_type" class="w-5 h-5 text-gray-400 shrink-0" />
+                            <div class="min-w-0">
+                                @if (Route::has('documents.serve'))
+                                    <a href="{{ route('documents.serve', $document) }}"
+                                       @if ($isViewable($document->mime_type)) target="_blank" rel="noopener" @endif
+                                       class="block text-gray-900 truncate hover:text-blue-700 hover:underline">{{ $document->original_name }}</a>
+                                @else
+                                    <span class="block text-gray-900 truncate">{{ $document->original_name }}</span>
+                                @endif
+                                {{-- Phone-only stacked metadata --}}
+                                <p class="sm:hidden mt-0.5 text-xs text-gray-500 truncate">
+                                    {{ $fileKind($document->mime_type, $document->original_name) }}
+                                    · {{ $formatBytes($document->size_bytes) }}
+                                    · {{ optional($document->created_at)->format('d M Y') ?? '—' }}
+                                </p>
+                            </div>
                         </div>
 
                         <span class="hidden sm:block w-32 text-sm text-gray-500 truncate">{{ $fileKind($document->mime_type, $document->original_name) }}</span>
                         <span class="hidden sm:block w-20 text-right text-sm text-gray-500">{{ $formatBytes($document->size_bytes) }}</span>
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($document->created_at)->format('d M Y') ?? '—' }}</span>
 
-                        <div class="w-16 flex justify-end items-center gap-2">
+                        <div class="flex justify-end items-center gap-1 sm:w-16">
                             @if (Route::has('documents.serve') && $isViewable($document->mime_type))
-                                <a href="{{ route('documents.serve', $document) }}" target="_blank" rel="noopener" title="View in browser"
-                                   class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <x-icon-button :href="route('documents.serve', $document)"
+                                               label="View {{ $document->original_name }} in browser"
+                                               target="_blank" rel="noopener"
+                                               class="sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:transition-opacity">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S5.5 5.5 12 5.5 21.5 12 21.5 12 18.5 18.5 12 18.5 2.5 12 2.5 12z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
-                                </a>
+                                </x-icon-button>
                             @endif
 
                             @if (Route::has('documents.serve'))
-                                <a href="{{ route('documents.serve', ['document' => $document, 'download' => 1]) }}" title="Download"
-                                   class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <x-icon-button :href="route('documents.serve', ['document' => $document, 'download' => 1])"
+                                               label="Download {{ $document->original_name }}"
+                                               class="sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:transition-opacity">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
                                     </svg>
-                                </a>
+                                </x-icon-button>
                             @endif
                         </div>
                     </div>
@@ -212,13 +224,7 @@
 
                 {{-- Empty state --}}
                 @if ($totalItems === 0)
-                    <div class="px-4 py-16 text-center">
-                        <svg width="48" height="48" class="mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-                        </svg>
-                        <p class="mt-3 text-sm font-medium text-gray-700">This folder is empty</p>
-                        <p class="mt-1 text-sm text-gray-500">Nothing has been added here yet.</p>
-                    </div>
+                    <x-empty-state heading="This folder is empty" message="Nothing has been added here yet." />
                 @endif
             </div>
         </div>

@@ -38,6 +38,7 @@ The Customer Documents Portal adds a SharePoint-style document library to the Si
 4. THE SiteDesk SHALL restrict Project creation and Project_State changes to Admin users.
 5. IF a non-Admin user requests Project creation or Project_State change, THEN THE SiteDesk SHALL deny the request and return an authorization error.
 6. WHEN an Admin views the Project list, THE SiteDesk SHALL display each Project with its associated Customer and current Project_State.
+7. WHEN an Admin initiates Project creation from a Customer record, THE SiteDesk SHALL pre-associate the new Project with that Customer.
 
 ### Requirement 2: Read-Only Completed Projects
 
@@ -152,3 +153,15 @@ The Customer Documents Portal adds a SharePoint-style document library to the Si
 2. WHEN a Folder is created, renamed, reordered, or deleted, THE SiteDesk SHALL record an Audit_Log entry containing the acting user, the action, the target Folder, and the timestamp.
 3. WHEN an Admin views the Audit_Log for a Project, THE SiteDesk SHALL display the recorded entries for that Project.
 4. THE SiteDesk SHALL restrict Audit_Log viewing to Admin users.
+
+### Requirement 11: Project Discovery and Navigation
+
+**User Story:** As an Admin, I want to reach and create Projects from the places I already work — the Customer record and the main dashboard — so that Projects are easy to find and start without navigating to a separate list.
+
+#### Acceptance Criteria
+
+1. WHEN an Admin views a Customer record, THE SiteDesk SHALL display the Projects belonging to that Customer, each with its current Project_State, and provide an action to open each Project.
+2. WHEN an Admin views a Customer record, THE SiteDesk SHALL provide an action to create a new Project that is pre-scoped to that Customer.
+3. WHEN an Admin views the main dashboard, THE SiteDesk SHALL display all Projects in a paginated table showing the Project name, associated Customer, Project_State, and creation date, with an action to open each Project.
+4. THE SiteDesk SHALL restrict the dashboard Projects table and the Customer-record Projects listing to Admin users.
+5. IF a non-Admin user is presented the main dashboard, THEN THE SiteDesk SHALL NOT display the Projects table to that user.

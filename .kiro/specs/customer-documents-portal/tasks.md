@@ -240,8 +240,26 @@ Test infrastructure notes:
     - `admin/projects/audit-log.blade.php` (actor/action/target/timestamp); `portal/projects/index` and `portal/library` (permission-filtered tree, upload forms for read-write folders, download links to `documents.serve`)
     - _Requirements: 6.1, 6.2, 7.1, 9.1, 10.3_
 
-- [-] 15. Final checkpoint - full suite green
+- [x] 15. Final checkpoint - full suite green
   - Run migrations + seeders and the full feature/property test suite. Ensure all tests pass, ask the user if questions arise.
+
+- [x] 16. Project discovery and navigation (customer record + dashboard)
+  - [x] 16.1 Create-project from customer record + customer projects list
+    - Add `Customer::projects(): HasMany` (Project via `customer_id`)
+    - `ProjectController@create` reads optional `?customer_id=` (validate `exists:customers,id`) and pre-selects it in the customer dropdown; update `admin/projects/create.blade.php` to honour the pre-selected `customer_id`
+    - `CustomerController@show` loads `$customer->projects()->latest()->get()` and passes `$projects`
+    - `admin/customers/show.blade.php`: add a "Create project" action (links to `admin.projects.create` with `?customer_id=`) and a "Projects" table (name, state, created, Open) mirroring the current-quotes section, guarded with `Route::has`
+    - _Requirements: 1.7, 11.1, 11.2_
+
+  - [x] 16.2 Dashboard projects table (replace Jobs card)
+    - Convert the dashboard route from a view closure to `DashboardController@index`; for admins pass `$projects = Project::with('customer')->latest()->paginate(15)`
+    - Replace the disabled "Jobs" placeholder card in `dashboard.blade.php` with a full-width, paginated Projects table (name, customer, state, created, Open link); render only for admins
+    - _Requirements: 11.3, 11.4, 11.5_
+
+  - [x] 16.3 Feature tests for discovery and navigation
+    - **Property 24: Create-project from a customer pre-scopes that customer; the customer record lists that customer's projects (admin-only)**
+    - **Property 25: The dashboard lists all projects paginated for admins and is not shown to non-admins**
+    - **Validates: Requirements 1.7, 11.1, 11.2, 11.3, 11.4, 11.5**
 
 ## Notes
 
@@ -264,6 +282,7 @@ Test infrastructure notes:
     { "id": 5, "tasks": ["8.3", "8.4", "9.1", "10.1", "11.1", "13.1", "13.2"] },
     { "id": 6, "tasks": ["9.2", "9.3", "10.2", "11.2", "12.1", "12.2", "12.3", "13.3"] },
     { "id": 7, "tasks": ["12.4", "12.5", "12.6", "14.1", "14.2", "14.3"] }
+    ,{ "id": 8, "tasks": ["16.1", "16.2", "16.3"] }
   ]
 }
 ```

@@ -112,10 +112,13 @@ class CustomerController extends Controller
         ->limit(5)
         ->get();
 
+    $projects = $customer->projects()->latest()->get();
+
     return view('admin.customers.show', [
         'customer' => $customer,
         'currentQuotes' => $currentQuotes,
         'recentQuotes' => $recentQuotes,
+        'projects' => $projects,
     ]);
 }
 

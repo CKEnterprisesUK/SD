@@ -537,7 +537,7 @@ All routes are added inside the existing `Route::middleware(['auth'])->prefix('a
 | Method | URI | Name | Action |
 | --- | --- | --- | --- |
 | GET | `/admin/projects` | `admin.projects.index` | `ProjectController@index` |
-| GET | `/admin/projects/create` | `admin.projects.create` | `ProjectController@create` |
+| GET | `/admin/projects/create` | `admin.projects.create` | `ProjectController@create` (accepts optional `?customer_id=` to pre-select the Customer) |
 | POST | `/admin/projects` | `admin.projects.store` | `ProjectController@store` (seeds from template, state=Draft) |
 | GET | `/admin/projects/{project}` | `admin.projects.show` | `ProjectController@show` |
 | GET | `/admin/projects/{project}/edit` | `admin.projects.edit` | `ProjectController@edit` |
@@ -545,6 +545,14 @@ All routes are added inside the existing `Route::middleware(['auth'])->prefix('a
 | PUT | `/admin/projects/{project}/state` | `admin.projects.state.update` | `ProjectController@updateState` |
 | POST | `/admin/projects/{project}/contractors` | `admin.projects.contractors.store` | assign contractor |
 | DELETE | `/admin/projects/{project}/contractors/{contractor}` | `admin.projects.contractors.destroy` | unassign |
+
+### Project discovery & navigation (Requirement 11)
+
+Two navigation surfaces make Projects reachable from where admins already work. No new routes are required — both reuse the existing `admin.projects.*` routes above.
+
+**Customer record (`admin/customers/show`).** `CustomerController@show` additionally loads the Customer's Projects (`$customer->projects()->latest()->get()`, via a new `Customer::projects()` `hasMany`). The view renders a "Projects" table (name, state, created, Open link) mirroring the existing "Current quotes" section, plus a "Create project" action linking to `route('admin.projects.create', ['customer_id' => $customer->id])`. `ProjectController@create` reads the optional `customer_id` query parameter and pre-selects it in the customer dropdown (validating it exists); `store` already accepts `customer_id`, so no store change is needed. This satisfies req 1.7, 11.1, 11.2.
+
+**Main dashboard.** The dashboard route is converted from a view closure to `DashboardController@index`. For an admin it passes `$projects = Project::with('customer')->latest()->paginate(15)`; the "Jobs" placeholder card is replaced by a full-width Projects table (name, customer, state, created, Open link) with pagination. Non-admin users receive no `$projects` data and the table is not rendered (req 11.5). The table and the customer-record listing are admin-only (req 11.3, 11.4) — the dashboard already branches on `$user->isAdmin()`, and `CustomerController@show` already enforces `abort_unless(isAdmin)`.
 
 ### Admin: Per-project folder management
 

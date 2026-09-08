@@ -65,7 +65,7 @@
                     >
                         <option value="">Select a customer</option>
                         @foreach ($customers as $customer)
-                            <option value="{{ $customer->id }}" @selected((string) old('customer_id') === (string) $customer->id)>
+                            <option value="{{ $customer->id }}" @selected((string) old('customer_id', $selectedCustomerId ?? '') === (string) $customer->id)>
                                 {{ $customer->company_name ?: $customer->name }}
                             </option>
                         @endforeach

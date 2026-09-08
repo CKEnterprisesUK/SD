@@ -272,39 +272,6 @@
                         </a>
                     @endif
 
-                    <div class="flex flex-col border border-gray-300 bg-white opacity-70 min-h-[320px]">
-                        <div class="h-36 bg-gray-50 border-b border-gray-300 flex items-center justify-center">
-                            <svg class="h-16 w-16 text-gray-400"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke-width="1.5"
-                                 stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M3.75 21h16.5M4.5 3h15l-.75 18H5.25L4.5 3zM9 7.5h6M8.25 12h7.5M9 16.5h6" />
-                            </svg>
-                        </div>
-
-                        <div class="p-6 flex flex-col flex-1">
-                            <div class="flex items-center justify-between gap-4">
-                                <h2 class="text-xl font-bold text-gray-700">
-                                    Jobs
-                                </h2>
-
-                                <span class="text-sm text-gray-500">
-                                    Coming soon
-                                </span>
-                            </div>
-
-                            <p class="text-sm text-gray-600 mt-3 flex-1">
-                                Track jobs, sites, progress and contractor activity.
-                            </p>
-
-                            <span class="mt-6 inline-flex w-fit px-4 py-2 border border-gray-400 text-gray-600 text-sm font-semibold rounded-none">
-                                Not available yet
-                            </span>
-                        </div>
-                    </div>
                 @endif
 
                 @if ($user->isContractor())
@@ -371,6 +338,70 @@
                     </a>
                 @endif
             </div>
+
+            @if ($user->isAdmin() && !empty($projects))
+                <section class="mt-6 sm:mt-8">
+                    <div class="mb-4">
+                        <h2 class="text-3xl font-bold text-gray-900">
+                            Projects
+                        </h2>
+
+                        <p class="text-gray-600 mt-2 max-w-2xl">
+                            Recently created customer projects and their document libraries.
+                        </p>
+                    </div>
+
+                    <div class="border border-gray-300 bg-white">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-300 bg-gray-50 text-left">
+                                    <th class="px-4 py-3 font-semibold">Project</th>
+                                    <th class="px-4 py-3 font-semibold">Customer</th>
+                                    <th class="px-4 py-3 font-semibold">State</th>
+                                    <th class="px-4 py-3 font-semibold">Created</th>
+                                    <th class="px-4 py-3 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @forelse ($projects as $project)
+                                    <tr class="border-b border-gray-200">
+                                        <td class="px-4 py-3 font-semibold">{{ $project->name }}</td>
+                                        <td class="px-4 py-3">
+                                            {{ optional($project->customer)->company_name ?: optional($project->customer)->name ?: '—' }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-block border border-gray-400 px-2 py-1 text-xs font-semibold">
+                                                {{ $project->state }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3">{{ $project->created_at?->format('d M Y') ?: '—' }}</td>
+                                        <td class="px-4 py-3">
+                                            @if (Route::has('admin.projects.show'))
+                                                <a href="{{ route('admin.projects.show', $project) }}" class="underline">
+                                                    Open
+                                                </a>
+                                            @else
+                                                <span class="text-gray-400">—</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-600">
+                                            No projects have been created yet.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-6">
+                        {{ $projects->links() }}
+                    </div>
+                </section>
+            @endif
         </div>
     </div>
 </x-app-layout>

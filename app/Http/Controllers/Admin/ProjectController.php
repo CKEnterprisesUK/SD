@@ -54,12 +54,21 @@ class ProjectController extends Controller
     /**
      * Show the create-project form.
      */
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', Project::class);
 
+        $selectedCustomerId = $request->query('customer_id');
+
+        if ($selectedCustomerId !== null) {
+            $request->validate([
+                'customer_id' => ['nullable', 'exists:customers,id'],
+            ]);
+        }
+
         return view('admin.projects.create', [
             'customers' => Customer::orderBy('company_name')->orderBy('name')->get(),
+            'selectedCustomerId' => $selectedCustomerId,
         ]);
     }
 

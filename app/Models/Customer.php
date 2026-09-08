@@ -30,6 +30,11 @@ class Customer extends Model
     return $this->hasMany(Quote::class);
 }
 
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
     public function primaryContact(): HasOne
     {
         return $this->hasOne(CustomerContact::class)

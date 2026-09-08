@@ -28,6 +28,7 @@
     @php
         $currentQuotes = $currentQuotes ?? collect();
         $recentQuotes = $recentQuotes ?? collect();
+        $projects = $projects ?? collect();
 
         $statusClass = match ($customer->status) {
             'active' => 'border-green-700 bg-green-50 text-green-900',
@@ -162,6 +163,19 @@
                         </p>
                     </a>
 
+                    @if (Route::has('admin.projects.create'))
+                        <a href="{{ route('admin.projects.create', ['customer_id' => $customer->id]) }}"
+                           class="block border border-gray-300 bg-white p-5 hover:border-black">
+                            <div class="font-bold text-lg">
+                                Create project
+                            </div>
+
+                            <p class="text-sm text-gray-600 mt-2">
+                                Start a new project for this customer.
+                            </p>
+                        </a>
+                    @endif
+
                     @if ($currentQuotes->count() && Route::has('admin.quotes.index'))
                         <a href="{{ route('admin.quotes.index') }}"
                            class="block border border-gray-300 bg-white p-5 hover:border-black">
@@ -274,6 +288,92 @@
                     <div class="border border-gray-300 bg-gray-50 p-5">
                         <p class="text-sm text-gray-700">
                             No current quotes for this customer.
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </section>
+
+        <section class="border border-gray-300 bg-white">
+            <div class="p-6 border-b border-gray-300 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">
+                        Projects
+                    </h2>
+
+                    <p class="text-sm text-gray-600 mt-1">
+                        Projects linked to this customer record.
+                    </p>
+                </div>
+
+                @if (Route::has('admin.projects.create'))
+                    <a href="{{ route('admin.projects.create', ['customer_id' => $customer->id]) }}"
+                       class="inline-flex px-5 py-3 bg-black text-white text-sm font-semibold rounded-none">
+                        Create project
+                    </a>
+                @endif
+            </div>
+
+            <div class="p-6">
+                @if ($projects->count())
+                    <div class="overflow-x-auto border border-gray-300">
+                        <table class="min-w-full divide-y divide-gray-300 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">
+                                        Project
+                                    </th>
+
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">
+                                        State
+                                    </th>
+
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">
+                                        Created
+                                    </th>
+
+                                    <th class="px-4 py-3 text-right font-semibold text-gray-700">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                @foreach ($projects as $project)
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold">
+                                            {{ $project->name }}
+                                        </td>
+
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <span class="inline-flex px-2 py-1 border border-gray-500 bg-gray-50 text-xs font-semibold">
+                                                {{ $project->state }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            {{ $project->created_at ? $project->created_at->format('d M Y') : '—' }}
+                                        </td>
+
+                                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                                            @if (Route::has('admin.projects.show'))
+                                                <a href="{{ route('admin.projects.show', $project) }}"
+                                                   class="underline font-semibold">
+                                                    Open
+                                                </a>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="border border-gray-300 bg-gray-50 p-5">
+                        <p class="text-sm text-gray-700">
+                            No projects for this customer.
                         </p>
                     </div>
                 @endif

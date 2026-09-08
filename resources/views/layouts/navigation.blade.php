@@ -103,6 +103,12 @@
                             My Invoices
                         </x-nav-link>
                     @endif
+
+                    @if ($user?->isContractor() && Route::has('contractor.projects.index') && $user->hasAssignedProjects())
+                        <x-nav-link :href="route('contractor.projects.index')" :active="request()->routeIs('contractor.projects.*')">
+                            My Projects
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -255,6 +261,12 @@
             @if ($user?->isContractor() && Route::has('contractor.invoices.index'))
                 <x-responsive-nav-link :href="route('contractor.invoices.index')" :active="request()->routeIs('contractor.invoices.*')">
                     My Invoices
+                </x-responsive-nav-link>
+            @endif
+
+            @if ($user?->isContractor() && Route::has('contractor.projects.index') && $user->hasAssignedProjects())
+                <x-responsive-nav-link :href="route('contractor.projects.index')" :active="request()->routeIs('contractor.projects.*')">
+                    My Projects
                 </x-responsive-nav-link>
             @endif
         </div>

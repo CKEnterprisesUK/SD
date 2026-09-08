@@ -339,6 +339,37 @@
                         </a>
                     @endif
 
+                    @if (Route::has('contractor.projects.index') && $user->hasAssignedProjects())
+                        <a href="{{ route('contractor.projects.index') }}"
+                           class="group flex flex-col border border-gray-300 bg-white hover:border-gray-900 focus:border-gray-900 focus:outline-none transition min-h-[320px]">
+                            <div class="h-36 bg-gray-100 border-b border-gray-300 flex items-center justify-center">
+                                <svg class="h-16 w-16 text-gray-700 group-hover:text-gray-900 transition"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     fill="none"
+                                     viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                                </svg>
+                            </div>
+
+                            <div class="p-6 flex flex-col flex-1">
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    My projects
+                                </h2>
+
+                                <p class="text-sm text-gray-600 mt-3 flex-1">
+                                    View the projects you are assigned to, their site addresses and document libraries.
+                                </p>
+
+                                <span class="mt-6 inline-flex w-fit px-4 py-2 bg-black text-white text-sm font-semibold rounded-none">
+                                    Open my projects
+                                </span>
+                            </div>
+                        </a>
+                    @endif
+
                     <a href="{{ route('profile.edit') }}"
                        class="group flex flex-col border border-gray-300 bg-white hover:border-gray-900 focus:border-gray-900 focus:outline-none transition min-h-[320px]">
                         <div class="h-36 bg-gray-100 border-b border-gray-300 flex items-center justify-center">

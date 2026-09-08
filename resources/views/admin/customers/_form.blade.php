@@ -11,40 +11,31 @@
 @endif
 
 @php
-    $existingContacts = $customer
-        ? $customer->contacts->map(function ($contact) {
-            return [
-                'name' => $contact->name,
-                'email' => $contact->email,
-                'phone' => $contact->phone,
-                'role' => $contact->role,
-                'is_primary' => $contact->is_primary,
-            ];
-        })->values()->toArray()
+    // The primary contact is collected inline with the customer details so the
+    // main customer is captured as a contact without having to type it twice.
+    $primaryContact = $customer?->contacts->firstWhere('is_primary', true)
+        ?? $customer?->contacts->first();
+
+    $primaryName = old('primary_contact.name', $primaryContact?->name ?? $customer?->name);
+    $primaryEmail = old('primary_contact.email', $primaryContact?->email);
+    $primaryPhone = old('primary_contact.phone', $primaryContact?->phone);
+    $primaryRole = old('primary_contact.role', $primaryContact?->role ?? 'Primary contact');
+
+    // Additional contacts are everyone except the primary contact.
+    $existingAdditional = $customer
+        ? $customer->contacts
+            ->reject(fn ($contact) => $primaryContact && $contact->id === $primaryContact->id)
+            ->map(function ($contact) {
+                return [
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'role' => $contact->role,
+                ];
+            })->values()->toArray()
         : [];
 
-    $oldContacts = old('contacts', count($existingContacts) ? $existingContacts : [
-        [
-            'name' => '',
-            'email' => '',
-            'phone' => '',
-            'role' => 'Primary contact',
-            'is_primary' => true,
-        ],
-    ]);
-
-    $primaryContactIndex = old('primary_contact_index');
-
-    if ($primaryContactIndex === null) {
-        $primaryContactIndex = 0;
-
-        foreach ($oldContacts as $index => $contact) {
-            if (!empty($contact['is_primary'])) {
-                $primaryContactIndex = $index;
-                break;
-            }
-        }
-    }
+    $oldContacts = old('contacts', $existingAdditional);
 @endphp
 
 <form method="POST" action="{{ $action }}" class="space-y-8">
@@ -55,7 +46,10 @@
     @endif
 
     <section class="border border-gray-300 bg-white p-6">
-        <h2 class="text-lg font-semibold mb-4">Customer details</h2>
+        <h2 class="text-lg font-semibold mb-1">Customer &amp; main contact</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            The customer name is also saved as the main contact, so you only enter it once.
+        </p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -68,7 +62,9 @@
                        type="text"
                        value="{{ old('name', $customer?->name) }}"
                        class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                       placeholder="e.g. Jane Smith"
                        required>
+                <p class="text-xs text-gray-600 mt-1">This person becomes the main contact.</p>
             </div>
 
             <div>
@@ -81,6 +77,45 @@
                        type="text"
                        value="{{ old('company_name', $customer?->company_name) }}"
                        class="w-full border border-gray-400 px-4 py-3 rounded-none">
+            </div>
+
+            <div>
+                <label for="primary_email" class="block text-sm font-semibold mb-2">
+                    Main contact email
+                </label>
+
+                <input id="primary_email"
+                       name="primary_contact[email]"
+                       type="email"
+                       value="{{ $primaryEmail }}"
+                       class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                       placeholder="name@example.com">
+                <p class="text-xs text-gray-600 mt-1">Required to send a portal invite.</p>
+            </div>
+
+            <div>
+                <label for="primary_phone" class="block text-sm font-semibold mb-2">
+                    Main contact phone
+                </label>
+
+                <input id="primary_phone"
+                       name="primary_contact[phone]"
+                       type="text"
+                       value="{{ $primaryPhone }}"
+                       class="w-full border border-gray-400 px-4 py-3 rounded-none">
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="primary_role" class="block text-sm font-semibold mb-2">
+                    Main contact role
+                </label>
+
+                <input id="primary_role"
+                       name="primary_contact[role]"
+                       type="text"
+                       value="{{ $primaryRole }}"
+                       class="w-full border border-gray-400 px-4 py-3 rounded-none"
+                       placeholder="e.g. Homeowner, Director">
             </div>
 
             <div>
@@ -147,9 +182,9 @@
                                @checked(old('invite_to_portal'))>
 
                         <span>
-                            <span class="font-semibold">Invite to the Green Street Portal</span>
+                            <span class="font-semibold">Invite the main contact to the Green Street Portal</span>
                             <span class="block text-gray-600 mt-1">
-                                Sends the primary contact a password-setup email so they can sign in to the portal and view their project documents. You can also send this later from the customer dashboard.
+                                Sends the main contact a password-setup email so they can sign in to the portal and view their project documents. You can also send this later from the customer dashboard.
                             </span>
                         </span>
                     </label>
@@ -161,9 +196,9 @@
     <section class="border border-gray-300 bg-white p-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
             <div>
-                <h2 class="text-lg font-semibold">Contacts</h2>
+                <h2 class="text-lg font-semibold">Additional contacts</h2>
                 <p class="text-sm text-gray-600 mt-1">
-                    Add one or more customer contacts. Email and phone numbers are stored against contacts, not the customer record.
+                    Optional. Add other people at this customer, such as an architect or accounts contact. You can invite each of them to the portal.
                 </p>
             </div>
 
@@ -217,14 +252,15 @@
                                    placeholder="e.g. Homeowner, Architect, Accounts">
                         </div>
 
-                        <div class="md:col-span-1">
-                            <label class="block text-sm font-semibold mb-2">Primary</label>
-
-                            <input type="radio"
-                                   name="primary_contact_index"
-                                   value="{{ $index }}"
-                                   class="primary-contact-radio mt-3"
-                                   @checked((int) $primaryContactIndex === $index)>
+                        <div class="md:col-span-1 flex items-end">
+                            <label class="flex items-center gap-2 text-xs font-semibold">
+                                <input type="checkbox"
+                                       name="contacts[{{ $index }}][invite]"
+                                       value="1"
+                                       class="mt-0"
+                                       @checked(!empty($contact['invite']))>
+                                Invite
+                            </label>
                         </div>
                     </div>
 
@@ -262,16 +298,8 @@
             button.onclick = function () {
                 const row = button.closest('.contact-row');
 
-                if (!row) {
-                    return;
-                }
-
-                row.remove();
-
-                const primaryRadios = document.querySelectorAll('.primary-contact-radio');
-
-                if (primaryRadios.length && !Array.from(primaryRadios).some(radio => radio.checked)) {
-                    primaryRadios[0].checked = true;
+                if (row) {
+                    row.remove();
                 }
             };
         });
@@ -325,15 +353,16 @@
                             >
                         </div>
 
-                        <div class="md:col-span-1">
-                            <label class="block text-sm font-semibold mb-2">Primary</label>
-
-                            <input
-                                type="radio"
-                                name="primary_contact_index"
-                                value="${contactIndex}"
-                                class="primary-contact-radio mt-3"
-                            >
+                        <div class="md:col-span-1 flex items-end">
+                            <label class="flex items-center gap-2 text-xs font-semibold">
+                                <input
+                                    type="checkbox"
+                                    name="contacts[${contactIndex}][invite]"
+                                    value="1"
+                                    class="mt-0"
+                                >
+                                Invite
+                            </label>
                         </div>
                     </div>
 

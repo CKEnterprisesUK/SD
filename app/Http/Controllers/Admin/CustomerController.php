@@ -66,12 +66,17 @@ class CustomerController extends Controller
             'address' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:5000'],
 
+            'primary_contact' => ['nullable', 'array'],
+            'primary_contact.email' => ['nullable', 'email', 'max:255'],
+            'primary_contact.phone' => ['nullable', 'string', 'max:255'],
+            'primary_contact.role' => ['nullable', 'string', 'max:255'],
+
             'contacts' => ['nullable', 'array'],
             'contacts.*.name' => ['nullable', 'string', 'max:255'],
             'contacts.*.email' => ['nullable', 'email', 'max:255'],
             'contacts.*.phone' => ['nullable', 'string', 'max:255'],
             'contacts.*.role' => ['nullable', 'string', 'max:255'],
-            'primary_contact_index' => ['nullable', 'integer'],
+            'contacts.*.invite' => ['nullable', 'boolean'],
             'invite_to_portal' => ['nullable', 'boolean'],
         ]);
 
@@ -92,18 +97,30 @@ class CustomerController extends Controller
 
         CustomerActivityLogger::created($customer);
 
+        $customer->load('contacts');
+
         $status = 'Customer created successfully.';
+        $invitedCount = 0;
 
+        // Invite the main contact when requested.
         if (! empty($validated['invite_to_portal'])) {
-            $contact = $customer->fresh('contacts')->primaryContact
-                ?? $customer->contacts()->whereNotNull('email')->first();
+            $primary = $customer->primaryContact ?? $customer->contacts->firstWhere('email', '!=', null);
 
-            if ($contact && $contact->email) {
-                $inviter->invite($customer, $contact->email, $contact->name ?: $customer->name, $contact->id);
-                $status = 'Customer created and Green Street Portal invite sent.';
+            if ($primary && $primary->email) {
+                $inviter->invite($customer, $primary->email, $primary->name ?: $customer->name, $primary->id);
+                $invitedCount++;
             } else {
-                $status = 'Customer created. No contact email was available to send a portal invite.';
+                $status = 'Customer created. No main contact email was available to send a portal invite.';
             }
+        }
+
+        // Invite any additional contacts that were flagged for an invite.
+        $invitedCount += $this->inviteFlaggedContacts($customer, $validated, $inviter);
+
+        if ($invitedCount > 0) {
+            $status = $invitedCount === 1
+                ? 'Customer created and Green Street Portal invite sent.'
+                : "Customer created and {$invitedCount} Green Street Portal invites sent.";
         }
 
         return redirect()
@@ -153,7 +170,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Customer $customer)
+    public function update(Request $request, Customer $customer, CustomerPortalInviteService $inviter)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
@@ -164,12 +181,17 @@ class CustomerController extends Controller
             'address' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:5000'],
 
+            'primary_contact' => ['nullable', 'array'],
+            'primary_contact.email' => ['nullable', 'email', 'max:255'],
+            'primary_contact.phone' => ['nullable', 'string', 'max:255'],
+            'primary_contact.role' => ['nullable', 'string', 'max:255'],
+
             'contacts' => ['nullable', 'array'],
             'contacts.*.name' => ['nullable', 'string', 'max:255'],
             'contacts.*.email' => ['nullable', 'email', 'max:255'],
             'contacts.*.phone' => ['nullable', 'string', 'max:255'],
             'contacts.*.role' => ['nullable', 'string', 'max:255'],
-            'primary_contact_index' => ['nullable', 'integer'],
+            'contacts.*.invite' => ['nullable', 'boolean'],
         ]);
 
         $tracked = ['name', 'company_name', 'status', 'address', 'notes'];
@@ -201,56 +223,84 @@ class CustomerController extends Controller
 
         CustomerActivityLogger::updated($customer, $changes ?? []);
 
+        // Send invites to any additional contacts newly flagged for one.
+        $customer->load('contacts');
+        $invitedCount = $this->inviteFlaggedContacts($customer, $validated, $inviter);
+
+        $status = $invitedCount > 0
+            ? ($invitedCount === 1
+                ? 'Customer updated and Green Street Portal invite sent.'
+                : "Customer updated and {$invitedCount} Green Street Portal invites sent.")
+            : 'Customer updated successfully.';
+
         return redirect()
             ->route('admin.customers.show', $customer)
-            ->with('status', 'Customer updated successfully.');
+            ->with('status', $status);
     }
 
+    /**
+     * Persist the main contact (from the customer name + primary_contact fields)
+     * as the primary contact, then any additional contacts that have an email.
+     */
     private function syncContacts(Customer $customer, array $validated): void
     {
-        $contacts = $validated['contacts'] ?? [];
+        $primary = $validated['primary_contact'] ?? [];
 
-        if (! count($contacts)) {
-            return;
-        }
+        // The main contact is always created from the customer name so it never
+        // has to be typed twice.
+        $customer->contacts()->create([
+            'name' => $customer->name,
+            'email' => $primary['email'] ?? null,
+            'phone' => $primary['phone'] ?? null,
+            'role' => $primary['role'] ?? 'Primary contact',
+            'is_primary' => true,
+            'receives_quotes' => true,
+            'receives_invoices' => false,
+            'portal_access_enabled' => false,
+        ]);
 
-        $primaryContactIndex = isset($validated['primary_contact_index'])
-            ? (int) $validated['primary_contact_index']
-            : 0;
-
-        $createdAnyPrimary = false;
-
-        foreach ($contacts as $index => $contact) {
-            if (empty($contact['email'])) {
+        foreach ($validated['contacts'] ?? [] as $contact) {
+            // Skip empty rows; an additional contact needs at least a name or email.
+            if (empty($contact['name']) && empty($contact['email'])) {
                 continue;
-            }
-
-            $isPrimary = $index === $primaryContactIndex;
-
-            if ($isPrimary) {
-                $createdAnyPrimary = true;
             }
 
             $customer->contacts()->create([
                 'name' => $contact['name'] ?? null,
-                'email' => $contact['email'],
+                'email' => $contact['email'] ?? null,
                 'phone' => $contact['phone'] ?? null,
                 'role' => $contact['role'] ?? null,
-                'is_primary' => $isPrimary,
+                'is_primary' => false,
                 'receives_quotes' => true,
                 'receives_invoices' => false,
                 'portal_access_enabled' => false,
             ]);
         }
+    }
 
-        if (! $createdAnyPrimary) {
-            $firstContact = $customer->contacts()->orderBy('id')->first();
+    /**
+     * Invite any additional contacts (matched by email) that were flagged for a
+     * portal invite in the submitted form. Returns the number of invites sent.
+     */
+    private function inviteFlaggedContacts(Customer $customer, array $validated, CustomerPortalInviteService $inviter): int
+    {
+        $count = 0;
 
-            if ($firstContact) {
-                $firstContact->update([
-                    'is_primary' => true,
-                ]);
+        foreach ($validated['contacts'] ?? [] as $contact) {
+            if (empty($contact['invite']) || empty($contact['email'])) {
+                continue;
             }
+
+            $stored = $customer->contacts->firstWhere('email', $contact['email']);
+
+            if (! $stored) {
+                continue;
+            }
+
+            $inviter->invite($customer, $stored->email, $stored->name ?: $customer->name, $stored->id);
+            $count++;
         }
+
+        return $count;
     }
 }

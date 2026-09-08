@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\QuoteFollowUpController;
 use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
+use App\Http\Controllers\Contractor\ProjectController as ContractorProjectController;
 use App\Http\Controllers\DocumentServeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectLibraryController;
@@ -99,6 +100,27 @@ Route::middleware(['auth'])
             ->name('update');
 
         Route::get('/{invoice}', [ContractorInvoiceController::class, 'show'])
+            ->name('show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Contractor projects ("My Projects")
+|--------------------------------------------------------------------------
+| Contractor-facing list + detail for assigned projects. Lives under `auth`
+| (NOT the admin group). Access is gated by isContractor() + ProjectPolicy@view
+| (assigned contractors only). Views expose only name/state and the derived
+| customer address — never quotes or full customer details.
+*/
+
+Route::middleware(['auth'])
+    ->prefix('my-projects')
+    ->name('contractor.projects.')
+    ->group(function () {
+        Route::get('/', [ContractorProjectController::class, 'index'])
+            ->name('index');
+
+        Route::get('/{project}', [ContractorProjectController::class, 'show'])
             ->name('show');
     });
 

@@ -34,6 +34,32 @@
             return $mime ?: 'File';
         };
 
+        // Whether a document can be previewed inline (images + PDFs).
+        $isViewable = function ($mime) {
+            $mime = (string) $mime;
+            if ($mime === 'application/pdf') {
+                return true;
+            }
+            return str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml';
+        };
+
+        // Colour-coded permission badge for a resolved access level.
+        $permissionBadge = function (?string $level) {
+            $map = [
+                'read-write' => ['label' => 'Read / write', 'class' => 'bg-green-100 text-green-800 border-green-200'],
+                'read-only' => ['label' => 'Read only', 'class' => 'bg-amber-100 text-amber-800 border-amber-200'],
+                'no-access' => ['label' => 'No access', 'class' => 'bg-gray-100 text-gray-500 border-gray-200'],
+            ];
+            $meta = $map[$level] ?? ['label' => '—', 'class' => 'bg-gray-50 text-gray-400 border-gray-200'];
+
+            return '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium '
+                . $meta['class'] . '">' . e($meta['label']) . '</span>';
+        };
+
+        // The current folder's resolved access level applies to the documents
+        // inside it (documents inherit their folder's permission).
+        $folderLevel = $folderPermissions[$folder->id] ?? null;
+
         $totalItems = $subfolders->count() + $documents->count();
     @endphp
 
@@ -170,9 +196,10 @@
             {{-- Column header --}}
             <div class="hidden sm:flex items-center gap-3 px-4 py-2 border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <span class="flex-1">Name</span>
-                <span class="w-40">Type</span>
-                <span class="w-24 text-right">Size</span>
+                <span class="w-32">Type</span>
+                <span class="w-20 text-right">Size</span>
                 <span class="w-28 text-right">Modified</span>
+                <span class="w-28">Access</span>
                 <span class="w-16 text-right">Actions</span>
             </div>
 
@@ -188,9 +215,10 @@
                             <span class="font-medium text-gray-900 truncate group-hover:text-blue-700">{{ $subfolder->name }}</span>
                         </a>
 
-                        <span class="hidden sm:block w-40 text-sm text-gray-500">Folder</span>
-                        <span class="hidden sm:block w-24 text-right text-sm text-gray-400">—</span>
+                        <span class="hidden sm:block w-32 text-sm text-gray-500">Folder</span>
+                        <span class="hidden sm:block w-20 text-right text-sm text-gray-400">—</span>
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($subfolder->updated_at)->format('d M Y') ?? '—' }}</span>
+                        <span class="hidden sm:block w-28">{!! $permissionBadge($folderPermissions[$subfolder->id] ?? null) !!}</span>
 
                         <div class="w-16 flex justify-end">
                             @if ($isWritable && Route::has('admin.projects.folders.destroy'))
@@ -221,19 +249,31 @@
                             </svg>
                             @if (Route::has('documents.serve'))
                                 <a href="{{ route('documents.serve', $document) }}"
+                                   @if ($isViewable($document->mime_type)) target="_blank" rel="noopener" @endif
                                    class="text-gray-900 truncate hover:text-blue-700 hover:underline">{{ $document->original_name }}</a>
                             @else
                                 <span class="text-gray-900 truncate">{{ $document->original_name }}</span>
                             @endif
                         </div>
 
-                        <span class="hidden sm:block w-40 text-sm text-gray-500 truncate">{{ $fileKind($document->mime_type, $document->original_name) }}</span>
-                        <span class="hidden sm:block w-24 text-right text-sm text-gray-500">{{ $formatBytes($document->size_bytes) }}</span>
+                        <span class="hidden sm:block w-32 text-sm text-gray-500 truncate">{{ $fileKind($document->mime_type, $document->original_name) }}</span>
+                        <span class="hidden sm:block w-20 text-right text-sm text-gray-500">{{ $formatBytes($document->size_bytes) }}</span>
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($document->created_at)->format('d M Y') ?? '—' }}</span>
+                        <span class="hidden sm:block w-28">{!! $permissionBadge($folderLevel) !!}</span>
 
                         <div class="w-16 flex justify-end items-center gap-2">
+                            @if (Route::has('documents.serve') && $isViewable($document->mime_type))
+                                <a href="{{ route('documents.serve', $document) }}" target="_blank" rel="noopener" title="View"
+                                   class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S5.5 5.5 12 5.5 21.5 12 21.5 12 18.5 18.5 12 18.5 2.5 12 2.5 12z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </a>
+                            @endif
+
                             @if (Route::has('documents.serve'))
-                                <a href="{{ route('documents.serve', $document) }}" title="Download"
+                                <a href="{{ route('documents.serve', ['document' => $document, 'download' => 1]) }}" title="Download"
                                    class="text-gray-400 hover:text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />

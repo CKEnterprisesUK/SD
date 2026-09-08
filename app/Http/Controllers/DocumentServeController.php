@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProjectDocument;
 use App\Services\AuditLogger;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -28,7 +29,7 @@ class DocumentServeController extends Controller
     /**
      * Stream a single document from the private disk.
      */
-    public function show(ProjectDocument $document): StreamedResponse
+    public function show(Request $request, ProjectDocument $document): StreamedResponse
     {
         // Authorize download: DocumentPolicy -> PermissionResolver::canRead.
         // A no-access user triggers a 403 authorization error (req 8.5).
@@ -41,12 +42,42 @@ class DocumentServeController extends Controller
         // Missing storage key -> 404 (req 8.3).
         abort_unless($disk->exists($document->storage_path), 404);
 
-        // Record the download in the audit log (req 9.1).
+        // Record the read in the audit log (req 9.1).
         AuditLogger::documentDownloaded($document);
+
+        $mime = $document->mime_type ?? 'application/octet-stream';
+
+        // Serve inline when the browser can safely preview the type (images and
+        // PDFs), unless the caller explicitly asked to download (?download=1).
+        // Everything else falls back to an attachment download.
+        $forceDownload = $request->boolean('download');
+
+        if (! $forceDownload && self::isInlineViewable($mime)) {
+            return $disk->response($document->storage_path, $document->original_name, [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'inline; filename="' . addslashes($document->original_name) . '"',
+            ]);
+        }
 
         // Stream the file back with its original name and stored mime type.
         return $disk->download($document->storage_path, $document->original_name, [
-            'Content-Type' => $document->mime_type ?? 'application/octet-stream',
+            'Content-Type' => $mime,
         ]);
+    }
+
+    /**
+     * Whether a mime type can be safely previewed inline in the browser.
+     *
+     * Limited to images and PDFs on purpose: HTML/SVG and other active types
+     * are never served inline so an uploaded file cannot execute in the
+     * app's origin.
+     */
+    private static function isInlineViewable(string $mime): bool
+    {
+        if ($mime === 'application/pdf') {
+            return true;
+        }
+
+        return str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml';
     }
 }

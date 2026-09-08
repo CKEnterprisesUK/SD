@@ -7,6 +7,7 @@ use App\Models\Contractor;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectFolder;
+use App\Services\PermissionResolver;
 use App\Services\ProjectSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -130,7 +131,7 @@ class ProjectController extends Controller
      * time). Shows the folder's immediate subfolders and documents plus a
      * breadcrumb trail built by walking up the parent chain.
      */
-    public function folder(Project $project, ProjectFolder $folder)
+    public function folder(Project $project, ProjectFolder $folder, PermissionResolver $permissions)
     {
         $this->authorize('view', $project);
 
@@ -148,12 +149,22 @@ class ProjectController extends Controller
             $node = $node->parent;
         }
 
+        // Resolved access level (read-write / read-only / no-access) for the
+        // current user, keyed by folder id, for the current folder and each of
+        // its subfolders. Documents inherit their folder's level.
+        $user = auth()->user();
+        $folderPermissions = collect([$folder])
+            ->merge($folder->children)
+            ->mapWithKeys(fn (ProjectFolder $f) => [$f->id => $permissions->level($user, $f)])
+            ->all();
+
         return view('admin.projects.folder', [
             'project' => $project,
             'folder' => $folder,
             'subfolders' => $folder->children,
             'documents' => $folder->documents,
             'breadcrumbs' => $breadcrumbs,
+            'folderPermissions' => $folderPermissions,
         ]);
     }
 

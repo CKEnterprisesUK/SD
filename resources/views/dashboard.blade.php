@@ -74,10 +74,6 @@
                 <h2 class="text-3xl font-bold text-gray-900">
                     Tools
                 </h2>
-
-                <p class="text-gray-600 mt-2 max-w-2xl">
-                    SiteDesk gives you access to the tools available for your account.
-                </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

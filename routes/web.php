@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\QuoteLineItemController;
 use App\Http\Controllers\Admin\QuoteNoteController;
 use App\Http\Controllers\Contractor\InvoiceController as ContractorInvoiceController;
 use App\Http\Controllers\Contractor\ProjectController as ContractorProjectController;
+use App\Http\Controllers\Customer\ProjectController as CustomerProjectController;
 use App\Http\Controllers\DocumentServeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectLibraryController;
@@ -122,6 +123,24 @@ Route::middleware(['auth'])
 
         Route::get('/{project}', [ContractorProjectController::class, 'show'])
             ->name('show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Customer projects ("My Projects")
+|--------------------------------------------------------------------------
+| Customer-facing list of the projects belonging to the customer's linked
+| customer record. Lives under `auth` (NOT the admin group). Access is gated
+| by isCustomer() + a customer_id scope; each project opens into the shared
+| permission-filtered document library (projects.library).
+*/
+
+Route::middleware(['auth'])
+    ->prefix('portal/projects')
+    ->name('customer.projects.')
+    ->group(function () {
+        Route::get('/', [CustomerProjectController::class, 'index'])
+            ->name('index');
     });
 
 /*

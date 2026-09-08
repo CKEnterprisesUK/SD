@@ -64,6 +64,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Projects visible to this customer user, scoped to their linked customer.
+     *
+     * Returns an empty relation for non-customers or customer users without a
+     * linked customer_id, so it is always safe to query.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'customer_id', 'customer_id');
+    }
+
+    /**
+     * Whether this customer user has at least one project on their customer.
+     *
+     * Used to conditionally surface the customer "My Projects" nav link.
+     * Returns false for non-customers or customer users without a customer_id.
+     */
+    public function hasCustomerProjects(): bool
+    {
+        if (! $this->isCustomer() || $this->customer_id === null) {
+            return false;
+        }
+
+        return Project::where('customer_id', $this->customer_id)->exists();
+    }
+
+    /**
      * Whether this (contractor) user is assigned to at least one project.
      *
      * Used to conditionally surface the contractor "My Projects" nav link and

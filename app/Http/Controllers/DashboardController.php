@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -12,9 +13,16 @@ class DashboardController extends Controller
      * The dashboard is a role-aware grid of tool tiles (Contractors, Customers,
      * Quotes, Projects, etc.). The full projects listing lives on its own page
      * at admin.projects.index, reached via the Projects tile.
+     *
+     * Customers don't get a tool grid — they land straight in their portal on
+     * their projects list, which is the only surface they need.
      */
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
+        if (auth()->user()?->isCustomer()) {
+            return redirect()->route('customer.projects.index');
+        }
+
         return view('dashboard');
     }
 }

@@ -10,6 +10,7 @@ use App\Models\SharedDocument;
 use App\Services\DocumentStorageService;
 use App\Services\ProjectSeeder;
 use App\Services\SharedDocumentService;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -99,6 +100,31 @@ class SharedDocumentReferenceTest extends TestCase
 
         $this->assertDatabaseHas('project_documents', ['id' => $reference->id]);
         Storage::disk('local')->assertExists($shared->storage_path);
+    }
+
+    public function test_admin_can_remove_a_locked_default_file_from_settings(): void
+    {
+        Storage::fake('local');
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $template = FolderTemplate::factory()->create(['name' => 'Insurance', 'subfolders' => []]);
+        $locked = app(SharedDocumentService::class)->store(
+            UploadedFile::fake()->createWithContent('cert.pdf', 'X'),
+            $template,
+            true, // locked
+        );
+
+        $this->assertTrue($locked->is_locked);
+
+        // A locked file CAN be removed from the settings page (unlike inside a project).
+        $response = $this->actingAs($admin)
+            ->delete(route('admin.settings.folder-template.shared-documents.destroy', $locked));
+
+        $response->assertRedirect(route('admin.settings.folder-template.edit'));
+
+        $this->assertSame(0, SharedDocument::count());
+        Storage::disk('local')->assertMissing($locked->storage_path);
     }
 
     public function test_deleting_the_shared_document_removes_all_references_and_the_file(): void

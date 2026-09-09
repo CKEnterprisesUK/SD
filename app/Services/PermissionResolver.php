@@ -62,6 +62,31 @@ class PermissionResolver
     }
 
     /**
+     * The configured access level for each role on a folder, resolved from the
+     * folder's top-level ancestor (which carries the permission rows).
+     *
+     * Admin defaults to read-write when no explicit row exists. Contractor and
+     * customer default to no-access. The returned array is always keyed by
+     * 'admin', 'contractor' and 'customer'.
+     *
+     * @return array{admin:string, contractor:string, customer:string}
+     */
+    public function roleLevels(ProjectFolder $folder): array
+    {
+        $topLevel = $folder->topLevelFolder();
+
+        $rows = FolderPermission::query()
+            ->where('project_folder_id', $topLevel->id)
+            ->pluck('level', 'role');
+
+        return [
+            'admin' => $rows['admin'] ?? self::READ_WRITE,
+            'contractor' => $rows['contractor'] ?? self::NO_ACCESS,
+            'customer' => $rows['customer'] ?? self::NO_ACCESS,
+        ];
+    }
+
+    /**
      * Whether the user can read the folder (level !== no-access).
      */
     public function canRead(User $user, ProjectFolder $folder): bool

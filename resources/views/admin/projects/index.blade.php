@@ -80,7 +80,13 @@
                             <td class="px-4 py-3 font-semibold">{{ $project->name }}</td>
                             <td class="px-4 py-3">{{ $project->reference ?: '—' }}</td>
                             <td class="px-4 py-3">
-                                {{ optional($project->customer)->company_name ?: optional($project->customer)->name ?: '—' }}
+                                @if ($project->customer)
+                                    <a href="{{ route('admin.customers.show', $project->customer) }}" class="underline">
+                                        {{ $project->customer->display_name }}
+                                    </a>
+                                @else
+                                    —
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-block border border-gray-400 px-2 py-1 text-xs font-semibold">

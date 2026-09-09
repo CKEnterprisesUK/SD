@@ -43,21 +43,63 @@
             return str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml';
         };
 
-        // Colour-coded permission badge for a resolved access level.
-        // Full class strings are written as literals (not concatenated) so
-        // Tailwind's JIT scanner can see and compile them.
-        $permissionBadge = function (?string $level) {
+        // Short human label for a single level.
+        $levelLabel = function (?string $level) {
             return match ($level) {
-                'read-write' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 border-green-300">Read / write</span>',
-                'read-only' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 border-amber-300">Read only</span>',
-                'no-access' => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 border-gray-300">No access</span>',
-                default => '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-gray-50 text-gray-400 border-gray-200">—</span>',
+                'read-write' => 'Read / write',
+                'read-only' => 'Read only',
+                'no-access' => 'No access',
+                default => '—',
             };
         };
 
-        // The current folder's resolved access level applies to the documents
-        // inside it (documents inherit their folder's permission).
-        $folderLevel = $folderPermissions[$folder->id] ?? null;
+        // Colour-coded "who has access" card summarising the per-role levels
+        // (admin / contractor / customer). Access means the role's level is not
+        // "no-access". Colour follows the combination of roles that can see the
+        // folder:
+        //   All (contractor + client + admin) .......... green
+        //   Client & admin (no contractor) ............. amber
+        //   Admin & contractor (no client) ............. amber
+        //   Admin only ................................. red
+        // Full Tailwind class strings are written as literals so the JIT
+        // scanner can compile them.
+        $accessCard = function (?array $access) use ($levelLabel) {
+            $roles = $access['roles'] ?? null;
+
+            if ($roles === null) {
+                return '<span class="inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium bg-gray-50 text-gray-400 border-gray-200">—</span>';
+            }
+
+            $contractorHas = ($roles['contractor'] ?? 'no-access') !== 'no-access';
+            $customerHas = ($roles['customer'] ?? 'no-access') !== 'no-access';
+
+            if ($contractorHas && $customerHas) {
+                $label = 'All access';
+                $sub = 'Contractor, Client &amp; Admin';
+                $classes = 'bg-green-100 text-green-800 border-green-300';
+            } elseif ($customerHas && ! $contractorHas) {
+                $label = 'Client &amp; Admin';
+                $sub = 'No contractor access';
+                $classes = 'bg-amber-100 text-amber-800 border-amber-300';
+            } elseif ($contractorHas && ! $customerHas) {
+                $label = 'Admin &amp; Contractor';
+                $sub = 'No client access';
+                $classes = 'bg-amber-100 text-amber-800 border-amber-300';
+            } else {
+                $label = 'Admin only';
+                $sub = 'Restricted';
+                $classes = 'bg-red-100 text-red-800 border-red-300';
+            }
+
+            $tooltip = 'Admin: '.$levelLabel($roles['admin'] ?? 'no-access')
+                .' | Contractor: '.$levelLabel($roles['contractor'] ?? 'no-access')
+                .' | Client: '.$levelLabel($roles['customer'] ?? 'no-access');
+
+            return '<span title="'.$tooltip.'" class="inline-flex flex-col items-start rounded-md border px-2 py-1 text-xs font-medium leading-tight '.$classes.'">'
+                .'<span>'.$label.'</span>'
+                .'<span class="text-[10px] font-normal opacity-80">'.$sub.'</span>'
+                .'</span>';
+        };
 
         $totalItems = $subfolders->count() + $documents->count();
     @endphp
@@ -198,7 +240,7 @@
                 <span class="w-32">Type</span>
                 <span class="w-20 text-right">Size</span>
                 <span class="w-28 text-right">Modified</span>
-                <span class="w-28">Access</span>
+                <span class="w-44">Access</span>
                 <span class="w-40 text-right">Actions</span>
             </div>
 
@@ -217,7 +259,23 @@
                         <span class="hidden sm:block w-32 text-sm text-gray-500">Folder</span>
                         <span class="hidden sm:block w-20 text-right text-sm text-gray-400">—</span>
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($subfolder->updated_at)->format('d M Y') ?? '—' }}</span>
-                        <span class="hidden sm:block w-28">{!! $permissionBadge($folderPermissions[$subfolder->id] ?? null) !!}</span>
+                        @php $subAccess = $folderAccess[$subfolder->id] ?? null; @endphp
+                        <span class="hidden sm:block w-44">
+                            @if ($isWritable && ($subAccess['is_top_level'] ?? false) && Route::has('admin.projects.folders.permissions.update'))
+                                <button type="button"
+                                        title="Change who can access this folder"
+                                        data-access-folder="{{ $subfolder->id }}"
+                                        data-access-name="{{ $subfolder->name }}"
+                                        data-access-admin="{{ $subAccess['roles']['admin'] ?? 'read-write' }}"
+                                        data-access-contractor="{{ $subAccess['roles']['contractor'] ?? 'no-access' }}"
+                                        data-access-customer="{{ $subAccess['roles']['customer'] ?? 'no-access' }}"
+                                        class="text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md">
+                                    {!! $accessCard($subAccess) !!}
+                                </button>
+                            @else
+                                {!! $accessCard($subAccess) !!}
+                            @endif
+                        </span>
 
                         <div class="w-40 flex justify-end items-center gap-2">
                             @if ($isWritable && Route::has('admin.projects.folders.update'))
@@ -281,7 +339,7 @@
                         <span class="hidden sm:block w-32 text-sm text-gray-500 truncate">{{ $fileKind($document->mime_type, $document->original_name) }}</span>
                         <span class="hidden sm:block w-20 text-right text-sm text-gray-500">{{ $formatBytes($document->size_bytes) }}</span>
                         <span class="hidden sm:block w-28 text-right text-sm text-gray-500">{{ optional($document->created_at)->format('d M Y') ?? '—' }}</span>
-                        <span class="hidden sm:block w-28">{!! $permissionBadge($folderLevel) !!}</span>
+                        <span class="hidden sm:block w-44">{!! $accessCard($folderAccess[$folder->id] ?? null) !!}</span>
 
                         <div class="w-40 flex justify-end items-center gap-2">
                             @if (Route::has('documents.serve') && $isViewable($document->mime_type))
@@ -432,6 +490,50 @@
             </div>
         </div>
 
+        {{-- Access (permissions) dialog. Reused for any top-level folder row;
+             JS rewrites the form action and prefilled levels when an access
+             card is clicked. Posts to the permissions.update route. --}}
+        @if (Route::has('admin.projects.folders.permissions.update'))
+            @php
+                $accessLevels = ['read-write' => 'Read / write', 'read-only' => 'Read only', 'no-access' => 'No access'];
+            @endphp
+            <div id="access-dialog"
+                 class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+                 role="dialog" aria-modal="true" aria-labelledby="access-title">
+                <div class="w-full max-w-md bg-white border border-gray-300 shadow-lg">
+                    <form id="access-form" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="px-5 py-4 border-b border-gray-200">
+                            <h2 id="access-title" class="text-base font-semibold text-gray-900">Folder access</h2>
+                            <p id="access-subtitle" class="text-xs text-gray-500 mt-0.5"></p>
+                        </div>
+                        <div class="px-5 py-4 space-y-4">
+                            <p class="text-xs text-gray-500">Choose the level of access each role has to this folder and everything inside it.</p>
+                            @foreach (['admin' => 'Admin', 'contractor' => 'Contractor', 'customer' => 'Client'] as $role => $roleLabel)
+                                <div class="grid grid-cols-[110px_1fr] items-center gap-3">
+                                    <label for="access-{{ $role }}" class="text-sm font-semibold text-gray-800">{{ $roleLabel }}</label>
+                                    <select id="access-{{ $role }}"
+                                            name="permissions[{{ $role }}]"
+                                            class="block w-full border border-gray-300 px-3 py-2 rounded-none text-sm bg-white">
+                                        @foreach ($accessLevels as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+                            <button type="button" data-close-dialog
+                                    class="px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-none hover:bg-gray-100">Cancel</button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-black text-white text-sm font-semibold rounded-none hover:bg-gray-800">Save access</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <script>
             (function () {
                 const currentFolderId = @json($folder->id);
@@ -448,12 +550,20 @@
                 const moveSubtitle = document.getElementById('move-subtitle');
                 const moveTopLevelOption = document.getElementById('move-top-level-option');
 
+                const accessDialog = document.getElementById('access-dialog');
+                const accessForm = document.getElementById('access-form');
+                const accessSubtitle = document.getElementById('access-subtitle');
+                const accessAdmin = document.getElementById('access-admin');
+                const accessContractor = document.getElementById('access-contractor');
+                const accessCustomer = document.getElementById('access-customer');
+
                 // URL templates with a __ID__ placeholder swapped per row.
                 const routes = {
                     folderRename: @json($isWritable && Route::has('admin.projects.folders.update') ? route('admin.projects.folders.update', [$project, '__ID__']) : null),
                     folderMove: @json($isWritable && Route::has('admin.projects.folders.move') ? route('admin.projects.folders.move', [$project, '__ID__']) : null),
                     documentRename: @json($isWritable && Route::has('admin.projects.documents.update') ? route('admin.projects.documents.update', [$project, '__ID__']) : null),
                     documentMove: @json($isWritable && Route::has('admin.projects.documents.move') ? route('admin.projects.documents.move', [$project, '__ID__']) : null),
+                    folderAccess: @json($isWritable && Route::has('admin.projects.folders.permissions.update') ? route('admin.projects.folders.permissions.update', [$project, '__ID__']) : null),
                 };
 
                 function openDialog(el) { el.classList.remove('hidden'); }
@@ -538,15 +648,32 @@
                     });
                 });
 
+                // --- Access (permissions) wiring ---
+                if (accessDialog && accessForm) {
+                    document.querySelectorAll('[data-access-folder]').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            const id = btn.getAttribute('data-access-folder');
+                            accessForm.action = fillRoute(routes.folderAccess, id);
+                            accessSubtitle.textContent = btn.getAttribute('data-access-name') || '';
+                            accessAdmin.value = btn.getAttribute('data-access-admin') || 'read-write';
+                            accessContractor.value = btn.getAttribute('data-access-contractor') || 'no-access';
+                            accessCustomer.value = btn.getAttribute('data-access-customer') || 'no-access';
+                            openDialog(accessDialog);
+                        });
+                    });
+                }
+
                 // --- Close handlers ---
+                const allDialogs = [renameDialog, moveDialog];
+                if (accessDialog) allDialogs.push(accessDialog);
+
                 document.querySelectorAll('[data-close-dialog]').forEach(function (btn) {
                     btn.addEventListener('click', function () {
-                        closeDialog(renameDialog);
-                        closeDialog(moveDialog);
+                        allDialogs.forEach(closeDialog);
                     });
                 });
 
-                [renameDialog, moveDialog].forEach(function (dialog) {
+                allDialogs.forEach(function (dialog) {
                     dialog.addEventListener('click', function (e) {
                         if (e.target === dialog) closeDialog(dialog);
                     });
@@ -554,8 +681,7 @@
 
                 document.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape') {
-                        closeDialog(renameDialog);
-                        closeDialog(moveDialog);
+                        allDialogs.forEach(closeDialog);
                     }
                 });
             })();

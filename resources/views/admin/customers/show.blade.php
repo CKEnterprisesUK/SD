@@ -291,7 +291,13 @@
                                 @foreach ($currentQuotes as $quote)
                                     <tr>
                                         <td class="px-4 py-3 whitespace-nowrap font-semibold">
-                                            {{ $quote->quote_number }}
+                                            @if (Route::has('admin.quotes.show'))
+                                                <a href="{{ route('admin.quotes.show', $quote) }}" class="underline">
+                                                    {{ $quote->quote_number }}
+                                                </a>
+                                            @else
+                                                {{ $quote->quote_number }}
+                                            @endif
                                         </td>
 
                                         <td class="px-4 py-3">
@@ -385,7 +391,13 @@
                                 @foreach ($projects as $project)
                                     <tr>
                                         <td class="px-4 py-3 font-semibold">
-                                            {{ $project->name }}
+                                            @if (Route::has('admin.projects.show'))
+                                                <a href="{{ route('admin.projects.show', $project) }}" class="underline">
+                                                    {{ $project->name }}
+                                                </a>
+                                            @else
+                                                {{ $project->name }}
+                                            @endif
                                         </td>
 
                                         <td class="px-4 py-3 whitespace-nowrap">

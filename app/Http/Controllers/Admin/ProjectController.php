@@ -7,6 +7,8 @@ use App\Models\Contractor;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectFolder;
+use App\Services\CustomerActivityLogger;
+use App\Services\CustomerPortalInviteService;
 use App\Services\PermissionResolver;
 use App\Services\ProjectSeeder;
 use Illuminate\Http\Request;
@@ -77,20 +79,48 @@ class ProjectController extends Controller
     /**
      * Create a project (state=Draft) and seed its folder library.
      */
-    public function store(Request $request)
+    public function store(Request $request, CustomerPortalInviteService $inviter)
     {
         $this->authorize('create', Project::class);
 
+        // The customer can either be picked from the existing list
+        // (customer_mode=existing) or created inline as part of the project
+        // (customer_mode=new). The rules for customer_id vs. the new-customer
+        // fields are applied conditionally based on that choice.
+        $creatingCustomer = $request->input('customer_mode') === 'new';
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_mode' => ['nullable', 'in:existing,new'],
+            'customer_id' => [Rule::requiredIf(! $creatingCustomer), 'nullable', 'exists:customers,id'],
             'reference' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
+
+            // New-customer fields (only required when creating a customer inline).
+            'new_customer.name' => [Rule::requiredIf($creatingCustomer), 'nullable', 'string', 'max:255'],
+            'new_customer.company_name' => ['nullable', 'string', 'max:255'],
+            'new_customer.status' => [Rule::requiredIf($creatingCustomer), 'nullable', 'in:active,inactive,prospect,archived'],
+            'new_customer.email' => ['nullable', 'email', 'max:255'],
+            'new_customer.phone' => ['nullable', 'string', 'max:255'],
+            'new_customer.role' => ['nullable', 'string', 'max:255'],
+            'new_customer.address' => ['nullable', 'string', 'max:2000'],
+            'new_customer.notes' => ['nullable', 'string', 'max:5000'],
+            'new_customer.invite_to_portal' => ['nullable', 'boolean'],
         ]);
 
-        $project = DB::transaction(function () use ($validated) {
+        /** @var \App\Models\Customer|null $createdCustomer */
+        $createdCustomer = null;
+
+        $project = DB::transaction(function () use ($validated, $creatingCustomer, &$createdCustomer) {
+            $customerId = $validated['customer_id'] ?? null;
+
+            if ($creatingCustomer) {
+                $createdCustomer = $this->createInlineCustomer($validated['new_customer']);
+                $customerId = $createdCustomer->id;
+            }
+
             $project = Project::create([
-                'customer_id' => $validated['customer_id'],
+                'customer_id' => $customerId,
                 'created_by_user_id' => auth()->id(),
                 'name' => $validated['name'],
                 'reference' => $validated['reference'] ?? null,
@@ -103,9 +133,58 @@ class ProjectController extends Controller
             return $project;
         });
 
+        $status = 'Project created successfully.';
+
+        // Send the portal invite after the transaction commits, mirroring the
+        // customer create flow. The main contact was stored from the customer
+        // name, so we invite that primary contact when a valid email exists.
+        if ($creatingCustomer && ! empty($validated['new_customer']['invite_to_portal'])) {
+            $createdCustomer->load('contacts');
+            $primary = $createdCustomer->primaryContact ?? $createdCustomer->contacts->firstWhere('email', '!=', null);
+
+            if ($primary && $primary->email) {
+                $inviter->invite($createdCustomer, $primary->email, $primary->name ?: $createdCustomer->name, $primary->id);
+                $status = 'Project created and Green Street Portal invite sent to the customer.';
+            } else {
+                $status = 'Project created. No main contact email was available to send a portal invite.';
+            }
+        }
+
         return redirect()
             ->route('admin.projects.show', $project)
-            ->with('status', 'Project created successfully.');
+            ->with('status', $status);
+    }
+
+    /**
+     * Create a customer inline from the project form. Mirrors the customer
+     * creation flow: the customer name is also stored as the primary contact so
+     * it never has to be typed twice.
+     */
+    private function createInlineCustomer(array $data): Customer
+    {
+        $customer = Customer::create([
+            'created_by_user_id' => auth()->id(),
+            'name' => $data['name'],
+            'company_name' => $data['company_name'] ?? null,
+            'status' => $data['status'],
+            'address' => $data['address'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        $customer->contacts()->create([
+            'name' => $customer->name,
+            'email' => $data['email'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'role' => $data['role'] ?? 'Primary contact',
+            'is_primary' => true,
+            'receives_quotes' => true,
+            'receives_invoices' => false,
+            'portal_access_enabled' => false,
+        ]);
+
+        CustomerActivityLogger::created($customer);
+
+        return $customer;
     }
 
     /**
@@ -149,13 +228,18 @@ class ProjectController extends Controller
             $node = $node->parent;
         }
 
-        // Resolved access level (read-write / read-only / no-access) for the
-        // current user, keyed by folder id, for the current folder and each of
-        // its subfolders. Documents inherit their folder's level.
-        $user = auth()->user();
-        $folderPermissions = collect([$folder])
+        // Per-role access map (admin/contractor/customer => level) for the
+        // current folder and each subfolder, resolved from the top-level
+        // ancestor that carries the permission rows. Drives the colour-coded
+        // "who has access" cards on the browse page. Each entry also records
+        // whether the folder is top-level, since only top-level folders can
+        // have their permissions edited (subfolders inherit).
+        $folderAccess = collect([$folder])
             ->merge($folder->children)
-            ->mapWithKeys(fn (ProjectFolder $f) => [$f->id => $permissions->level($user, $f)])
+            ->mapWithKeys(fn (ProjectFolder $f) => [$f->id => [
+                'roles' => $permissions->roleLevels($f),
+                'is_top_level' => $f->is_top_level,
+            ]])
             ->all();
 
         // Flat list of every folder in the project, each with an indented
@@ -169,7 +253,7 @@ class ProjectController extends Controller
             'subfolders' => $folder->children,
             'documents' => $folder->documents,
             'breadcrumbs' => $breadcrumbs,
-            'folderPermissions' => $folderPermissions,
+            'folderAccess' => $folderAccess,
             'moveTargets' => $moveTargets,
         ]);
     }

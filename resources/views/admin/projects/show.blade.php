@@ -31,7 +31,13 @@
                 <h1 class="text-3xl font-bold mt-4">{{ $project->name }}</h1>
 
                 <p class="text-gray-600 mt-1">
-                    {{ optional($project->customer)->company_name ?: optional($project->customer)->name ?: 'No customer linked' }}
+                    @if ($project->customer)
+                        <a href="{{ route('admin.customers.show', $project->customer) }}" class="underline">
+                            {{ $project->customer->display_name }}
+                        </a>
+                    @else
+                        No customer linked
+                    @endif
                 </p>
             </div>
 
@@ -57,7 +63,15 @@
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="font-semibold text-gray-700">Customer</dt>
-                        <dd>{{ optional($project->customer)->company_name ?: optional($project->customer)->name ?: '—' }}</dd>
+                        <dd>
+                            @if ($project->customer)
+                                <a href="{{ route('admin.customers.show', $project->customer) }}" class="underline">
+                                    {{ $project->customer->display_name }}
+                                </a>
+                            @else
+                                —
+                            @endif
+                        </dd>
                     </div>
 
                     <div>
@@ -96,7 +110,7 @@
                         @foreach ($project->contractors as $contractor)
                             <li class="flex items-center justify-between gap-3 border-b border-gray-200 pb-2">
                                 <span>
-                                    <span class="font-semibold">{{ $contractor->name }}</span>
+                                    <a href="{{ route('admin.contractors.show', $contractor) }}" class="font-semibold underline">{{ $contractor->name }}</a>
                                     @if ($contractor->company_name)
                                         <span class="block text-xs text-gray-600">{{ $contractor->company_name }}</span>
                                     @endif

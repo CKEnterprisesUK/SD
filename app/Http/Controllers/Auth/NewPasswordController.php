@@ -52,12 +52,24 @@ class NewPasswordController extends Controller
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
-        return $status == Password::PASSWORD_RESET
-                    ? redirect()->route('login')->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        // On success, send them to sign in with the confirmation message.
+        if ($status == Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('status', __($status));
+        }
+
+        // An expired or already-used token is the most common failure here,
+        // especially for invite/setup links that were opened too late. Rather
+        // than leaving the customer on a dead form with a cryptic error, send
+        // them to the "forgot password" page (with their email pre-filled) and
+        // tell them to request a fresh link.
+        if ($status == Password::INVALID_TOKEN) {
+            return redirect()->route('password.request')
+                ->withInput($request->only('email'))
+                ->with('status', 'That password link has expired or already been used. Enter your email below and we will send you a fresh link to set your password.');
+        }
+
+        // Any other failure (e.g. unknown email) stays on the reset form.
+        return back()->withInput($request->only('email'))
+            ->withErrors(['email' => __($status)]);
     }
 }

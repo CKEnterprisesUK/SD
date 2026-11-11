@@ -13,6 +13,7 @@ namespace Symfony\Component\HttpKernel\EventListener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Attribute\RateLimit;
+use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\Event\ControllerAttributeEvent;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -35,7 +36,7 @@ final class RateLimitAttributeListener implements EventSubscriberInterface
     }
 
     /**
-     * @param ControllerAttributeEvent<RateLimit> $event
+     * @param ControllerAttributeEvent<RateLimit, ControllerArgumentsEvent> $event
      */
     public function onKernelControllerAttribute(ControllerAttributeEvent $event): void
     {
@@ -51,7 +52,7 @@ final class RateLimitAttributeListener implements EventSubscriberInterface
         }
 
         if (null === $attribute->key) {
-            $key = ($request->getClientIp() ?? 'unknown').'~'.$request->getMethod().'~'.$request->getPathInfo();
+            $key = ($request->getClientIp() ?? 'unknown').'~'.$request->getPathInfo();
         } elseif (!\is_string($key = $event->evaluate($attribute->key))) {
             throw new \TypeError(\sprintf('The value of the "$key" option of the "%s" attribute must evaluate to a string, "%s" given.', RateLimit::class, get_debug_type($key)));
         }
